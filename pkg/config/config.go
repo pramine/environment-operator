@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"io/ioutil"
 	"strings"
 
 	validator "gopkg.in/validator.v2"
@@ -142,8 +143,8 @@ func (e *DeploymentSettings) UnmarshalYAML(unmarshal func(interface{}) error) er
 	return nil
 }
 
-// Load returns BitesizeEnvironment object from yaml string
-func Load(cfg string) (*EnvironmentsBitesize, error) {
+// LoadFromString returns BitesizeEnvironment object from yaml string
+func LoadFromString(cfg string) (*EnvironmentsBitesize, error) {
 	t := &EnvironmentsBitesize{}
 
 	err := yaml.Unmarshal([]byte(cfg), t)
@@ -152,6 +153,19 @@ func Load(cfg string) (*EnvironmentsBitesize, error) {
 	}
 
 	return t, err
+}
+
+// LoadFromFile returns BitesizeEnvironment object loaded from file, passed
+// as a path argument.
+func LoadFromFile(path string) (*EnvironmentsBitesize, error) {
+	var err error
+	var contents []byte
+
+	contents, err = ioutil.ReadFile(path)
+	if err != nil {
+		return nil, err
+	}
+	return LoadFromString(string(contents))
 }
 
 func checkOverflow(m map[string]interface{}, ctx string) error {

@@ -1,0 +1,8 @@
+project: test
+environments:
+- name: environment1
+  services:
+  - name: service1_environment1
+- name: environment2
+  services:
+  - name: service1_environment2

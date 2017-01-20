@@ -14,6 +14,11 @@ func TestEnvironmentsBitesize(t *testing.T) {
 	})
 
 	t.Run("invalid config", testInvalidConfig)
+
+	t.Run("config from path", func(t *testing.T) {
+		t.Run("existing config", testExistingFile)
+		t.Run("non-existing config", testNonExistingFile)
+	})
 }
 
 func testSingleName(t *testing.T) {
@@ -22,7 +27,7 @@ func testSingleName(t *testing.T) {
   environments:
   - name: Abr
   `
-	configuration, err := config.Load(cfg)
+	configuration, err := config.LoadFromString(cfg)
 	if err != nil {
 		t.Errorf("Config: unexpected error %s", err.Error())
 	}
@@ -43,7 +48,7 @@ func testNumberOfEnvironments(t *testing.T) {
   `
 	expected := 2
 
-	configuration, err := config.Load(cfg)
+	configuration, err := config.LoadFromString(cfg)
 	if err != nil {
 		t.Errorf("Config: unexpected error %s", err.Error())
 	}
@@ -190,7 +195,7 @@ func testInvalidConfig(t *testing.T) {
 
 	for idx, tst := range saTests {
 		t.Run(tst.Cause, func(t *testing.T) {
-			configuration, err := config.Load(tst.Cfg)
+			configuration, err := config.LoadFromString(tst.Cfg)
 			if err != nil {
 				if err.Error() != tst.Expected {
 					t.Errorf("Error in %d test:\nEXPECTED:\n%s\n--\nACTUAL:\n%s\n",
@@ -204,7 +209,26 @@ func testInvalidConfig(t *testing.T) {
 				t.Errorf("Config: no error on %s", tst.Cause)
 			}
 		})
-
 	}
+}
 
+func testExistingFile(t *testing.T) {
+	path := "../assets/environments.bitesize"
+	_, err := config.LoadFromFile(path)
+	if err != nil {
+		t.Error(err)
+	}
+}
+
+func testNonExistingFile(t *testing.T) {
+	path := "../test/assets/nnn"
+	_, err := config.LoadFromFile(path)
+
+	if err == nil {
+		t.Errorf("Config: no error on non-existing file load: %s", path)
+	} else {
+		if err.Error() != fmt.Sprintf("open %s: no such file or directory", path) {
+			t.Error(err)
+		}
+	}
 }
