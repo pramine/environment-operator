@@ -1,0 +1,10 @@
+hash: 944d21ad1bf295c9bdc07b69a44cf027c103aa9985650db8f6fd1ed0a8a01759
+updated: 2017-01-18T15:16:42.653260398Z
+imports:
+- name: github.com/asaskevich/govalidator
+  version: 7b3beb6df3c42abd3509abfc3bcacc0fbfb7c877
+- name: gopkg.in/validator.v2
+  version: 0a9835d809fb647a62611d30cb792e0b5dd65b11
+- name: gopkg.in/yaml.v2
+  version: 53feefa2559fb8dfa8d81baad31be332c97d6c77
+testImports: []

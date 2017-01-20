@@ -1,2 +1,3 @@
 package: .
-import: []
+import:
+- package: gopkg.in/validator.v2
