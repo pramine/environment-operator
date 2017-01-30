@@ -40,14 +40,20 @@ type DeploymentSettings struct {
 // BitesizeService represents a single service and it's configuration,
 // running in environment
 type BitesizeService struct {
-	Name        string                 `yaml:"name" validate:"nonzero"`
-	ExternalURL string                 `yaml:"external_url,omitempty" validate:"regexp=^([a-zA-Z\\.\\-]+$)*"`
-	Port        int                    `yaml:"port,omitempty" validate:"max=65535"`
-	Ssl         string                 `yaml:"ssl,omitempty" validate:"regexp=^(true|false)*$"`
-	Replicas    int                    `yaml:"replicas,omitempty"`
-	Deployment  *DeploymentSettings    `yaml:"deployment,omitempty"`
-	HealthCheck *BitesizeLiveness      `yaml:"health_check,omitempty"`
-	XXX         map[string]interface{} `yaml:",inline"`
+	Name         string              `yaml:"name" validate:"nonzero"`
+	ExternalURL  string              `yaml:"external_url,omitempty" validate:"regexp=^([a-zA-Z\\.\\-]+$)*"`
+	Port         int                 `yaml:"port,omitempty" validate:"max=65535"`
+	Ssl          string              `yaml:"ssl,omitempty" validate:"regexp=^(true|false)*$"`
+	Version      string              `yaml:"version,omitempty"`
+	Application  string              `yaml:"application,omitempty"`
+	Replicas     int                 `yaml:"replicas,omitempty"`
+	Deployment   *DeploymentSettings `yaml:"deployment,omitempty"`
+	HealthCheck  *BitesizeLiveness   `yaml:"health_check,omitempty"`
+	EnvVars      []BitesizeEnvVar    `yaml:"env,omitempty"`
+	Volumes      []BitesizeVolume    `yaml:"volumes,omitempty"`
+	HTTPSOnly    string
+	HTTPSBackend string
+	XXX          map[string]interface{} `yaml:",inline"`
 }
 
 // BitesizeTest is obsolete and not used by environment-operator,
@@ -62,10 +68,24 @@ type BitesizeTest struct {
 
 // BitesizeLiveness maps to LivenessProbe in Kubernetes
 type BitesizeLiveness struct {
-	Command      []string               `yaml:"command"`
+	Command      []string               `yaml:"command" validate:"volume_modes"`
 	InitialDelay int                    `yaml:"initial_delay,omitempty"`
 	Timeout      int                    `yaml:"timeout,omitempty"`
 	XXX          map[string]interface{} `yaml:",inline"`
+}
+
+// BitesizeEnvVar represents environment variables in pod
+type BitesizeEnvVar struct {
+	Name   string `yaml:"name"`
+	Value  string `yaml:"value"`
+	Secret string `yaml:"secret"`
+}
+
+// BitesizeVolume represents volume & it's mount
+type BitesizeVolume struct {
+	Path  string `yaml:"path"`
+	Modes string `yaml:"modes" validate:"volume_modes"`
+	Size  string `yaml:"size"`
 }
 
 // UnmarshalYAML implements the yaml.Unmarshaler interface for BitesizeEnvironment.
@@ -77,11 +97,13 @@ func (e *BitesizeEnvironment) UnmarshalYAML(unmarshal func(interface{}) error) e
 		return fmt.Errorf("environment.%s", err.Error())
 	}
 
+	validator.SetValidationFunc("volume_modes", validVolumeModes)
+
 	*e = *ee
 
-	if err = checkOverflow(e.XXX, "environment"); err != nil {
-		return err
-	}
+	// if err = checkOverflow(e.XXX, "environment"); err != nil {
+	// 	return err
+	// }
 
 	if err = validator.Validate(e); err != nil {
 		// return err
@@ -117,9 +139,9 @@ func (e *BitesizeLiveness) UnmarshalYAML(unmarshal func(interface{}) error) erro
 
 	*e = *ee
 
-	if err = checkOverflow(e.XXX, "health_check"); err != nil {
-		return err
-	}
+	// if err = checkOverflow(e.XXX, "health_check"); err != nil {
+	// 	return err
+	// }
 
 	if err = validator.Validate(e); err != nil {
 		return fmt.Errorf("health_check.%s", err.Error())
