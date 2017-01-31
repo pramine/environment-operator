@@ -258,7 +258,7 @@ func testRandomClient(t *testing.T) {
 		t.Error(err)
 	}
 
-	_, err = config.LoadFromClient(client)
+	_, err = config.LoadFromClient(client, "sample-app-dev")
 	if err != nil {
 		t.Error(err)
 	}

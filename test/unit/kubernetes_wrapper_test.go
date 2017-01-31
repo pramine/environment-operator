@@ -11,8 +11,10 @@ import (
 )
 
 func TestKubernetesWrapper(t *testing.T) {
-	t.Run("test service count", testServiceCount)
-	t.Run("test volumes", testVolumes)
+	t.Run("service count", testServiceCount)
+	t.Run("volumes", testVolumes)
+	t.Run("full bitesize construct", testFullBitesizeEnvironment)
+	t.Run("a/b deployment service", testABSingleService)
 }
 
 func testServiceCount(t *testing.T) {
@@ -135,6 +137,88 @@ func testVolumes(t *testing.T) {
 
 }
 
+func testABSingleService(t *testing.T) {
+	capacity, _ := resource.ParseQuantity("59G")
+	validLabels := map[string]string{"creator": "pipeline"}
+
+	client := fake.NewSimpleClientset(
+		&api.PersistentVolumeClaim{
+			ObjectMeta: api.ObjectMeta{
+				Name:      "ts",
+				Namespace: "test",
+			},
+		},
+		&api.PersistentVolumeClaim{
+			ObjectMeta: validMeta("test", "test"),
+			Spec: api.PersistentVolumeClaimSpec{
+				AccessModes: []api.PersistentVolumeAccessMode{
+					api.ReadWriteOnce,
+				},
+				Resources: api.ResourceRequirements{
+					Requests: api.ResourceList{
+						api.ResourceStorage: capacity,
+					},
+				},
+			},
+		},
+		&api.PersistentVolume{
+			ObjectMeta: api.ObjectMeta{
+				Name:   "test",
+				Labels: validLabels,
+			},
+		},
+		&extensions.Deployment{
+			ObjectMeta: validMeta("test", "test"),
+			Spec: extensions.DeploymentSpec{
+				Replicas: 1,
+				Template: api.PodTemplateSpec{
+					ObjectMeta: validMeta("test", "test"),
+					Spec: api.PodSpec{
+						Containers: []api.Container{
+							{
+								VolumeMounts: []api.VolumeMount{
+									{
+										Name:      "test",
+										MountPath: "/tmp/blah",
+										ReadOnly:  true,
+									},
+								},
+							},
+						},
+						Volumes: []api.Volume{
+							{
+								Name: "test",
+								VolumeSource: api.VolumeSource{
+									PersistentVolumeClaim: &api.PersistentVolumeClaimVolumeSource{
+										ClaimName: "test",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		&api.Service{
+			ObjectMeta: api.ObjectMeta{
+				Name:      "ts",
+				Namespace: "test",
+			},
+		},
+		&extensions.Ingress{
+			ObjectMeta: api.ObjectMeta{
+				Name:      "ts",
+				Namespace: "test",
+			},
+		},
+	)
+
+	wrapper := config.KubernetesWrapper{Interface: client}
+	wrapper.Services("test")
+
+	t.Errorf("Not implemented")
+}
+
 func newDeployment(namespace, name string) *extensions.Deployment {
 	d := extensions.Deployment{
 		ObjectMeta: api.ObjectMeta{
@@ -167,7 +251,7 @@ func newService(namespace, serviceName, portName string, portNumber int32) *api.
 	return &service
 }
 
-func validMeta(name, namespace string) api.ObjectMeta {
+func validMeta(namespace, name string) api.ObjectMeta {
 	validLabels := map[string]string{"creator": "pipeline"}
 
 	if namespace != "" {

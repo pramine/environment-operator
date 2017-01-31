@@ -187,6 +187,12 @@ func (w *KubernetesWrapper) HealthCheckForDeployment(namespace, name string) (*B
 	return retval, nil
 }
 
+// NamespaceInfo loads namespace information from Kubernetes given namespace name.
+// Used to retrieve essential namespace labels (e.g. project name, environment name)
+func (w *KubernetesWrapper) NamespaceInfo(ns string) (*api.Namespace, error) {
+	return w.Core().Namespaces().Get(ns)
+}
+
 func (w *KubernetesWrapper) deploymentFromName(namespace, name string) (extensions.Deployment, error) {
 	deployments, err := w.Deployments(namespace)
 	if err != nil {

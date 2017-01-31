@@ -8,21 +8,27 @@ import (
 )
 
 // LoadFromClient returns BitesizeEnvironment object loaded from Kubernetes API
-func LoadFromClient(client clientset.Interface) (*EnvironmentsBitesize, error) {
+func LoadFromClient(client clientset.Interface, namespace string) (*EnvironmentsBitesize, error) {
 	// var err error
-
-	namespace := "sample-app-dev"
 	wrapper := &KubernetesWrapper{client}
 
 	serviceMap := make(map[string]*BitesizeService)
 
+	ns, _ := wrapper.NamespaceInfo(namespace)
+	environmentName := ns.Labels["environment"]
+
 	services, _ := wrapper.Services(namespace)
 	for _, kubeService := range services {
 		// name := trimBlueGreenFromName(kubeService.Name)
+
 		name := kubeService.Name
+		kubePort := 0
+		if len(kubeService.Spec.Ports) > 0 {
+			kubePort = int(kubeService.Spec.Ports[0].Port)
+		}
 		serviceMap[name] = &BitesizeService{
 			Name: name,
-			Port: int(kubeService.Spec.Ports[0].Port),
+			Port: kubePort,
 		}
 	}
 
@@ -55,15 +61,32 @@ func LoadFromClient(client clientset.Interface) (*EnvironmentsBitesize, error) {
 		if serviceMap[name] == nil {
 			serviceMap[name] = &BitesizeService{}
 		}
+		var externalURL string
 
-		// serviceMap[name].ExternalURL = trimBlueGreenFromHost(kubeIngress.Spec.Rules[0].Host)
-		serviceMap[name].ExternalURL = kubeIngress.Spec.Rules[0].Host
+		if len(kubeIngress.Spec.Rules) > 0 {
+			externalURL = kubeIngress.Spec.Rules[0].Host
+		}
 
-		// fmt.Printf("%+v", kubeIngress)
+		serviceMap[name].ExternalURL = externalURL
+	}
+
+	var serviceList []BitesizeService
+
+	for _, v := range serviceMap {
+		serviceList = append(serviceList, *v)
+	}
+
+	bitesizeConfig := EnvironmentsBitesize{
+		Environments: []BitesizeEnvironment{
+			{
+				Name:     environmentName,
+				Services: serviceList,
+			},
+		},
 	}
 
 	// spew.Dump(serviceMap)
-	return nil, nil
+	return &bitesizeConfig, nil
 }
 
 func trimBlueGreenFromName(orig string) string {
