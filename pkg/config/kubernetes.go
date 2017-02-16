@@ -3,12 +3,12 @@ package config
 import (
 	"strings"
 
-	"k8s.io/kubernetes/pkg/api/v1"
-	clientset "k8s.io/kubernetes/pkg/client/clientset_generated/internalclientset"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/pkg/api/v1"
 )
 
 // LoadFromClient returns BitesizeEnvironment object loaded from Kubernetes API
-func LoadFromClient(client clientset.Interface, namespace string) (*EnvironmentsBitesize, error) {
+func LoadFromClient(client kubernetes.Interface, namespace string) (*EnvironmentsBitesize, error) {
 	// var err error
 	wrapper := &KubernetesWrapper{client}
 
@@ -43,7 +43,7 @@ func LoadFromClient(client clientset.Interface, namespace string) (*Environments
 
 		// volumeClaims := client.Core().PersistentVolumeClaims(kubeDeployment.Namespace).List()
 
-		serviceMap[name].Replicas = int(kubeDeployment.Spec.Replicas)
+		serviceMap[name].Replicas = int(*kubeDeployment.Spec.Replicas)
 		serviceMap[name].Ssl = kubeDeployment.Labels["ssl"]
 		serviceMap[name].Version = kubeDeployment.Labels["version"]
 		serviceMap[name].Application = kubeDeployment.Labels["application"]

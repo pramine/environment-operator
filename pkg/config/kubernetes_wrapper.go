@@ -4,30 +4,26 @@ import (
 	"fmt"
 	"strings"
 
-	"k8s.io/kubernetes/pkg/api"
-	"k8s.io/kubernetes/pkg/apis/extensions"
-	clientset "k8s.io/kubernetes/pkg/client/clientset_generated/internalclientset"
-	"k8s.io/kubernetes/pkg/labels"
+	"k8s.io/client-go/kubernetes"
+	api_v1 "k8s.io/client-go/pkg/api/v1"
+	"k8s.io/client-go/pkg/apis/extensions/v1beta1"
 )
 
-// KubernetesWrapper wraps low level client-go requests to an object easier
+// KubernetesWrapper wraps low level kubernetes api requests to an object easier
 // to interact with
 type KubernetesWrapper struct {
-	clientset.Interface
+	kubernetes.Interface
 }
 
-func listOptions() api.ListOptions {
-	tlabels := map[string]string{"creator": "pipeline"}
-	selector := labels.SelectorFromSet(labels.Set(tlabels))
-
-	return api.ListOptions{
-		LabelSelector: selector,
+func listOptions() api_v1.ListOptions {
+	return api_v1.ListOptions{
+		LabelSelector: "creator=pipeline",
 	}
 }
 
 // Services returns the list of environment-operator managed services within
 // given namespace
-func (w *KubernetesWrapper) Services(ns string) ([]api.Service, error) {
+func (w *KubernetesWrapper) Services(ns string) ([]api_v1.Service, error) {
 	list, err := w.Core().Services(ns).List(listOptions())
 	if err != nil {
 		return nil, err
@@ -39,7 +35,7 @@ func (w *KubernetesWrapper) Services(ns string) ([]api.Service, error) {
 
 // Ingresses returns the list of environment-operator managed ingresses within
 // given namespace
-func (w *KubernetesWrapper) Ingresses(ns string) ([]extensions.Ingress, error) {
+func (w *KubernetesWrapper) Ingresses(ns string) ([]v1beta1.Ingress, error) {
 
 	list, err := w.Extensions().Ingresses(ns).List(listOptions())
 	if err != nil {
@@ -51,7 +47,7 @@ func (w *KubernetesWrapper) Ingresses(ns string) ([]extensions.Ingress, error) {
 
 // Deployments returns the list of environment-operator managed deployments within
 // given namespace
-func (w *KubernetesWrapper) Deployments(ns string) ([]extensions.Deployment, error) {
+func (w *KubernetesWrapper) Deployments(ns string) ([]v1beta1.Deployment, error) {
 
 	list, err := w.Extensions().Deployments(ns).List(listOptions())
 	if err != nil {
@@ -63,7 +59,7 @@ func (w *KubernetesWrapper) Deployments(ns string) ([]extensions.Deployment, err
 
 // PersistentVolumeClaims returns the list of environment-operator managed
 // persistent volume claims  within given namespace
-func (w *KubernetesWrapper) PersistentVolumeClaims(ns string) ([]api.PersistentVolumeClaim, error) {
+func (w *KubernetesWrapper) PersistentVolumeClaims(ns string) ([]api_v1.PersistentVolumeClaim, error) {
 	list, err := w.Core().PersistentVolumeClaims(ns).List(listOptions())
 	if err != nil {
 		return nil, err
@@ -189,14 +185,14 @@ func (w *KubernetesWrapper) HealthCheckForDeployment(namespace, name string) (*B
 
 // NamespaceInfo loads namespace information from Kubernetes given namespace name.
 // Used to retrieve essential namespace labels (e.g. project name, environment name)
-func (w *KubernetesWrapper) NamespaceInfo(ns string) (*api.Namespace, error) {
+func (w *KubernetesWrapper) NamespaceInfo(ns string) (*api_v1.Namespace, error) {
 	return w.Core().Namespaces().Get(ns)
 }
 
-func (w *KubernetesWrapper) deploymentFromName(namespace, name string) (extensions.Deployment, error) {
+func (w *KubernetesWrapper) deploymentFromName(namespace, name string) (v1beta1.Deployment, error) {
 	deployments, err := w.Deployments(namespace)
 	if err != nil {
-		return extensions.Deployment{}, err
+		return v1beta1.Deployment{}, err
 	}
 
 	for _, d := range deployments {
@@ -204,22 +200,22 @@ func (w *KubernetesWrapper) deploymentFromName(namespace, name string) (extensio
 			return d, nil
 		}
 	}
-	return extensions.Deployment{}, fmt.Errorf("No deployment %s found", name)
+	return v1beta1.Deployment{}, fmt.Errorf("No deployment %s found", name)
 }
 
-func (w *KubernetesWrapper) volumeMountFromName(d extensions.Deployment, name string) (api.VolumeMount, error) {
+func (w *KubernetesWrapper) volumeMountFromName(d v1beta1.Deployment, name string) (api_v1.VolumeMount, error) {
 	for _, vmount := range d.Spec.Template.Spec.Containers[0].VolumeMounts {
 		if vmount.Name == name {
 			return vmount, nil
 		}
 	}
-	return api.VolumeMount{}, fmt.Errorf("No volume mount %s found", name)
+	return api_v1.VolumeMount{}, fmt.Errorf("No volume mount %s found", name)
 }
 
-func (w *KubernetesWrapper) volumeClaimFromName(namespace, name string) (api.PersistentVolumeClaim, error) {
+func (w *KubernetesWrapper) volumeClaimFromName(namespace, name string) (api_v1.PersistentVolumeClaim, error) {
 	claims, err := w.PersistentVolumeClaims(namespace)
 	if err != nil {
-		return api.PersistentVolumeClaim{}, err
+		return api_v1.PersistentVolumeClaim{}, err
 	}
 
 	for _, claim := range claims {
@@ -227,5 +223,5 @@ func (w *KubernetesWrapper) volumeClaimFromName(namespace, name string) (api.Per
 			return claim, nil
 		}
 	}
-	return api.PersistentVolumeClaim{}, fmt.Errorf("Persistent volume claim %s not found", name)
+	return api_v1.PersistentVolumeClaim{}, fmt.Errorf("Persistent volume claim %s not found", name)
 }

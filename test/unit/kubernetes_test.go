@@ -4,59 +4,68 @@ import (
 	"testing"
 
 	"github.com/pearsontechnology/environment-operator/pkg/config"
-	"k8s.io/kubernetes/pkg/api"
-	"k8s.io/kubernetes/pkg/api/resource"
-	"k8s.io/kubernetes/pkg/apis/extensions"
-	"k8s.io/kubernetes/pkg/client/clientset_generated/internalclientset/fake"
+	"k8s.io/client-go/kubernetes/fake"
+	"k8s.io/client-go/pkg/api/resource"
+	"k8s.io/client-go/pkg/api/v1"
+	"k8s.io/client-go/pkg/apis/extensions/v1beta1"
 )
 
 func testFullBitesizeEnvironment(t *testing.T) {
 	capacity, _ := resource.ParseQuantity("59G")
 	validLabels := map[string]string{"creator": "pipeline"}
 	nsLabels := map[string]string{"environment": "Development"}
+	replicaCount := int32(1)
 
 	client := fake.NewSimpleClientset(
-		&api.Namespace{
-			ObjectMeta: api.ObjectMeta{
+		&v1.Namespace{
+			ObjectMeta: v1.ObjectMeta{
 				Name:   "test",
 				Labels: nsLabels,
 			},
 		},
-		&api.PersistentVolumeClaim{
-			ObjectMeta: api.ObjectMeta{
+		&v1.PersistentVolumeClaim{
+			ObjectMeta: v1.ObjectMeta{
 				Name:      "ts",
 				Namespace: "test",
 			},
 		},
-		&api.PersistentVolumeClaim{
+		&v1.PersistentVolumeClaim{
 			ObjectMeta: validMeta("test", "test"),
-			Spec: api.PersistentVolumeClaimSpec{
-				AccessModes: []api.PersistentVolumeAccessMode{
-					api.ReadWriteOnce,
+			Spec: v1.PersistentVolumeClaimSpec{
+				AccessModes: []v1.PersistentVolumeAccessMode{
+					v1.ReadWriteOnce,
 				},
-				Resources: api.ResourceRequirements{
-					Requests: api.ResourceList{
-						api.ResourceStorage: capacity,
+				Resources: v1.ResourceRequirements{
+					Requests: v1.ResourceList{
+						v1.ResourceStorage: capacity,
 					},
 				},
 			},
 		},
-		&api.PersistentVolume{
-			ObjectMeta: api.ObjectMeta{
+		&v1.PersistentVolume{
+			ObjectMeta: v1.ObjectMeta{
 				Name:   "test",
 				Labels: validLabels,
 			},
 		},
-		&extensions.Deployment{
-			ObjectMeta: validMeta("test", "test"),
-			Spec: extensions.DeploymentSpec{
-				Replicas: 1,
-				Template: api.PodTemplateSpec{
-					ObjectMeta: validMeta("test", "test"),
-					Spec: api.PodSpec{
-						Containers: []api.Container{
+		&v1beta1.Deployment{
+			ObjectMeta: v1.ObjectMeta{
+				Name:      "test",
+				Namespace: "test",
+				Labels:    validLabels,
+			},
+			Spec: v1beta1.DeploymentSpec{
+				Replicas: &replicaCount,
+				Template: v1.PodTemplateSpec{
+					ObjectMeta: v1.ObjectMeta{
+						Name:      "test",
+						Namespace: "test",
+						Labels:    validLabels,
+					},
+					Spec: v1.PodSpec{
+						Containers: []v1.Container{
 							{
-								Env: []api.EnvVar{
+								Env: []v1.EnvVar{
 									{
 										Name:  "test",
 										Value: "1",
@@ -71,7 +80,7 @@ func testFullBitesizeEnvironment(t *testing.T) {
 									},
 								},
 
-								VolumeMounts: []api.VolumeMount{
+								VolumeMounts: []v1.VolumeMount{
 									{
 										Name:      "test",
 										MountPath: "/tmp/blah",
@@ -80,11 +89,11 @@ func testFullBitesizeEnvironment(t *testing.T) {
 								},
 							},
 						},
-						Volumes: []api.Volume{
+						Volumes: []v1.Volume{
 							{
 								Name: "test",
-								VolumeSource: api.VolumeSource{
-									PersistentVolumeClaim: &api.PersistentVolumeClaimVolumeSource{
+								VolumeSource: v1.VolumeSource{
+									PersistentVolumeClaim: &v1.PersistentVolumeClaimVolumeSource{
 										ClaimName: "test",
 									},
 								},
@@ -94,16 +103,16 @@ func testFullBitesizeEnvironment(t *testing.T) {
 				},
 			},
 		},
-		&api.Service{
-			ObjectMeta: api.ObjectMeta{
+		&v1.Service{
+			ObjectMeta: v1.ObjectMeta{
 				Name:      "ts",
 				Namespace: "test",
 			},
 		},
-		&api.Service{
+		&v1.Service{
 			ObjectMeta: validMeta("test", "test"),
-			Spec: api.ServiceSpec{
-				Ports: []api.ServicePort{
+			Spec: v1.ServiceSpec{
+				Ports: []v1.ServicePort{
 					{
 						Name:     "whatevs",
 						Protocol: "TCP",
@@ -112,19 +121,22 @@ func testFullBitesizeEnvironment(t *testing.T) {
 				},
 			},
 		},
-		&api.Service{
+		&v1.Service{
 			ObjectMeta: validMeta("test", "test2"),
 		},
-		&extensions.Ingress{
-			ObjectMeta: api.ObjectMeta{
+		&v1beta1.Ingress{
+			ObjectMeta: v1.ObjectMeta{
 				Name:      "ts",
 				Namespace: "test",
 			},
 		},
-		&extensions.Ingress{
-			ObjectMeta: validMeta("test", "test"),
-			Spec: extensions.IngressSpec{
-				Rules: []extensions.IngressRule{
+		&v1beta1.Ingress{
+			ObjectMeta: v1.ObjectMeta{
+				Name:      "test",
+				Namespace: "test",
+			},
+			Spec: v1beta1.IngressSpec{
+				Rules: []v1beta1.IngressRule{
 					{
 						Host: "www.test.com",
 					},

@@ -4,10 +4,15 @@ import (
 	"testing"
 
 	"github.com/pearsontechnology/environment-operator/pkg/config"
-	"k8s.io/kubernetes/pkg/api"
-	"k8s.io/kubernetes/pkg/api/resource"
-	"k8s.io/kubernetes/pkg/apis/extensions"
-	"k8s.io/kubernetes/pkg/client/clientset_generated/internalclientset/fake"
+	"k8s.io/client-go/kubernetes/fake"
+	"k8s.io/client-go/pkg/api/v1"
+	// "k8s.io/kubernetes/pkg/api"
+	//	"k8s.io/kubernetes/pkg/api/resource"
+	// 	"k8s.io/apimachinery/pkg/api/resource"
+	"k8s.io/client-go/pkg/api/resource"
+	//	"k8s.io/kubernetes/pkg/apis/extensions"
+	"k8s.io/client-go/pkg/apis/extensions/v1beta1"
+	//	"k8s.io/kubernetes/pkg/client/clientset_generated/internalclientset/fake"
 )
 
 func TestKubernetesWrapper(t *testing.T) {
@@ -39,43 +44,52 @@ func testServiceCount(t *testing.T) {
 func testVolumes(t *testing.T) {
 	capacity, _ := resource.ParseQuantity("59G")
 	validLabels := map[string]string{"creator": "pipeline"}
+	replicaCount := int32(1)
 
 	client := fake.NewSimpleClientset(
-		&api.PersistentVolumeClaim{
-			ObjectMeta: api.ObjectMeta{
+		&v1.PersistentVolumeClaim{
+			ObjectMeta: v1.ObjectMeta{
 				Name:      "ts",
 				Namespace: "test",
 			},
 		},
-		&api.PersistentVolumeClaim{
+		&v1.PersistentVolumeClaim{
 			ObjectMeta: validMeta("test", "test"),
-			Spec: api.PersistentVolumeClaimSpec{
-				AccessModes: []api.PersistentVolumeAccessMode{
-					api.ReadWriteOnce,
+			Spec: v1.PersistentVolumeClaimSpec{
+				AccessModes: []v1.PersistentVolumeAccessMode{
+					v1.ReadWriteOnce,
 				},
-				Resources: api.ResourceRequirements{
-					Requests: api.ResourceList{
-						api.ResourceStorage: capacity,
+				Resources: v1.ResourceRequirements{
+					Requests: v1.ResourceList{
+						v1.ResourceStorage: capacity,
 					},
 				},
 			},
 		},
-		&api.PersistentVolume{
-			ObjectMeta: api.ObjectMeta{
+		&v1.PersistentVolume{
+			ObjectMeta: v1.ObjectMeta{
 				Name:   "test",
 				Labels: validLabels,
 			},
 		},
-		&extensions.Deployment{
-			ObjectMeta: validMeta("test", "test"),
-			Spec: extensions.DeploymentSpec{
-				Replicas: 1,
-				Template: api.PodTemplateSpec{
-					ObjectMeta: validMeta("test", "test"),
-					Spec: api.PodSpec{
-						Containers: []api.Container{
+		&v1beta1.Deployment{
+			ObjectMeta: v1.ObjectMeta{
+				Name:      "test",
+				Namespace: "test",
+				Labels:    validLabels,
+			},
+			Spec: v1beta1.DeploymentSpec{
+				Replicas: &replicaCount,
+				Template: v1.PodTemplateSpec{
+					ObjectMeta: v1.ObjectMeta{
+						Name:      "test",
+						Namespace: "test",
+						Labels:    validLabels,
+					},
+					Spec: v1.PodSpec{
+						Containers: []v1.Container{
 							{
-								VolumeMounts: []api.VolumeMount{
+								VolumeMounts: []v1.VolumeMount{
 									{
 										Name:      "test",
 										MountPath: "/tmp/blah",
@@ -84,11 +98,11 @@ func testVolumes(t *testing.T) {
 								},
 							},
 						},
-						Volumes: []api.Volume{
+						Volumes: []v1.Volume{
 							{
 								Name: "test",
-								VolumeSource: api.VolumeSource{
-									PersistentVolumeClaim: &api.PersistentVolumeClaimVolumeSource{
+								VolumeSource: v1.VolumeSource{
+									PersistentVolumeClaim: &v1.PersistentVolumeClaimVolumeSource{
 										ClaimName: "test",
 									},
 								},
@@ -104,7 +118,7 @@ func testVolumes(t *testing.T) {
 		// 		Namespace: "test",
 		// 	},
 		// },
-		// &extensions.Ingress{
+		// &v1beta1.Ingress{
 		// 	ObjectMeta: api.ObjectMeta{
 		// 		Name:      "ts",
 		// 		Namespace: "test",
@@ -140,43 +154,52 @@ func testVolumes(t *testing.T) {
 func testABSingleService(t *testing.T) {
 	capacity, _ := resource.ParseQuantity("59G")
 	validLabels := map[string]string{"creator": "pipeline"}
+	replicaCount := int32(1)
 
 	client := fake.NewSimpleClientset(
-		&api.PersistentVolumeClaim{
-			ObjectMeta: api.ObjectMeta{
+		&v1.PersistentVolumeClaim{
+			ObjectMeta: v1.ObjectMeta{
 				Name:      "ts",
 				Namespace: "test",
 			},
 		},
-		&api.PersistentVolumeClaim{
+		&v1.PersistentVolumeClaim{
 			ObjectMeta: validMeta("test", "test"),
-			Spec: api.PersistentVolumeClaimSpec{
-				AccessModes: []api.PersistentVolumeAccessMode{
-					api.ReadWriteOnce,
+			Spec: v1.PersistentVolumeClaimSpec{
+				AccessModes: []v1.PersistentVolumeAccessMode{
+					v1.ReadWriteOnce,
 				},
-				Resources: api.ResourceRequirements{
-					Requests: api.ResourceList{
-						api.ResourceStorage: capacity,
+				Resources: v1.ResourceRequirements{
+					Requests: v1.ResourceList{
+						v1.ResourceStorage: capacity,
 					},
 				},
 			},
 		},
-		&api.PersistentVolume{
-			ObjectMeta: api.ObjectMeta{
+		&v1.PersistentVolume{
+			ObjectMeta: v1.ObjectMeta{
 				Name:   "test",
 				Labels: validLabels,
 			},
 		},
-		&extensions.Deployment{
-			ObjectMeta: validMeta("test", "test"),
-			Spec: extensions.DeploymentSpec{
-				Replicas: 1,
-				Template: api.PodTemplateSpec{
-					ObjectMeta: validMeta("test", "test"),
-					Spec: api.PodSpec{
-						Containers: []api.Container{
+		&v1beta1.Deployment{
+			ObjectMeta: v1.ObjectMeta{
+				Name:      "test",
+				Namespace: "test",
+				Labels:    validLabels,
+			},
+			Spec: v1beta1.DeploymentSpec{
+				Replicas: &replicaCount,
+				Template: v1.PodTemplateSpec{
+					ObjectMeta: v1.ObjectMeta{
+						Name:      "test",
+						Namespace: "test",
+						Labels:    validLabels,
+					},
+					Spec: v1.PodSpec{
+						Containers: []v1.Container{
 							{
-								VolumeMounts: []api.VolumeMount{
+								VolumeMounts: []v1.VolumeMount{
 									{
 										Name:      "test",
 										MountPath: "/tmp/blah",
@@ -185,11 +208,11 @@ func testABSingleService(t *testing.T) {
 								},
 							},
 						},
-						Volumes: []api.Volume{
+						Volumes: []v1.Volume{
 							{
 								Name: "test",
-								VolumeSource: api.VolumeSource{
-									PersistentVolumeClaim: &api.PersistentVolumeClaimVolumeSource{
+								VolumeSource: v1.VolumeSource{
+									PersistentVolumeClaim: &v1.PersistentVolumeClaimVolumeSource{
 										ClaimName: "test",
 									},
 								},
@@ -199,14 +222,14 @@ func testABSingleService(t *testing.T) {
 				},
 			},
 		},
-		&api.Service{
-			ObjectMeta: api.ObjectMeta{
+		&v1.Service{
+			ObjectMeta: v1.ObjectMeta{
 				Name:      "ts",
 				Namespace: "test",
 			},
 		},
-		&extensions.Ingress{
-			ObjectMeta: api.ObjectMeta{
+		&v1beta1.Ingress{
+			ObjectMeta: v1.ObjectMeta{
 				Name:      "ts",
 				Namespace: "test",
 			},
@@ -219,31 +242,31 @@ func testABSingleService(t *testing.T) {
 	t.Errorf("Not implemented")
 }
 
-func newDeployment(namespace, name string) *extensions.Deployment {
-	d := extensions.Deployment{
-		ObjectMeta: api.ObjectMeta{
+func newDeployment(namespace, name string) *v1beta1.Deployment {
+	d := v1beta1.Deployment{
+		ObjectMeta: v1.ObjectMeta{
 			Name:      name,
 			Namespace: namespace,
 		},
-		Spec: extensions.DeploymentSpec{
-			Template: api.PodTemplateSpec{},
+		Spec: v1beta1.DeploymentSpec{
+			Template: v1.PodTemplateSpec{},
 		},
 	}
 	return &d
 }
 
-func newService(namespace, serviceName, portName string, portNumber int32) *api.Service {
+func newService(namespace, serviceName, portName string, portNumber int32) *v1.Service {
 	labels := map[string]string{"creator": "pipeline"}
 
-	service := api.Service{
-		ObjectMeta: api.ObjectMeta{
+	service := v1.Service{
+		ObjectMeta: v1.ObjectMeta{
 			Name:      serviceName,
 			Namespace: namespace,
 			Labels:    labels,
 		},
-		Spec: api.ServiceSpec{
+		Spec: v1.ServiceSpec{
 			ClusterIP: "1.1.1.1",
-			Ports: []api.ServicePort{
+			Ports: []v1.ServicePort{
 				{Port: portNumber, Name: portName, Protocol: "TCP"},
 			},
 		},
@@ -251,17 +274,17 @@ func newService(namespace, serviceName, portName string, portNumber int32) *api.
 	return &service
 }
 
-func validMeta(namespace, name string) api.ObjectMeta {
+func validMeta(namespace, name string) v1.ObjectMeta {
 	validLabels := map[string]string{"creator": "pipeline"}
 
 	if namespace != "" {
-		return api.ObjectMeta{
+		return v1.ObjectMeta{
 			Name:      name,
 			Namespace: namespace,
 			Labels:    validLabels,
 		}
 	}
-	return api.ObjectMeta{
+	return v1.ObjectMeta{
 		Name:   name,
 		Labels: validLabels,
 	}

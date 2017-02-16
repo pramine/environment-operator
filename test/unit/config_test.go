@@ -1,14 +1,10 @@
 package unit
 
 import (
-	"flag"
 	"fmt"
 	"testing"
 
 	"github.com/pearsontechnology/environment-operator/pkg/config"
-
-	clientset "k8s.io/kubernetes/pkg/client/clientset_generated/internalclientset"
-	"k8s.io/kubernetes/pkg/client/unversioned/clientcmd"
 )
 
 func TestEnvironmentsBitesize(t *testing.T) {
@@ -242,24 +238,25 @@ func testNonExistingFile(t *testing.T) {
 }
 
 func testRandomClient(t *testing.T) {
-	kubeconfig := flag.String(
-		"kubeconfig",
-		"/Users/simas/.kube/config",
-		"absolute path to the kubeconfig file",
-	)
+	/*	kubeconfig := flag.String(
+			"kubeconfig",
+			"/Users/simas/.kube/config",
+			"absolute path to the kubeconfig file",
+		)
 
-	cfg, err := clientcmd.BuildConfigFromFlags("", *kubeconfig)
-	if err != nil {
-		t.Error(err)
-	}
+		cfg, err := clientcmd.BuildConfigFromFlags("", *kubeconfig)
+		if err != nil {
+			t.Error(err)
+		}
 
-	client, err := clientset.NewForConfig(cfg)
-	if err != nil {
-		t.Error(err)
-	}
+		client, err := clientset.NewForConfig(cfg)
+		if err != nil {
+			t.Error(err)
+		}
 
-	_, err = config.LoadFromClient(client, "sample-app-dev")
-	if err != nil {
-		t.Error(err)
-	}
+		_, err = config.LoadFromClient(client, "sample-app-dev")
+		if err != nil {
+			t.Error(err)
+		}
+	*/
 }
