@@ -6,33 +6,46 @@ import (
 	git2go "gopkg.in/libgit2/git2go.v25"
 )
 
+// Git represents repository object and wraps git2go calls
+type Git struct {
+	SSHKey     string
+	LocalPath  string
+	RemotePath string
+	BranchName string
+}
+
 // CloneOrPull checks if repo exists in local path. If it does, it
 // pulls changes from remotePath, if it doesn't, performs a full git clone
-func CloneOrPull(localPath string, remotePath string) error {
-	if _, err := os.Stat("./conf/app.ini"); err == nil {
-		return Pull(localPath, remotePath)
-	} else {
-		return Clone(localPath, remotePath)
+func (g *Git) CloneOrPull() error {
+	if _, err := os.Stat(g.LocalPath); err == nil {
+		return g.Pull()
 	}
+	return g.Clone()
 }
 
-func Clone(localPath, remotePath string) error {
-	return nil
+func credentialsCallback(url string, username string, allowedTypes git2go.CredType) (git2go.ErrorCode, *git2go.Cred) {
+	sshKey := os.Getenv("PRIVATE_SSH_KEY")
+
+	ret, cred := git2go.NewCredSshKeyFromMemory("git", "", sshKey, "")
+	return git2go.ErrorCode(ret), &cred
 }
 
-func Pull(localPath, remotePath string) error {
-	repo, err := git2go.OpenRepository(remotePath)
-	if err != nil {
-		return err
-	}
+// Made this one just return 0 during troubleshooting...
+func certificateCheckCallback(cert *git2go.Certificate, valid bool, hostname string) git2go.ErrorCode {
+	return 0
+}
 
-	remote, err := repo.Remotes.Lookup("origin")
-	if err != nil {
-		return err
-	}
+func cloneOptions() *git2go.CloneOptions {
+	opts := &git2go.CloneOptions{}
+	opts.FetchOptions = fetchOptions()
+	return opts
+}
 
-	if err := remote.Fetch([]string{}, nil, ""); err != nil {
-		return err
+func fetchOptions() *git2go.FetchOptions {
+	return &git2go.FetchOptions{
+		RemoteCallbacks: git2go.RemoteCallbacks{
+			CredentialsCallback:      credentialsCallback,
+			CertificateCheckCallback: certificateCheckCallback,
+		},
 	}
-	return nil
 }

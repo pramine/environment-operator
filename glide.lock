@@ -1,5 +1,5 @@
-hash: 2c3dde77fa8e6dabf17c4c21632b9a2784f2e7d7c1614812b188f14cb4f0e6ad
-updated: 2017-02-16T13:33:43.766116103Z
+hash: 003d801dd0eac77a7c2346b137d3ae001add25525dcded6b0ead9bee56a46cea
+updated: 2017-02-17T11:43:48.287832373Z
 imports:
 - name: cloud.google.com/go
   version: 3b1ae45394a234c385be014e9a488f2bb6eef821
@@ -75,6 +75,8 @@ imports:
   version: 8a290539e2e8629dbc4e6bad948158f790ec31f4
 - name: github.com/PuerkitoBio/urlesc
   version: 5bd2802263f21d8788851d5305584c82a5c75d7e
+- name: github.com/Sirupsen/logrus
+  version: c078b1e43f58d563c74cebe63c85789e76ddb627
 - name: github.com/spf13/pflag
   version: 5ccb023bc27df288a957c5e994cd44fd19619465
 - name: github.com/ugorji/go
@@ -97,6 +99,10 @@ imports:
   - internal
   - jws
   - jwt
+- name: golang.org/x/sys
+  version: 8f0908ab3b2457e2e15403d3697c9ef5cb4b57a9
+  subpackages:
+  - unix
 - name: golang.org/x/text
   version: 2910a502d2bf9e43193af9d68ca516529614eed3
   subpackages:
@@ -132,42 +138,6 @@ imports:
   version: a3f3340b5840cee44f372bddb5880fcbc419b46a
 - name: k8s.io/apimachinery
   version: 7080e31e90e981181435294bca96c80a37db8941
-  subpackages:
-  - pkg/api/meta
-  - pkg/api/resource
-  - pkg/apimachinery
-  - pkg/apimachinery/announced
-  - pkg/apimachinery/registered
-  - pkg/apis/meta/v1
-  - pkg/apis/meta/v1/unstructured
-  - pkg/conversion
-  - pkg/conversion/queryparams
-  - pkg/fields
-  - pkg/labels
-  - pkg/openapi
-  - pkg/runtime
-  - pkg/runtime/schema
-  - pkg/runtime/serializer
-  - pkg/runtime/serializer/json
-  - pkg/runtime/serializer/protobuf
-  - pkg/runtime/serializer/recognizer
-  - pkg/runtime/serializer/versioning
-  - pkg/selection
-  - pkg/types
-  - pkg/util/errors
-  - pkg/util/framer
-  - pkg/util/intstr
-  - pkg/util/json
-  - pkg/util/net
-  - pkg/util/rand
-  - pkg/util/runtime
-  - pkg/util/sets
-  - pkg/util/validation
-  - pkg/util/validation/field
-  - pkg/util/wait
-  - pkg/util/yaml
-  - pkg/watch
-  - third_party/forked/golang/reflect
 - name: k8s.io/client-go
   version: e121606b0d09b2e1c467183ee46217fa85a6b672
   subpackages:
@@ -291,13 +261,4 @@ imports:
   - tools/clientcmd/api
   - tools/metrics
   - transport
-- name: k8s.io/kubernetes
-  version: 7738f41b958bd8a8018333b9c3eb86c563e1ee1a
-  subpackages:
-  - pkg/api
-  - pkg/api/v1
-  - pkg/apis/extensions
-  - pkg/util
-  - pkg/util/labels
-  - pkg/util/parsers
 testImports: []
