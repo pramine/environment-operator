@@ -21,6 +21,23 @@ End-to-end tests are located in `test/e2e` (currently none).
 By default, image will be tagged with the HEAD commit tag. If you want to override
 it and release versioned image, set `IMAGE_TAG` environment variable.
 
+## Deploying sample environment-operator
+
+First, you will need to provide private git key that could read from the repository
+containing `environments.bitesize` file. Create file named `key` with private key
+contents (e.g. `cp ~/.ssh/id_rsa key`) and create secret `git-private-key` from
+it:
+
+```
+$ kubectl create secret generic git-private-key --from-file=./key
+```
+
+Modify repository in `example/operator-deployment.yaml`. Deploy operator:
+
+```
+$ kubectl apply -f example/operator-deployment.yaml
+```
+
 ## Releasing new version
 
 * Tag MASTER branch with release version (e.g. v0.0.1)
