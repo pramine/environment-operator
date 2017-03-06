@@ -49,30 +49,36 @@ func main() {
 	}
 
 	for {
-		if ok, err := g.UpdatesExist(); ok {
-			if err != nil {
-				log.Error(err.Error())
-			}
-			log.Infof("Updates in repository: %s", g.RemotePath)
-			g.CloneOrPull()
-		}
-
-		fp := filepath.Join(g.LocalPath, cfg.EnvFile)
-		gitEnv, _ := config.Environment(fp, cfg.EnvName)
-		kubeEnv, _ := config.LoadFromClient(client, cfg.Namespace)
-
-		compareConfig := &pretty.Config{
-			Diffable:       true,
-			SkipZeroFields: true,
-		}
-		diff := compareConfig.Compare(kubeEnv, gitEnv)
-
-		if diff != "" {
-			log.Infof(diff)
-			// Need to apply gitEnv here
-		}
+		updateGitRepo(g)
+		compareConfig(cfg, g, client)
 
 		time.Sleep(30000 * time.Millisecond)
 	}
 
+}
+
+func compareConfig(cfg Config, g *git.Git, client *config.KubernetesWrapper) {
+	fp := filepath.Join(g.LocalPath, cfg.EnvFile)
+	gitEnv, _ := config.Environment(fp, cfg.EnvName)
+	kubeEnv, _ := config.LoadFromClient(client, cfg.Namespace)
+
+	compareConfig := &pretty.Config{
+		Diffable:       true,
+		SkipZeroFields: true,
+	}
+	diff := compareConfig.Compare(kubeEnv, gitEnv)
+	if diff != "" {
+		log.Infof(diff)
+		// Need to apply gitEnv here
+	}
+}
+
+func updateGitRepo(g *git.Git) {
+	if ok, err := g.UpdatesExist(); ok {
+		if err != nil {
+			log.Error(err.Error())
+		}
+		log.Infof("Updates in repository: %s", g.RemotePath)
+		g.CloneOrPull()
+	}
 }
