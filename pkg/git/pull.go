@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 
-	git2go "gopkg.in/libgit2/git2go.v25"
+	git2go "gopkg.in/libgit2/git2go.v24"
 )
 
 // Pull performs git pull for remote path
@@ -26,7 +26,7 @@ func (g *Git) Pull() error {
 	}
 	remoteBranchID := remoteBranch.Target()
 
-	if err = remote.Fetch([]string{}, fetchOptions(), ""); err != nil {
+	if err = remote.Fetch([]string{}, g.fetchOptions(), ""); err != nil {
 		return err
 	}
 

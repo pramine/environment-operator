@@ -7,12 +7,27 @@ import (
 	"k8s.io/client-go/kubernetes"
 	api_v1 "k8s.io/client-go/pkg/api/v1"
 	"k8s.io/client-go/pkg/apis/extensions/v1beta1"
+	"k8s.io/client-go/rest"
 )
 
 // KubernetesWrapper wraps low level kubernetes api requests to an object easier
 // to interact with
 type KubernetesWrapper struct {
 	kubernetes.Interface
+}
+
+// NewKubernetesWrapper returns default in-cluster kubernetes client
+func NewKubernetesWrapper() (*KubernetesWrapper, error) {
+	restConfig, err := rest.InClusterConfig()
+	if err != nil {
+		return nil, err
+	}
+	clientset, err := kubernetes.NewForConfig(restConfig)
+	if err != nil {
+		return nil, err
+	}
+
+	return &KubernetesWrapper{Interface: clientset}, nil
 }
 
 func listOptions() api_v1.ListOptions {

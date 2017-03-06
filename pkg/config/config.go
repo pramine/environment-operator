@@ -11,9 +11,9 @@ import (
 
 // EnvironmentsBitesize is a 1:1 mapping to environments.bitesize file
 type EnvironmentsBitesize struct {
-	Project      string                 `yaml:"project"`
-	Environments []BitesizeEnvironment  `yaml:"environments"`
-	XXX          map[string]interface{} `yaml:",inline"`
+	Project      string                `yaml:"project"`
+	Environments []BitesizeEnvironment `yaml:"environments"`
+	// XXX          map[string]interface{} `yaml:",inline"`
 }
 
 // BitesizeEnvironment represents full managed environment,
@@ -21,20 +21,20 @@ type EnvironmentsBitesize struct {
 // be either built from environments.bitesize configuration file
 // or Kubernetes cluster
 type BitesizeEnvironment struct {
-	Name       string                 `yaml:"name" validate:"nonzero"`
-	Namespace  string                 `yaml:"namespace,omitempty" validate:"regexp=^[a-zA-Z\\-]*$"` // This field should be optional now
-	Deployment *DeploymentSettings    `yaml:"deployment,omitempty"`
-	Services   []BitesizeService      `yaml:"services"`
-	Tests      []BitesizeTest         `yaml:"tests,omitempty"`
-	XXX        map[string]interface{} `yaml:",inline"`
+	Name       string              `yaml:"name" validate:"nonzero"`
+	Namespace  string              `yaml:"namespace,omitempty" validate:"regexp=^[a-zA-Z\\-]*$"` // This field should be optional now
+	Deployment *DeploymentSettings `yaml:"deployment,omitempty"`
+	Services   []BitesizeService   `yaml:"services"`
+	Tests      []BitesizeTest      `yaml:"tests,omitempty"`
+	// XXX        map[string]interface{} `yaml:",inline"`
 }
 
 // DeploymentSettings represent "deployment" block in environments.bitesize
 type DeploymentSettings struct {
-	Method string                 `yaml:"method,omitempty" validate:"regexp=^(bluegreen|rolling-upgrade)*$"`
-	Mode   string                 `yaml:"mode,omitempty" validate:"regexp=^(manual|auto)*$"`
-	Active string                 `yaml:"active,omitempty" validate:"regexp=^(blue|green)*$"`
-	XXX    map[string]interface{} `yaml:",inline"`
+	Method string `yaml:"method,omitempty" validate:"regexp=^(bluegreen|rolling-upgrade)*$"`
+	Mode   string `yaml:"mode,omitempty" validate:"regexp=^(manual|auto)*$"`
+	Active string `yaml:"active,omitempty" validate:"regexp=^(blue|green)*$"`
+	// XXX    map[string]interface{} `yaml:",inline"`
 }
 
 // BitesizeService represents a single service and it's configuration,
@@ -53,25 +53,25 @@ type BitesizeService struct {
 	Volumes      []BitesizeVolume    `yaml:"volumes,omitempty"`
 	HTTPSOnly    string
 	HTTPSBackend string
-	XXX          map[string]interface{} `yaml:",inline"`
+	// XXX          map[string]interface{} `yaml:",inline"`
 }
 
 // BitesizeTest is obsolete and not used by environment-operator,
 // but it's here for configuration compatability
 type BitesizeTest struct {
-	Name       string                 `yaml:"name"`
-	Repository string                 `yaml:"repository"`
-	Branch     string                 `yaml:"branch"`
-	Commands   map[string]string      `yaml:"commands"`
-	XXX        map[string]interface{} `yaml:",inline"`
+	Name       string              `yaml:"name"`
+	Repository string              `yaml:"repository"`
+	Branch     string              `yaml:"branch"`
+	Commands   []map[string]string `yaml:"commands"`
+	// XXX        map[string]interface{} `yaml:",inline"`
 }
 
 // BitesizeLiveness maps to LivenessProbe in Kubernetes
 type BitesizeLiveness struct {
-	Command      []string               `yaml:"command" validate:"volume_modes"`
-	InitialDelay int                    `yaml:"initial_delay,omitempty"`
-	Timeout      int                    `yaml:"timeout,omitempty"`
-	XXX          map[string]interface{} `yaml:",inline"`
+	Command      []string `yaml:"command" validate:"volume_modes"`
+	InitialDelay int      `yaml:"initial_delay,omitempty"`
+	Timeout      int      `yaml:"timeout,omitempty"`
+	// XXX          map[string]interface{} `yaml:",inline"`
 }
 
 // BitesizeEnvVar represents environment variables in pod
@@ -101,12 +101,7 @@ func (e *BitesizeEnvironment) UnmarshalYAML(unmarshal func(interface{}) error) e
 
 	*e = *ee
 
-	// if err = checkOverflow(e.XXX, "environment"); err != nil {
-	// 	return err
-	// }
-
 	if err = validator.Validate(e); err != nil {
-		// return err
 		return fmt.Errorf("environment.%s", err.Error())
 	}
 	return nil
@@ -168,12 +163,7 @@ func (e *DeploymentSettings) UnmarshalYAML(unmarshal func(interface{}) error) er
 // LoadFromString returns BitesizeEnvironment object from yaml string
 func LoadFromString(cfg string) (*EnvironmentsBitesize, error) {
 	t := &EnvironmentsBitesize{}
-
 	err := yaml.Unmarshal([]byte(cfg), t)
-	if err != nil {
-		return t, err
-	}
-
 	return t, err
 }
 
@@ -188,6 +178,20 @@ func LoadFromFile(path string) (*EnvironmentsBitesize, error) {
 		return nil, err
 	}
 	return LoadFromString(string(contents))
+}
+
+// Environment loads named environment from a filename with a given path
+func Environment(path, envName string) (*BitesizeEnvironment, error) {
+	e, err := LoadFromFile(path)
+	if err != nil {
+		return nil, err
+	}
+	for _, env := range e.Environments {
+		if env.Name == envName {
+			return &env, nil
+		}
+	}
+	return nil, fmt.Errorf("Environment %s not found in %s", envName, path)
 }
 
 func checkOverflow(m map[string]interface{}, ctx string) error {

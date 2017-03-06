@@ -3,7 +3,7 @@ package git
 import (
 	"os"
 
-	git2go "gopkg.in/libgit2/git2go.v25"
+	git2go "gopkg.in/libgit2/git2go.v24"
 )
 
 // Git represents repository object and wraps git2go calls
@@ -23,10 +23,8 @@ func (g *Git) CloneOrPull() error {
 	return g.Clone()
 }
 
-func credentialsCallback(url string, username string, allowedTypes git2go.CredType) (git2go.ErrorCode, *git2go.Cred) {
-	sshKey := os.Getenv("PRIVATE_SSH_KEY")
-
-	ret, cred := git2go.NewCredSshKeyFromMemory("git", "", sshKey, "")
+func (g *Git) credentialsCallback(url string, username string, allowedTypes git2go.CredType) (git2go.ErrorCode, *git2go.Cred) {
+	ret, cred := git2go.NewCredSshKeyFromMemory("git", "", g.SSHKey, "")
 	return git2go.ErrorCode(ret), &cred
 }
 
@@ -35,16 +33,16 @@ func certificateCheckCallback(cert *git2go.Certificate, valid bool, hostname str
 	return 0
 }
 
-func cloneOptions() *git2go.CloneOptions {
+func (g *Git) cloneOptions() *git2go.CloneOptions {
 	opts := &git2go.CloneOptions{}
-	opts.FetchOptions = fetchOptions()
+	opts.FetchOptions = g.fetchOptions()
 	return opts
 }
 
-func fetchOptions() *git2go.FetchOptions {
+func (g *Git) fetchOptions() *git2go.FetchOptions {
 	return &git2go.FetchOptions{
 		RemoteCallbacks: git2go.RemoteCallbacks{
-			CredentialsCallback:      credentialsCallback,
+			CredentialsCallback:      g.credentialsCallback,
 			CertificateCheckCallback: certificateCheckCallback,
 		},
 	}

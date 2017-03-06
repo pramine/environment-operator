@@ -4,10 +4,11 @@ import (
 	"io/ioutil"
 	"math/rand"
 	"os"
+	"path/filepath"
 	"testing"
 	"time"
 
-	git2go "gopkg.in/libgit2/git2go.v25"
+	git2go "gopkg.in/libgit2/git2go.v24"
 )
 
 func initAndClone(t *testing.T, local, remote string) *Git {
@@ -59,16 +60,20 @@ func createTestRepo(t *testing.T) string {
 }
 
 func commitTestJunk(t *testing.T, dest string, file string) {
+	var path string
 
 	repo, err := git2go.OpenRepository(dest)
 	checkFatal(t, err)
 
 	if file == "" {
 		f, e := ioutil.TempFile(dest, "junk")
-		file = f.Name()
+		path = f.Name()
+		file = filepath.Base(path)
 		checkFatal(t, e)
+	} else {
+		path = dest + "/" + file
 	}
-	path := dest + "/" + file
+
 	contents := randomString(64)
 
 	err = ioutil.WriteFile(path, contents, 0644)

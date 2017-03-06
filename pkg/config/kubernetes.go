@@ -8,7 +8,7 @@ import (
 )
 
 // LoadFromClient returns BitesizeEnvironment object loaded from Kubernetes API
-func LoadFromClient(client kubernetes.Interface, namespace string) (*EnvironmentsBitesize, error) {
+func LoadFromClient(client kubernetes.Interface, namespace string) (*BitesizeEnvironment, error) {
 	// var err error
 	wrapper := &KubernetesWrapper{client}
 
@@ -76,13 +76,9 @@ func LoadFromClient(client kubernetes.Interface, namespace string) (*Environment
 		serviceList = append(serviceList, *v)
 	}
 
-	bitesizeConfig := EnvironmentsBitesize{
-		Environments: []BitesizeEnvironment{
-			{
-				Name:     environmentName,
-				Services: serviceList,
-			},
-		},
+	bitesizeConfig := BitesizeEnvironment{
+		Name:     environmentName,
+		Services: serviceList,
 	}
 
 	// spew.Dump(serviceMap)

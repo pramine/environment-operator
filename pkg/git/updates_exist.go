@@ -1,7 +1,10 @@
 package git
 
 import (
-	git2go "gopkg.in/libgit2/git2go.v25"
+	"fmt"
+	"strings"
+
+	git2go "gopkg.in/libgit2/git2go.v24"
 )
 
 // UpdatesExist returns true if local HEAD is behind remote
@@ -23,7 +26,7 @@ func (g *Git) UpdatesExist() (bool, error) {
 		return true, err
 	}
 
-	if err = remote.Fetch([]string{}, fetchOptions(), ""); err != nil {
+	if err = remote.Fetch([]string{}, g.fetchOptions(), ""); err != nil {
 		return true, err
 	}
 
@@ -33,7 +36,9 @@ func (g *Git) UpdatesExist() (bool, error) {
 	}
 
 	remoteTag := branch.Target()
+	sTag := fmt.Sprintf("%s", srcTag)
+	rTag := fmt.Sprintf("%s", remoteTag)
 
-	return (srcTag == remoteTag), nil
+	return (strings.Compare(sTag, rTag) != 0), nil
 
 }
