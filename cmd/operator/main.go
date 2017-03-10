@@ -7,19 +7,21 @@ import (
 	log "github.com/Sirupsen/logrus"
 	"github.com/kelseyhightower/envconfig"
 	"github.com/kylelemons/godebug/pretty"
-	"github.com/pearsontechnology/environment-operator/pkg/config"
+	"github.com/pearsontechnology/environment-operator/pkg/bitesize"
 	"github.com/pearsontechnology/environment-operator/pkg/git"
+	"github.com/pearsontechnology/environment-operator/pkg/kubernetes"
 	"github.com/pearsontechnology/environment-operator/version"
 )
 
 // Config contains environment variables used to configure the app
 type Config struct {
-	GitRepo   string `envconfig:"GIT_REMOTE_REPOSITORY"`
-	GitBranch string `envconfig:"GIT_BRANCH" default:"master"`
-	GitKey    string `envconfig:"GIT_PRIVATE_KEY"`
-	EnvName   string `envconfig:"ENVIRONMENT_NAME"`
-	EnvFile   string `envconfig:"BITESIZE_FILE"`
-	Namespace string `envconfig:"NAMESPACE"`
+	GitRepo        string `envconfig:"GIT_REMOTE_REPOSITORY"`
+	GitBranch      string `envconfig:"GIT_BRANCH" default:"master"`
+	GitKey         string `envconfig:"GIT_PRIVATE_KEY"`
+	EnvName        string `envconfig:"ENVIRONMENT_NAME"`
+	EnvFile        string `envconfig:"BITESIZE_FILE"`
+	Namespace      string `envconfig:"NAMESPACE"`
+	DockerRegistry string `envconfig:"DOCKER_REGISTRY" default:"bitesize-registry.default.svc.cluster.local"`
 }
 
 func main() {
@@ -36,7 +38,7 @@ func main() {
 		SSHKey:     cfg.GitKey,
 	}
 
-	client, err := config.NewKubernetesWrapper()
+	client, err := kubernetes.NewWrapper()
 
 	if err != nil {
 		log.Errorf("Error creating kubernetes client: %s", err.Error())
@@ -57,10 +59,30 @@ func main() {
 
 }
 
-func compareConfig(cfg Config, g *git.Git, client *config.KubernetesWrapper) {
+func compareConfig(cfg Config, g *git.Git, client *kubernetes.Wrapper) {
 	fp := filepath.Join(g.LocalPath, cfg.EnvFile)
-	gitEnv, _ := config.Environment(fp, cfg.EnvName)
-	kubeEnv, _ := config.LoadFromClient(client, cfg.Namespace)
+	gitEnv, _ := bitesize.LoadEnvironment(fp, cfg.EnvName)
+	kubeEnv, _ := kubernetes.LoadFromClient(client, cfg.Namespace)
+
+	// Tests are obsolete.
+	gitEnv.Tests = []bitesize.Test{}
+	kubeEnv.Tests = []bitesize.Test{}
+	gitEnv.Deployment = nil
+	kubeEnv.Deployment = nil
+
+	// XXX: remove tprs for now
+	var newServices bitesize.Services
+	for _, s := range gitEnv.Services {
+		if s.Type == "" {
+			d := kubeEnv.Services.FindByName(s.Name)
+			if d != nil {
+				s.Version = d.Version
+			}
+			newServices = append(newServices, s)
+		}
+	}
+	gitEnv.Services = newServices
+	// XXX: the end
 
 	compareConfig := &pretty.Config{
 		Diffable:       true,
@@ -69,6 +91,7 @@ func compareConfig(cfg Config, g *git.Git, client *config.KubernetesWrapper) {
 	diff := compareConfig.Compare(kubeEnv, gitEnv)
 	if diff != "" {
 		log.Infof(diff)
+		client.ApplyEnvironment(gitEnv)
 		// Need to apply gitEnv here
 	}
 }

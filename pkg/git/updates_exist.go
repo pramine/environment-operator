@@ -39,6 +39,8 @@ func (g *Git) UpdatesExist() (bool, error) {
 	sTag := fmt.Sprintf("%s", srcTag)
 	rTag := fmt.Sprintf("%s", remoteTag)
 
+	// log.Infof("git remote tag: %s, local tag: %s", rTag, sTag)
+
 	return (strings.Compare(sTag, rTag) != 0), nil
 
 }

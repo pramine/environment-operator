@@ -3,16 +3,10 @@ package unit
 import (
 	"testing"
 
-	"github.com/pearsontechnology/environment-operator/pkg/config"
 	"k8s.io/client-go/kubernetes/fake"
-	"k8s.io/client-go/pkg/api/v1"
-	// "k8s.io/kubernetes/pkg/api"
-	//	"k8s.io/kubernetes/pkg/api/resource"
-	// 	"k8s.io/apimachinery/pkg/api/resource"
 	"k8s.io/client-go/pkg/api/resource"
-	//	"k8s.io/kubernetes/pkg/apis/extensions"
+	"k8s.io/client-go/pkg/api/v1"
 	"k8s.io/client-go/pkg/apis/extensions/v1beta1"
-	//	"k8s.io/kubernetes/pkg/client/clientset_generated/internalclientset/fake"
 )
 
 func TestKubernetesWrapper(t *testing.T) {

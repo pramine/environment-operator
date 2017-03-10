@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/pearsontechnology/environment-operator/pkg/config"
+	"github.com/pearsontechnology/environment-operator/pkg/bitesize"
 )
 
 func TestEnvironmentsBitesize(t *testing.T) {
@@ -31,7 +31,7 @@ func testSingleName(t *testing.T) {
   environments:
   - name: Abr
   `
-	configuration, err := config.LoadFromString(cfg)
+	configuration, err := bitesize.LoadFromString(cfg)
 	if err != nil {
 		t.Errorf("Config: unexpected error %s", err.Error())
 	}
@@ -52,7 +52,7 @@ func testNumberOfEnvironments(t *testing.T) {
   `
 	expected := 2
 
-	configuration, err := config.LoadFromString(cfg)
+	configuration, err := bitesize.LoadFromString(cfg)
 	if err != nil {
 		t.Errorf("Config: unexpected error %s", err.Error())
 	}
@@ -199,7 +199,7 @@ func testInvalidConfig(t *testing.T) {
 
 	for idx, tst := range saTests {
 		t.Run(tst.Cause, func(t *testing.T) {
-			configuration, err := config.LoadFromString(tst.Cfg)
+			configuration, err := bitesize.LoadFromString(tst.Cfg)
 			if err != nil {
 				if err.Error() != tst.Expected {
 					t.Errorf("Error in %d test:\nEXPECTED:\n%s\n--\nACTUAL:\n%s\n",
@@ -218,7 +218,7 @@ func testInvalidConfig(t *testing.T) {
 
 func testExistingFile(t *testing.T) {
 	path := "../assets/environments.bitesize"
-	_, err := config.LoadFromFile(path)
+	_, err := bitesize.LoadFromFile(path)
 	if err != nil {
 		t.Error(err)
 	}
@@ -226,7 +226,7 @@ func testExistingFile(t *testing.T) {
 
 func testNonExistingFile(t *testing.T) {
 	path := "../test/assets/nnn"
-	_, err := config.LoadFromFile(path)
+	_, err := bitesize.LoadFromFile(path)
 
 	if err == nil {
 		t.Errorf("Config: no error on non-existing file load: %s", path)

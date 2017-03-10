@@ -3,7 +3,8 @@ package unit
 import (
 	"testing"
 
-	"github.com/pearsontechnology/environment-operator/pkg/config"
+	"github.com/pearsontechnology/environment-operator/pkg/kubernetes"
+
 	"k8s.io/client-go/kubernetes/fake"
 	"k8s.io/client-go/pkg/api/resource"
 	"k8s.io/client-go/pkg/api/v1"
@@ -144,19 +145,19 @@ func testFullBitesizeEnvironment(t *testing.T) {
 			},
 		},
 	)
-	bitesize, err := config.LoadFromClient(client, "test")
+	bt, err := kubernetes.LoadFromClient(client, "test")
 	if err != nil {
 		t.Error(err)
 	}
-	if bitesize == nil {
+	if bt == nil {
 		t.Error("Bitesize object is nil")
 	}
 
-	if len(bitesize.Environments) != 1 {
-		t.Errorf("Unexpected environment count: %d, expected: 1", len(bitesize.Environments))
+	if len(bt.Environments) != 1 {
+		t.Errorf("Unexpected environment count: %d, expected: 1", len(bt.Environments))
 	}
 
-	environment := bitesize.Environments[0]
+	environment := bt.Environments[0]
 
 	if environment.Name != "Development" {
 		t.Errorf("Unexpected environment name: %s", environment.Name)

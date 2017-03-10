@@ -29,7 +29,7 @@ func TestUpdatesExist(t *testing.T) {
 
 	if exist, e := g.UpdatesExist(); !exist {
 		if e != nil {
-			t.Error("Exception on update exist: %s", e.Error())
+			t.Errorf("Exception on update exist: %s", e.Error())
 		} else {
 			t.Error("Invalid state: remote update not found.")
 		}

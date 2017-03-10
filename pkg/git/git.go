@@ -17,8 +17,8 @@ type Git struct {
 // CloneOrPull checks if repo exists in local path. If it does, it
 // pulls changes from remotePath, if it doesn't, performs a full git clone
 func (g *Git) CloneOrPull() error {
-	if _, err := os.Stat(g.LocalPath); err == nil {
-		return g.Pull()
+	if err := os.RemoveAll(g.LocalPath); err != nil {
+		return err
 	}
 	return g.Clone()
 }

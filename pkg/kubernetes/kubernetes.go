@@ -1,23 +1,31 @@
-package config
+package kubernetes
 
 import (
+	"sort"
 	"strings"
 
+	log "github.com/Sirupsen/logrus"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/pkg/api/v1"
+	"k8s.io/client-go/pkg/apis/extensions/v1beta1"
+
+	"github.com/pearsontechnology/environment-operator/pkg/bitesize"
 )
 
 // LoadFromClient returns BitesizeEnvironment object loaded from Kubernetes API
-func LoadFromClient(client kubernetes.Interface, namespace string) (*BitesizeEnvironment, error) {
+func LoadFromClient(client kubernetes.Interface, namespace string) (*bitesize.Environment, error) {
 	// var err error
-	wrapper := &KubernetesWrapper{client}
+	wrapper := &Wrapper{client}
 
-	serviceMap := make(map[string]*BitesizeService)
+	serviceMap := make(map[string]*bitesize.Service)
 
 	ns, _ := wrapper.NamespaceInfo(namespace)
-	environmentName := ns.Labels["environment"]
+	environmentName := ns.ObjectMeta.Labels["environment"]
 
-	services, _ := wrapper.Services(namespace)
+	services, err := wrapper.Services(namespace)
+	if err != nil {
+		log.Errorf("Error loading kubernetes services: %s", err.Error())
+	}
 	for _, kubeService := range services {
 		// name := trimBlueGreenFromName(kubeService.Name)
 
@@ -26,40 +34,47 @@ func LoadFromClient(client kubernetes.Interface, namespace string) (*BitesizeEnv
 		if len(kubeService.Spec.Ports) > 0 {
 			kubePort = int(kubeService.Spec.Ports[0].Port)
 		}
-		serviceMap[name] = &BitesizeService{
+		serviceMap[name] = &bitesize.Service{
 			Name: name,
 			Port: kubePort,
 		}
 	}
 
-	deployments, _ := wrapper.Deployments(namespace)
+	deployments, err := wrapper.Deployments(namespace)
+	if err != nil {
+		log.Errorf("Error loading kubernetes deployments: %s", err.Error())
+	}
 	for _, kubeDeployment := range deployments {
 		// name := trimBlueGreenFromName(kubeDeployment.Name)
 		name := kubeDeployment.Name
 
 		if serviceMap[name] == nil {
-			serviceMap[name] = &BitesizeService{}
+			serviceMap[name] = &bitesize.Service{}
 		}
 
 		// volumeClaims := client.Core().PersistentVolumeClaims(kubeDeployment.Namespace).List()
 
 		serviceMap[name].Replicas = int(*kubeDeployment.Spec.Replicas)
-		serviceMap[name].Ssl = kubeDeployment.Labels["ssl"]
-		serviceMap[name].Version = kubeDeployment.Labels["version"]
-		serviceMap[name].Application = kubeDeployment.Labels["application"]
-		serviceMap[name].HTTPSOnly = kubeDeployment.Labels["httpsOnly"]
-		serviceMap[name].HTTPSBackend = kubeDeployment.Labels["httpsBackend"]
+		serviceMap[name].Ssl = getLabel(kubeDeployment, "ssl") // kubeDeployment.Labels["ssl"]
+		serviceMap[name].Version = getLabel(kubeDeployment, "version")
+		serviceMap[name].Application = getLabel(kubeDeployment, "application")
+		serviceMap[name].HTTPSOnly = getLabel(kubeDeployment, "httpsOnly")
+		serviceMap[name].HTTPSBackend = getLabel(kubeDeployment, "httpsBackend")
 		serviceMap[name].Volumes, _ = wrapper.VolumesForDeployment(namespace, kubeDeployment.Name)
 		serviceMap[name].EnvVars, _ = wrapper.EnvVarsForDeployment(namespace, kubeDeployment.Name)
 		serviceMap[name].HealthCheck, _ = wrapper.HealthCheckForDeployment(namespace, kubeDeployment.Name)
 	}
 
-	ingresses, _ := wrapper.Ingresses(namespace)
+	ingresses, err := wrapper.Ingresses(namespace)
+	if err != nil {
+		log.Errorf("Error loading kubernetes ingresses: %s", err.Error())
+	}
+
 	for _, kubeIngress := range ingresses {
 		// name := trimBlueGreenFromName(kubeIngress.Name)
 		name := kubeIngress.Name
 		if serviceMap[name] == nil {
-			serviceMap[name] = &BitesizeService{}
+			serviceMap[name] = &bitesize.Service{}
 		}
 		var externalURL string
 
@@ -70,19 +85,30 @@ func LoadFromClient(client kubernetes.Interface, namespace string) (*BitesizeEnv
 		serviceMap[name].ExternalURL = externalURL
 	}
 
-	var serviceList []BitesizeService
+	var serviceList bitesize.Services
 
 	for _, v := range serviceMap {
 		serviceList = append(serviceList, *v)
 	}
 
-	bitesizeConfig := BitesizeEnvironment{
-		Name:     environmentName,
-		Services: serviceList,
+	sort.Sort(serviceList)
+
+	bitesizeConfig := bitesize.Environment{
+		Name:      environmentName,
+		Namespace: namespace,
+		Services:  serviceList,
 	}
 
 	// spew.Dump(serviceMap)
 	return &bitesizeConfig, nil
+}
+
+func getLabel(resource v1beta1.Deployment, label string) string {
+	if (len(resource.ObjectMeta.Labels) > 0) &&
+		(resource.ObjectMeta.Labels[label] != "") {
+		return resource.ObjectMeta.Labels[label]
+	}
+	return ""
 }
 
 func trimBlueGreenFromName(orig string) string {
@@ -94,6 +120,6 @@ func trimBlueGreenFromHost(orig string) string {
 	split[0] = trimBlueGreenFromName(split[0])
 	return strings.Join(split, ".")
 }
-func collectHealthCheck(probe *v1.Probe) *BitesizeLiveness {
-	return &BitesizeLiveness{}
+func collectHealthCheck(probe *v1.Probe) *bitesize.HealthCheck {
+	return &bitesize.HealthCheck{}
 }
