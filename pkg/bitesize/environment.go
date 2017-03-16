@@ -54,3 +54,17 @@ func (e *Environment) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	sort.Sort(e.Services)
 	return nil
 }
+
+// LoadEnvironment loads named environment from a filename with a given path
+func LoadEnvironment(path, envName string) (*Environment, error) {
+	e, err := LoadFromFile(path)
+	if err != nil {
+		return nil, err
+	}
+	for _, env := range e.Environments {
+		if env.Name == envName {
+			return &env, nil
+		}
+	}
+	return nil, fmt.Errorf("Environment %s not found in %s", envName, path)
+}

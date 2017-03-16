@@ -1,25 +1,42 @@
 package kubernetes
 
 import (
+	"fmt"
 	"sort"
 	"strings"
 
 	log "github.com/Sirupsen/logrus"
-	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/pkg/api/v1"
 	"k8s.io/client-go/pkg/apis/extensions/v1beta1"
 
 	"github.com/pearsontechnology/environment-operator/pkg/bitesize"
+	"github.com/pearsontechnology/environment-operator/pkg/diff"
 )
 
-// LoadFromClient returns BitesizeEnvironment object loaded from Kubernetes API
-func LoadFromClient(client kubernetes.Interface, namespace string) (*bitesize.Environment, error) {
+// ApplyIfChanged compares bitesize Environment passed as an argument to
+// the current client environment. If there are any changes, c is applied
+// to the current config
+func (wrapper *Wrapper) ApplyIfChanged(newConfig *bitesize.Environment) error {
+	currentConfig, _ := wrapper.LoadEnvironment(newConfig.Namespace)
+
+	changes := diff.Compare(*currentConfig, *newConfig)
+	if changes != "" {
+		log.Infof("Changes: %s", changes)
+		wrapper.ApplyEnvironment(newConfig)
+	}
+	return nil
+}
+
+// LoadEnvironment returns BitesizeEnvironment object loaded from Kubernetes API
+func (wrapper *Wrapper) LoadEnvironment(namespace string) (*bitesize.Environment, error) {
 	// var err error
-	wrapper := &Wrapper{client}
 
 	serviceMap := make(map[string]*bitesize.Service)
 
-	ns, _ := wrapper.NamespaceInfo(namespace)
+	ns, err := wrapper.NamespaceInfo(namespace)
+	if err != nil {
+		return nil, fmt.Errorf("Namespace %s not found", namespace)
+	}
 	environmentName := ns.ObjectMeta.Labels["environment"]
 
 	services, err := wrapper.Services(namespace)
@@ -34,9 +51,11 @@ func LoadFromClient(client kubernetes.Interface, namespace string) (*bitesize.En
 		if len(kubeService.Spec.Ports) > 0 {
 			kubePort = int(kubeService.Spec.Ports[0].Port)
 		}
+		// Replicas: represent default value. Overriden if deployments found
 		serviceMap[name] = &bitesize.Service{
-			Name: name,
-			Port: kubePort,
+			Name:     name,
+			Port:     kubePort,
+			Replicas: 1,
 		}
 	}
 
@@ -51,8 +70,6 @@ func LoadFromClient(client kubernetes.Interface, namespace string) (*bitesize.En
 		if serviceMap[name] == nil {
 			serviceMap[name] = &bitesize.Service{}
 		}
-
-		// volumeClaims := client.Core().PersistentVolumeClaims(kubeDeployment.Namespace).List()
 
 		serviceMap[name].Replicas = int(*kubeDeployment.Spec.Replicas)
 		serviceMap[name].Ssl = getLabel(kubeDeployment, "ssl") // kubeDeployment.Labels["ssl"]
@@ -85,6 +102,24 @@ func LoadFromClient(client kubernetes.Interface, namespace string) (*bitesize.En
 		serviceMap[name].ExternalURL = externalURL
 	}
 
+	claims, _ := wrapper.PersistentVolumeClaims(namespace)
+	for _, claim := range claims {
+		sName := claim.ObjectMeta.Labels["deployment"]
+
+		if sName != "" {
+			vol := bitesize.Volume{
+				Path:  claim.ObjectMeta.Labels["mount_path"],
+				Modes: getAccessModesAsString(claim.Spec.AccessModes),
+				Size:  claim.ObjectMeta.Labels["size"],
+				Name:  claim.ObjectMeta.Name,
+			}
+
+			serviceMap[sName].Volumes = append(serviceMap[sName].Volumes, vol)
+
+		}
+
+	}
+
 	var serviceList bitesize.Services
 
 	for _, v := range serviceMap {
@@ -111,15 +146,26 @@ func getLabel(resource v1beta1.Deployment, label string) string {
 	return ""
 }
 
-func trimBlueGreenFromName(orig string) string {
-	return strings.TrimSuffix(strings.TrimSuffix(orig, "-blue"), "-green")
+func getAccessModesAsString(modes []v1.PersistentVolumeAccessMode) string {
+
+	modesStr := []string{}
+	if containsAccessMode(modes, v1.ReadWriteOnce) {
+		modesStr = append(modesStr, "ReadWriteOnce")
+	}
+	if containsAccessMode(modes, v1.ReadOnlyMany) {
+		modesStr = append(modesStr, "ReadOnlyMany")
+	}
+	if containsAccessMode(modes, v1.ReadWriteMany) {
+		modesStr = append(modesStr, "ReadWriteMany")
+	}
+	return strings.Join(modesStr, ",")
 }
 
-func trimBlueGreenFromHost(orig string) string {
-	split := strings.Split(orig, ".")
-	split[0] = trimBlueGreenFromName(split[0])
-	return strings.Join(split, ".")
-}
-func collectHealthCheck(probe *v1.Probe) *bitesize.HealthCheck {
-	return &bitesize.HealthCheck{}
+func containsAccessMode(modes []v1.PersistentVolumeAccessMode, mode v1.PersistentVolumeAccessMode) bool {
+	for _, m := range modes {
+		if m == mode {
+			return true
+		}
+	}
+	return false
 }

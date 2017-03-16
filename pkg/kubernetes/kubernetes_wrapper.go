@@ -2,9 +2,9 @@ package kubernetes
 
 import (
 	"fmt"
-	"strings"
 
 	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/pkg/api/errors"
 	api_v1 "k8s.io/client-go/pkg/api/v1"
 	"k8s.io/client-go/pkg/apis/extensions/v1beta1"
 	"k8s.io/client-go/rest"
@@ -12,6 +12,8 @@ import (
 	log "github.com/Sirupsen/logrus"
 	"github.com/pearsontechnology/environment-operator/pkg/bitesize"
 	"github.com/pearsontechnology/environment-operator/pkg/translator"
+	"github.com/pearsontechnology/environment-operator/pkg/util"
+	"github.com/pearsontechnology/environment-operator/pkg/util/k8s"
 )
 
 // Wrapper wraps low level kubernetes api requests to an object easier
@@ -77,6 +79,11 @@ func (w *Wrapper) Deployments(ns string) ([]v1beta1.Deployment, error) {
 	return list.Items, nil
 }
 
+// Deployment returns Deployment in the namespace by given name
+func (w *Wrapper) Deployment(ns, name string) (*v1beta1.Deployment, error) {
+	return w.Extensions().Deployments(ns).Get(name)
+}
+
 // PersistentVolumeClaims returns the list of environment-operator managed
 // persistent volume claims  within given namespace
 func (w *Wrapper) PersistentVolumeClaims(ns string) ([]api_v1.PersistentVolumeClaim, error) {
@@ -87,58 +94,19 @@ func (w *Wrapper) PersistentVolumeClaims(ns string) ([]api_v1.PersistentVolumeCl
 	return list.Items, nil
 }
 
-// ApplyService generates ingress, tpr, deployment, service given
-// BitesizeService object and applies them
-func (w *Wrapper) ApplyService(svc *bitesize.Service, ns string) error {
-	mapper := &translator.KubeMapper{
-		BiteService: svc,
-		Namespace:   ns,
+// PersistentVolumeClaimsForDeployment returns the list of persistent volume claims
+// attached to the specific deployment, identified by name
+func (w *Wrapper) PersistentVolumeClaimsForDeployment(ns, deployment string) ([]api_v1.PersistentVolumeClaim, error) {
+	labels := fmt.Sprintf("creator=pipeline,deployment=%s", deployment)
+	opts := api_v1.ListOptions{
+		LabelSelector: labels,
 	}
-	_, err := mapper.Service()
+	list, err := w.Core().PersistentVolumeClaims(ns).List(opts)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	return nil
+	return list.Items, nil
 }
-
-// LoadNamespace fills in KubernetesWrapper with services, ingresses, deployments
-// and volumes
-// func (w *KubernetesWrapper) LoadNamespace() error {
-// 	tlabels := map[string]string{"creator": "pipeline"}
-// 	selector := labels.SelectorFromSet(labels.Set(tlabels))
-//
-// 	opts := api.ListOptions{
-// 		LabelSelector: selector,
-// 	}
-//
-// 	ingressList, err := w.Client.Extensions().Ingresses(w.Namespace).List(opts)
-// 	if err != nil {
-// 		return err
-// 	}
-//
-// 	w.Ingresses = ingressList.Items
-//
-// 	deploymentList, err := w.Client.Extensions().Deployments(w.Namespace).List(opts)
-// 	if err != nil {
-// 		return err
-// 	}
-// 	w.Deployments = deploymentList.Items
-//
-// 	serviceList, err := w.Client.Core().Services(w.Namespace).List(opts)
-// 	spew.Dump(serviceList)
-// 	if err != nil {
-// 		return err
-// 	}
-// 	w.Services = serviceList.Items
-//
-// 	volumeList, err := w.Client.Core().PersistentVolumeClaims(w.Namespace).List(opts)
-// 	if err != nil {
-// 		return err
-// 	}
-// 	w.Volumes = volumeList.Items
-//
-// 	return nil
-// }
 
 // VolumesForDeployment returns list of bitesize formatted volumes for a specific
 // deployment, identified by name
@@ -159,17 +127,12 @@ func (w *Wrapper) VolumesForDeployment(namespace string, name string) ([]bitesiz
 			return nil, err
 		}
 
-		modes := []string{}
-		for m := range claim.Spec.AccessModes {
-			modes = append(modes, string(m))
-		}
-
 		q := claim.Spec.Resources.Requests["storage"]
 
 		vol := bitesize.Volume{
 			Size:  q.String(),
 			Path:  vmount.MountPath,
-			Modes: strings.Join(modes, ","),
+			Modes: getAccessModesAsString(claim.Spec.AccessModes),
 		}
 		retval = append(retval, vol)
 	}
@@ -180,7 +143,7 @@ func (w *Wrapper) VolumesForDeployment(namespace string, name string) ([]bitesiz
 // name. XXX: figure out how to returns secrets in this list as well.
 func (w *Wrapper) EnvVarsForDeployment(namespace, name string) ([]bitesize.EnvVar, error) {
 	var retval []bitesize.EnvVar
-	d, err := w.deploymentFromName(namespace, name)
+	d, err := w.Deployment(namespace, name)
 	if err != nil {
 		return nil, err
 	}
@@ -238,6 +201,10 @@ func (w *Wrapper) deploymentFromName(namespace, name string) (v1beta1.Deployment
 }
 
 func (w *Wrapper) volumeMountFromName(d v1beta1.Deployment, name string) (api_v1.VolumeMount, error) {
+	if len(d.Spec.Template.Spec.Containers) == 0 {
+		return api_v1.VolumeMount{}, fmt.Errorf("No volume mount %s found", name)
+	}
+
 	for _, vmount := range d.Spec.Template.Spec.Containers[0].VolumeMounts {
 		if vmount.Name == name {
 			return vmount, nil
@@ -250,20 +217,15 @@ func (w *Wrapper) volumeMountFromName(d v1beta1.Deployment, name string) (api_v1
 // etc.
 func (w *Wrapper) ApplyEnvironment(e *bitesize.Environment) {
 	var err error
+
 	for _, service := range e.Services {
+
 		mapper := &translator.KubeMapper{
 			BiteService: &service,
 			Namespace:   e.Namespace,
 		}
 
 		if service.Type == "" {
-
-			// deployment, _ := mapper.Deployment()
-			// ingress, _ := mapper.Ingress()
-			// svc, _ := mapper.Service()
-
-			// tpr, _ := mapper.ThirdPartyResourceData()
-
 			if err = w.updateService(mapper); err != nil {
 				log.Error(err)
 			}
@@ -271,12 +233,22 @@ func (w *Wrapper) ApplyEnvironment(e *bitesize.Environment) {
 			if err = w.updateDeployment(mapper); err != nil {
 				log.Error(err)
 			}
+
+			if err = w.updatePersistentVolumeClaims(mapper); err != nil {
+				log.Error(err)
+			}
+
 			if service.ExternalURL != "" {
+
 				if err = w.updateIngress(mapper); err != nil {
 					log.Error(err)
 				}
 			}
 
+		} else {
+			if err = w.updateThirdPartyResource(mapper); err != nil {
+				log.Error(err)
+			}
 		}
 		// 	var tprconfig *rest.Config
 		// tprconfig = config
@@ -320,68 +292,111 @@ func (w *Wrapper) updateService(m *translator.KubeMapper) error {
 
 func (w *Wrapper) updateDeployment(m *translator.KubeMapper) error {
 	var err error
-	var existingDeployment *v1beta1.Deployment
 
 	deployment, err := m.Deployment()
 	if err != nil {
 		return err
 	}
 
-	if existingDeployment, err = w.Extensions().Deployments(m.Namespace).Get(deployment.Name); err == nil {
+	client := k8s.Deployment{
+		Namespace: m.Namespace,
+		Interface: w.Interface,
+	}
+
+	if client.Exist(deployment.Name) {
 		log.Debugf("Updating deployment %s", deployment.Name)
-		version := existingDeployment.GetResourceVersion()
-		deployment.ResourceVersion = version
-		deploymentVersion := existingDeployment.ObjectMeta.Labels["version"]
-
-		deployment.ObjectMeta.Labels["version"] = deploymentVersion
-		deployment.Spec.Template.Spec.Containers[0].Image = existingDeployment.Spec.Template.Spec.Containers[0].Image
-
-		_, err = w.Extensions().Deployments(m.Namespace).Update(deployment)
+		err = client.Update(deployment)
 	} else if m.BiteService.Version != "" {
 		log.Debugf("Creating deployment %s", deployment.Name)
-		image := fmt.Sprintf("%s/%s/%s:%s",
-			bitesize.Registry(),
-			bitesize.Project(),
-			m.BiteService.Application,
-			m.BiteService.Version,
-		)
+		image, _ := util.ApplicationImage(m.BiteService)
+
 		deployment.Spec.Template.Spec.Containers[0].Image = image
-		_, err = w.Extensions().Deployments(m.Namespace).Create(deployment)
+		err = client.Create(deployment)
+	}
+
+	return err
+}
+
+func (w *Wrapper) updateThirdPartyResource(m *translator.KubeMapper) error {
+	var err error
+	var result PrsnExternalResource
+	var rsc PrsnExternalResource
+
+	client, err := NewTPRClient()
+	if err != nil {
+		log.Error(err)
+		return err
+	}
+
+	tpr, err := m.ThirdPartyResourceData()
+	if err != nil {
+		log.Error(err)
+	}
+
+	err = client.Get().
+		Resource(m.BiteService.Type).
+		Namespace(m.Namespace).
+		Name(m.BiteService.Name).
+		Do().Into(&rsc)
+
+	if err != nil {
+		if errors.IsNotFound(err) {
+
+			err = client.Post().
+				Resource(m.BiteService.Type).
+				Namespace(m.Namespace).
+				Body(tpr).
+				Do().Into(&result)
+		}
+	} else {
+		err = client.Put().
+			Resource(m.BiteService.Type).
+			Namespace(m.Namespace).
+			Body(tpr).
+			Do().Into(&result)
+	}
+
+	if err != nil {
+		log.Error(err)
 	}
 	return err
 }
 
 func (w *Wrapper) updateIngress(m *translator.KubeMapper) error {
 	var err error
-	var existingIngress *v1beta1.Ingress
 
 	ingress, err := m.Ingress()
 	if err != nil {
 		return err
 	}
 
-	if existingIngress, err = w.Extensions().Ingresses(m.Namespace).Get(ingress.Name); err == nil {
-		log.Debugf("Updating ingress %s", ingress.Name)
-		version := existingIngress.GetResourceVersion()
-		ingress.ResourceVersion = version
-		_, err = w.Extensions().Ingresses(m.Namespace).Update(ingress)
-	} else {
-		log.Debugf("Creating ingress %s", ingress.Name)
-		_, err = w.Extensions().Ingresses(m.Namespace).Create(ingress)
+	client := k8s.Ingress{
+		Namespace: m.Namespace,
+		Interface: w.Interface,
 	}
-	return err
+
+	return client.Apply(ingress)
 }
 
-func (w *Wrapper) volumeClaimFromName(namespace, name string) (api_v1.PersistentVolumeClaim, error) {
-	claims, err := w.PersistentVolumeClaims(namespace)
+func (w *Wrapper) updatePersistentVolumeClaims(m *translator.KubeMapper) error {
+	var err error
+
+	claims, err := m.PersistentVolumeClaims()
 	if err != nil {
-		return api_v1.PersistentVolumeClaim{}, err
+		return err
 	}
 
 	for _, claim := range claims {
-		if claim.Name == name {
-			return claim, nil
+		if _, err = w.Core().PersistentVolumeClaims(m.Namespace).Get(claim.Name); err == nil {
+			_, err = w.Core().PersistentVolumeClaims(m.Namespace).Update(&claim)
+		} else {
+			_, err = w.Core().PersistentVolumeClaims(m.Namespace).Create(&claim)
+		}
+
+		if err != nil {
+			return err
 		}
 	}
-	return api_v1.PersistentVolumeClaim{}, fmt.Errorf("Persistent volume claim %s not found", name)
+
+	return nil
 }

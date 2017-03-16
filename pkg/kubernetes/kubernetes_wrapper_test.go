@@ -1,8 +1,13 @@
-package unit
+package kubernetes
 
 import (
 	"testing"
 
+	"github.com/pearsontechnology/environment-operator/pkg/bitesize"
+	"github.com/pearsontechnology/environment-operator/pkg/diff"
+	"github.com/pearsontechnology/environment-operator/pkg/translator"
+
+	log "github.com/Sirupsen/logrus"
 	"k8s.io/client-go/kubernetes/fake"
 	"k8s.io/client-go/pkg/api/resource"
 	"k8s.io/client-go/pkg/api/v1"
@@ -23,7 +28,7 @@ func testServiceCount(t *testing.T) {
 		newService("test", "test2", "test", 81),
 	)
 
-	wrapper := config.KubernetesWrapper{Interface: client}
+	wrapper := Wrapper{Interface: client}
 
 	services, err := wrapper.Services("test")
 	if err != nil {
@@ -119,7 +124,7 @@ func testVolumes(t *testing.T) {
 		// 	},
 		// },
 	)
-	wrapper := config.KubernetesWrapper{Interface: client}
+	wrapper := Wrapper{Interface: client}
 
 	a, err := wrapper.PersistentVolumeClaims("test")
 	if err != nil {
@@ -230,10 +235,114 @@ func testABSingleService(t *testing.T) {
 		},
 	)
 
-	wrapper := config.KubernetesWrapper{Interface: client}
+	wrapper := Wrapper{Interface: client}
 	wrapper.Services("test")
 
-	t.Errorf("Not implemented")
+	// t.Errorf("Not implemented")
+}
+
+func TestApplyEnvironment(t *testing.T) {
+
+	log.SetLevel(log.FatalLevel)
+	client := fake.NewSimpleClientset(
+		&v1.Namespace{
+			ObjectMeta: v1.ObjectMeta{
+				Name: "environment-dev",
+				Labels: map[string]string{
+					"environment": "environment2",
+				},
+			},
+		},
+	)
+	wrapper := Wrapper{Interface: client}
+
+	e1, err := bitesize.LoadEnvironment("../../test/assets/environments.bitesize", "environment2")
+	if err != nil {
+		t.Fatalf("Unexpected err: %s", err.Error())
+	}
+
+	wrapper.ApplyEnvironment(e1)
+
+	e2, err := wrapper.LoadEnvironment("environment-dev")
+	if err != nil {
+		t.Fatalf("Unexpected err: %s", err.Error())
+	}
+
+	if d := diff.Compare(*e1, *e2); d != "" {
+		t.Errorf("Expected loaded environments to be equal, yet diff is: %s", d)
+	}
+}
+
+func TestPersistentVolumeClaimsForDeployment(t *testing.T) {
+	client := fake.NewSimpleClientset(
+		&v1.PersistentVolumeClaim{
+			ObjectMeta: v1.ObjectMeta{
+				Name:      "a",
+				Namespace: "namespace",
+				Labels: map[string]string{
+					"creator":    "pipeline",
+					"deployment": "deployment",
+				},
+			},
+		},
+		&v1.PersistentVolumeClaim{
+			ObjectMeta: v1.ObjectMeta{
+				Name:      "b",
+				Namespace: "namespace",
+				Labels: map[string]string{
+					"creator":    "pipeline",
+					"deployment": "deployment",
+				},
+			},
+		},
+		&v1.PersistentVolumeClaim{
+			ObjectMeta: v1.ObjectMeta{
+				Name:      "c",
+				Namespace: "namespace",
+				Labels: map[string]string{
+					"creator":    "pipeline",
+					"deployment": "deployment1",
+				},
+			},
+		},
+	)
+	w := Wrapper{Interface: client}
+	claims, err := w.PersistentVolumeClaimsForDeployment("namespace", "deployment")
+	if err != nil {
+		t.Errorf("Unexpected error: %s", err.Error())
+	}
+	if len(claims) != 2 {
+		t.Errorf("Unexpected number of PersistentVolumeClaims. Expected: 2, Got: %d", len(claims))
+	}
+}
+
+func TestUpdateNewThirdPartyResource(t *testing.T) {
+	client := fake.NewSimpleClientset()
+	m := &translator.KubeMapper{
+		Namespace: "test",
+		BiteService: &bitesize.Service{
+			Type: "mysql",
+			Name: "awesomedb",
+			Options: map[string]string{
+				"test": "yes",
+			},
+		},
+	}
+
+	w := Wrapper{Interface: client}
+	err := w.updateThirdPartyResource(m)
+	if err != nil {
+		t.Errorf("Got unexpected error: %s", err.Error())
+	}
+}
+
+func TestUpdateExistingThirdPartyResource(t *testing.T) {
+	client := fake.NewSimpleClientset()
+	w := Wrapper{Interface: client}
+	m := &translator.KubeMapper{}
+	w.updateThirdPartyResource(m)
+
+	t.Error("Not implemented")
 }
 
 func newDeployment(namespace, name string) *v1beta1.Deployment {

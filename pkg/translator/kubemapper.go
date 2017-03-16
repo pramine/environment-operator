@@ -5,6 +5,7 @@ package translator
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	"github.com/pearsontechnology/environment-operator/pkg/bitesize"
 	"k8s.io/client-go/pkg/api/unversioned"
@@ -44,6 +45,38 @@ func (w *KubeMapper) Service() (*api_v1.Service, error) {
 				},
 			},
 		},
+	}
+	return retval, nil
+}
+
+// PersistentVolumeClaims returns a list of claims for a biteservice
+func (w *KubeMapper) PersistentVolumeClaims() ([]api_v1.PersistentVolumeClaim, error) {
+	var retval []api_v1.PersistentVolumeClaim
+
+	for _, vol := range w.BiteService.Volumes {
+		ret := api_v1.PersistentVolumeClaim{
+			ObjectMeta: api_v1.ObjectMeta{
+				Name:      vol.Name,
+				Namespace: w.Namespace,
+				Labels: map[string]string{
+					"creator":    "pipeline",
+					"deployment": w.BiteService.Name,
+					"mount_path": vol.Path,
+					"size":       vol.Size,
+				},
+			},
+			Spec: api_v1.PersistentVolumeClaimSpec{
+				VolumeName:  vol.Name,
+				AccessModes: getAccessModesFromString(vol.Modes),
+				Selector: &unversioned.LabelSelector{
+					MatchLabels: map[string]string{
+						"name": vol.Name,
+					},
+				},
+			},
+		}
+
+		retval = append(retval, ret)
 	}
 	return retval, nil
 }
@@ -231,4 +264,21 @@ func (w *KubeMapper) ThirdPartyResourceData() (*v1beta1.ThirdPartyResourceData, 
 		Data: jsonData,
 	}
 	return retval, nil
+}
+
+func getAccessModesFromString(modes string) []api_v1.PersistentVolumeAccessMode {
+	strmodes := strings.Split(modes, ",")
+	accessModes := []api_v1.PersistentVolumeAccessMode{}
+	for _, s := range strmodes {
+		s = strings.Trim(s, " ")
+		switch {
+		case s == "ReadWriteOnce":
+			accessModes = append(accessModes, api_v1.ReadWriteOnce)
+		case s == "ReadOnlyMany":
+			accessModes = append(accessModes, api_v1.ReadOnlyMany)
+		case s == "ReadWriteMany":
+			accessModes = append(accessModes, api_v1.ReadWriteMany)
+		}
+	}
+	return accessModes
 }
