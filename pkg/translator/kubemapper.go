@@ -3,11 +3,11 @@ package translator
 // translator package converts objects between Kubernetes and Bitesize
 
 import (
-	"encoding/json"
 	"fmt"
 	"strings"
 
 	"github.com/pearsontechnology/environment-operator/pkg/bitesize"
+	ext "github.com/pearsontechnology/environment-operator/pkg/k8_extensions"
 	"k8s.io/client-go/pkg/api/unversioned"
 	api_v1 "k8s.io/client-go/pkg/api/v1"
 	"k8s.io/client-go/pkg/apis/extensions/v1beta1"
@@ -238,21 +238,13 @@ func (w *KubeMapper) Ingress() (*v1beta1.Ingress, error) {
 	return retval, nil
 }
 
-// ThirdPartyResourceData extracts Kubernetes object from Bitesize definition
-func (w *KubeMapper) ThirdPartyResourceData() (*v1beta1.ThirdPartyResourceData, error) {
-	data := map[string]interface{}{
-		"spec": map[string]interface{}{
-			"version": w.BiteService.Version,
-			"options": w.BiteService.Options,
+// ThirdPartyResource extracts Kubernetes object from Bitesize definition
+func (w *KubeMapper) ThirdPartyResource() (*ext.PrsnExternalResource, error) {
+
+	retval := &ext.PrsnExternalResource{
+		TypeMeta: unversioned.TypeMeta{
+			Kind: w.BiteService.Type,
 		},
-	}
-
-	jsonData, err := json.Marshal(data)
-	if err != nil {
-		return nil, err
-	}
-
-	retval := &v1beta1.ThirdPartyResourceData{
 		ObjectMeta: api_v1.ObjectMeta{
 			Labels: map[string]string{
 				"creator": "pipeline",
@@ -261,8 +253,12 @@ func (w *KubeMapper) ThirdPartyResourceData() (*v1beta1.ThirdPartyResourceData, 
 			Namespace: w.Namespace,
 			Name:      w.BiteService.Name,
 		},
-		Data: jsonData,
+		Spec: ext.PrsnExternalResourceSpec{
+			Version: w.BiteService.Version,
+			Options: w.BiteService.Options,
+		},
 	}
+
 	return retval, nil
 }
 

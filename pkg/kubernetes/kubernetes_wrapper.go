@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/pkg/api/errors"
 	api_v1 "k8s.io/client-go/pkg/api/v1"
 	"k8s.io/client-go/pkg/apis/extensions/v1beta1"
 	"k8s.io/client-go/rest"
@@ -322,44 +321,24 @@ func (w *Wrapper) updateThirdPartyResource(m *translator.KubeMapper) error {
 	var result PrsnExternalResource
 	var rsc PrsnExternalResource
 
-	client, err := NewTPRClient()
-	if err != nil {
-		log.Error(err)
-		return err
-	}
-
 	tpr, err := m.ThirdPartyResourceData()
 	if err != nil {
 		log.Error(err)
 	}
 
-	err = client.Get().
-		Resource(m.BiteService.Type).
-		Namespace(m.Namespace).
-		Name(m.BiteService.Name).
-		Do().Into(&rsc)
-
-	if err != nil {
-		if errors.IsNotFound(err) {
-
-			err = client.Post().
-				Resource(m.BiteService.Type).
-				Namespace(m.Namespace).
-				Body(tpr).
-				Do().Into(&result)
-		}
-	} else {
-		err = client.Put().
-			Resource(m.BiteService.Type).
-			Namespace(m.Namespace).
-			Body(tpr).
-			Do().Into(&result)
-	}
-
+	iface, err := NewTPRClient()
 	if err != nil {
 		log.Error(err)
+		return err
 	}
-	return err
+
+	client := k8s.ThirdPartyResource{
+		Interface: iface,
+		Namespace: m.Namespace,
+		Type:      tpr.Kind,
+	}
+
+	return client.Apply(tpr)
 }
 
 func (w *Wrapper) updateIngress(m *translator.KubeMapper) error {
@@ -386,14 +365,14 @@ func (w *Wrapper) updatePersistentVolumeClaims(m *translator.KubeMapper) error {
 		return err
 	}
 
-	for _, claim := range claims {
-		if _, err = w.Core().PersistentVolumeClaims(m.Namespace).Get(claim.Name); err == nil {
-			_, err = w.Core().PersistentVolumeClaims(m.Namespace).Update(&claim)
-		} else {
-			_, err = w.Core().PersistentVolumeClaims(m.Namespace).Create(&claim)
-		}
+	client := k8s.PersistentVolumeClaim{
+		Interface: w.Interface,
+		Namespace: m.Namespace,
+	}
 
-		if err != nil {
+	for _, claim := range claims {
+
+		if err = client.Apply(&claim); err != nil {
 			return err
 		}
 	}

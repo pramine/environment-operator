@@ -29,9 +29,9 @@ func (client *Ingress) Exist(name string) bool {
 func (client *Ingress) Apply(resource *v1beta1.Ingress) error {
 	if client.Exist(resource.Name) {
 		return client.Update(resource)
-	} else {
-		return client.Create(resource)
 	}
+	return client.Create(resource)
+
 }
 
 // Update updates existing ingress in k8s

@@ -9,22 +9,45 @@ type PersistentVolumeClaim struct {
 	Namespace string
 }
 
+// Get returns pvc object from the k8s by name
 func (client *PersistentVolumeClaim) Get(name string) (*v1.PersistentVolumeClaim, error) {
-	return nil, nil
+	return client.Core().PersistentVolumeClaims(client.Namespace).Get(name)
 }
 
+// Exist returns boolean value if pvc exists in k8s
 func (client *PersistentVolumeClaim) Exist(name string) bool {
-	return true
+	_, err := client.Get(name)
+	return err == nil
 }
 
-func (client *PersistentVolumeClaim) Create(resource *v1.PersistentVolumeClaim) error {
-	return nil
-}
-
-func (client *PersistentVolumeClaim) Update(resource *v1.PersistentVolumeClaim) error {
-	return nil
-}
-
+// Apply updates or creates pvc in k8s
 func (client *PersistentVolumeClaim) Apply(resource *v1.PersistentVolumeClaim) error {
-	return nil
+	if client.Exist(resource.Name) {
+		return client.Update(resource)
+	}
+	return client.Create(resource)
+}
+
+// Create creates new ingress in k8s
+func (client *PersistentVolumeClaim) Create(resource *v1.PersistentVolumeClaim) error {
+	_, err := client.
+		Core().
+		PersistentVolumeClaims(client.Namespace).
+		Create(resource)
+	return err
+}
+
+// Update updates existing ingress in k8s
+func (client *PersistentVolumeClaim) Update(resource *v1.PersistentVolumeClaim) error {
+	current, err := client.Get(resource.Name)
+	if err != nil {
+		return err
+	}
+	resource.ResourceVersion = current.GetResourceVersion()
+
+	_, err = client.
+		Core().
+		PersistentVolumeClaims(client.Namespace).
+		Update(resource)
+	return err
 }

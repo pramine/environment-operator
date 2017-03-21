@@ -1,4 +1,4 @@
-package kubernetes
+package k8_extensions
 
 import (
 	"encoding/json"
@@ -37,21 +37,20 @@ func (tpr *PrsnExternalResource) GetObjectKind() unversioned.ObjectKind {
 	return &tpr.TypeMeta
 }
 
-//
-// // GetObjectMeta required to satisfy ObjectMetaAccessor interface
-func (tpr *PrsnExternalResource) GetObjectMeta() v1.Object {
-	return &tpr.ObjectMeta
+// GetObjectMeta required to satisfy ObjectMetaAccessor interface
+func (tpr *PrsnExternalResource) GetObjectMeta() unversioned.ObjectKind {
+	return &tpr.TypeMeta
 }
 
 // GetObjectKind required to satisfy Object interface
-func (tprList *PrsnExternalResourceList) GetObjectKind() unversioned.ObjectKind {
-	return &tprList.TypeMeta
-}
+// func (tprList *PrsnExternalResourceList) GetObjectKind() unversioned.ObjectKind {
+// 	return &tprList.TypeMeta
+// }
 
 // GetListMeta required to satisfy ListMetaAccessor interface
-func (tprList *PrsnExternalResourceList) GetListMeta() v1.List {
-	return &tprList.ObjectMeta
-}
+// func (tprList *PrsnExternalResourceList) GetListMeta() v1.List {
+// 	return &tprList.ObjectMeta
+// }
 
 // The code below is used only to work around a known problem with third-party
 // resources and ugorji. If/when these issues are resolved, the code below

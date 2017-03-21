@@ -26,8 +26,8 @@ func TestIngressExist(t *testing.T) {
 		Expected    bool
 		Message     string
 	}{
-		{"test", true, "Existing deployment not found"},
-		{"nonexistent", false, "Unexpected deployment 'nonexistent'"},
+		{"test", true, "Existing ingress not found"},
+		{"nonexistent", false, "Unexpected ingress 'nonexistent'"},
 	}
 
 	for _, sTest := range saTests {
@@ -49,7 +49,7 @@ func TestIngressApplyNew(t *testing.T) {
 		},
 	}
 	if err := client.Apply(newResource); err != nil {
-		t.Errorf("Unexpected error applying deployment: %s", err.Error())
+		t.Errorf("Unexpected error applying ingress: %s", err.Error())
 	}
 	_, err := client.Get("new")
 	if err != nil {
@@ -65,7 +65,6 @@ func TestIngressApplyExisting(t *testing.T) {
 			Namespace: "sample",
 			Labels: map[string]string{
 				"creator": "pipeline",
-				"version": "0.2",
 			},
 		},
 	}
