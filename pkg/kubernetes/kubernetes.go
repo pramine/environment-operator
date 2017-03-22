@@ -68,10 +68,15 @@ func (wrapper *Wrapper) LoadEnvironment(namespace string) (*bitesize.Environment
 		name := kubeDeployment.Name
 
 		if serviceMap[name] == nil {
-			serviceMap[name] = &bitesize.Service{}
+			serviceMap[name] = &bitesize.Service{
+				Name: name,
+			}
 		}
-
-		serviceMap[name].Replicas = int(*kubeDeployment.Spec.Replicas)
+		if kubeDeployment.Spec.Replicas != nil {
+			serviceMap[name].Replicas = int(*kubeDeployment.Spec.Replicas)
+		} else {
+			serviceMap[name].Replicas = 1
+		}
 		serviceMap[name].Ssl = getLabel(kubeDeployment, "ssl") // kubeDeployment.Labels["ssl"]
 		serviceMap[name].Version = getLabel(kubeDeployment, "version")
 		serviceMap[name].Application = getLabel(kubeDeployment, "application")
@@ -91,7 +96,9 @@ func (wrapper *Wrapper) LoadEnvironment(namespace string) (*bitesize.Environment
 		// name := trimBlueGreenFromName(kubeIngress.Name)
 		name := kubeIngress.Name
 		if serviceMap[name] == nil {
-			serviceMap[name] = &bitesize.Service{}
+			serviceMap[name] = &bitesize.Service{
+				Name: name,
+			}
 		}
 		var externalURL string
 

@@ -5,7 +5,6 @@ import (
 
 	"github.com/pearsontechnology/environment-operator/pkg/bitesize"
 	"github.com/pearsontechnology/environment-operator/pkg/diff"
-	"github.com/pearsontechnology/environment-operator/pkg/translator"
 
 	log "github.com/Sirupsen/logrus"
 	"k8s.io/client-go/kubernetes/fake"
@@ -316,34 +315,34 @@ func TestPersistentVolumeClaimsForDeployment(t *testing.T) {
 	}
 }
 
-func TestUpdateNewThirdPartyResource(t *testing.T) {
-	client := fake.NewSimpleClientset()
-	m := &translator.KubeMapper{
-		Namespace: "test",
-		BiteService: &bitesize.Service{
-			Type: "mysql",
-			Name: "awesomedb",
-			Options: map[string]string{
-				"test": "yes",
-			},
-		},
-	}
+// func TestUpdateNewThirdPartyResource(t *testing.T) {
+// 	client := fake.NewSimpleClientset()
+// 	m := &translator.KubeMapper{
+// 		Namespace: "test",
+// 		BiteService: &bitesize.Service{
+// 			Type: "mysql",
+// 			Name: "awesomedb",
+// 			Options: map[string]string{
+// 				"test": "yes",
+// 			},
+// 		},
+// 	}
+//
+// 	w := Wrapper{Interface: client}
+// 	err := w.updateThirdPartyResource(m)
+// 	if err != nil {
+// 		t.Errorf("Got unexpected error: %s", err.Error())
+// 	}
+// }
 
-	w := Wrapper{Interface: client}
-	err := w.updateThirdPartyResource(m)
-	if err != nil {
-		t.Errorf("Got unexpected error: %s", err.Error())
-	}
-}
-
-func TestUpdateExistingThirdPartyResource(t *testing.T) {
-	client := fake.NewSimpleClientset()
-	w := Wrapper{Interface: client}
-	m := &translator.KubeMapper{}
-	w.updateThirdPartyResource(m)
-
-	t.Error("Not implemented")
-}
+// func TestUpdateExistingThirdPartyResource(t *testing.T) {
+// 	client := fake.NewSimpleClientset()
+// 	w := Wrapper{Interface: client}
+// 	m := &translator.KubeMapper{}
+// 	w.updateThirdPartyResource(m)
+//
+// 	t.Error("Not implemented")
+// }
 
 func newDeployment(namespace, name string) *v1beta1.Deployment {
 	d := v1beta1.Deployment{

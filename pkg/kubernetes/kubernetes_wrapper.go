@@ -318,10 +318,10 @@ func (w *Wrapper) updateDeployment(m *translator.KubeMapper) error {
 
 func (w *Wrapper) updateThirdPartyResource(m *translator.KubeMapper) error {
 	var err error
-	var result PrsnExternalResource
-	var rsc PrsnExternalResource
+	// var result ext.PrsnExternalResource
+	// var rsc ext.PrsnExternalResource
 
-	tpr, err := m.ThirdPartyResourceData()
+	tpr, err := m.ThirdPartyResource()
 	if err != nil {
 		log.Error(err)
 	}

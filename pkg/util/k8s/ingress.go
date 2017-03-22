@@ -2,6 +2,7 @@ package k8s
 
 import (
 	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/pkg/api/v1"
 	"k8s.io/client-go/pkg/apis/extensions/v1beta1"
 )
 
@@ -56,4 +57,10 @@ func (client *Ingress) Create(resource *v1beta1.Ingress) error {
 		Ingresses(client.Namespace).
 		Create(resource)
 	return err
+}
+
+// Destroy deletes ingress from the k8 cluster
+func (client *Ingress) Destroy(name string) error {
+	options := &v1.DeleteOptions{}
+	return client.Extensions().Ingresses(client.Namespace).Delete(name, options)
 }

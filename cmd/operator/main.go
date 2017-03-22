@@ -30,13 +30,19 @@ func main() {
 		log.Fatalf("Error creating kubernetes client: %s", err.Error())
 	}
 
+	r := reaper.Reaper{
+		Namespace: cfg.Namespace,
+		Wrapper:   client,
+	}
+
 	log.Infof("Starting up environment-operator version %s", version.Version)
 
 	for {
 		g.Refresh()
 		gitConfiguration, _ := cfg.LoadEnvironment()
 		client.ApplyIfChanged(gitConfiguration)
-		go reaper.Cleanup(gitConfiguration, client)
+
+		go r.Cleanup(gitConfiguration)
 		time.Sleep(30000 * time.Millisecond)
 	}
 

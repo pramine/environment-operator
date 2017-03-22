@@ -51,3 +51,9 @@ func (client *PersistentVolumeClaim) Update(resource *v1.PersistentVolumeClaim) 
 		Update(resource)
 	return err
 }
+
+// Destroy deletes pvc from the k8 cluster
+func (client *PersistentVolumeClaim) Destroy(name string) error {
+	options := &v1.DeleteOptions{}
+	return client.Core().Services(client.Namespace).Delete(name, options)
+}
