@@ -17,25 +17,6 @@ func NewTPRClient() (*rest.RESTClient, error) {
 	var restcli *rest.RESTClient
 	var err error
 
-	// const GroupName = "prsn.io"
-	// var SchemeGroupVersion = unversioned.GroupVersion{Group: GroupName, Version: "v1"}
-	//
-	// var SchemeBuilder = runtime.NewSchemeBuilder(
-	// 	func(scheme *runtime.Scheme) error {
-	// 		scheme.AddKnownTypes(SchemeGroupVersion,
-	// 			&api.ListOptions{},
-	// 			&api.DeleteOptions{},
-	// 			&api.ExportOptions{},
-	// 			&PrsnExternalResource{},
-	// 			&PrsnExternalResourceList{},
-	// 		)
-	// 		scheme.AddKnownTypeWithName(SchemeGroupVersion.WithKind(kind))
-	// 		return nil
-	// 	})
-	//
-	// SchemeBuilder.AddToScheme(api.Scheme)
-	//
-	// if os.Getenv("KUBERNETES_SERVICE_HOST") != "" {
 	config, err := rest.InClusterConfig()
 	if err != nil {
 		return nil, err
@@ -49,10 +30,28 @@ func NewTPRClient() (*rest.RESTClient, error) {
 	config.ContentType = runtime.ContentTypeJSON
 	config.NegotiatedSerializer = serializer.DirectCodecFactory{CodecFactory: api.Codecs}
 
-	restcli, err = rest.RESTClientFor(config)
-	// } else {
-	// 	restcli = fakeClient()
+	// TPR request/response debug stuff below.
+	// config.CAFile = ""
+	// config.CAData = []byte{}
+	// config.CertFile = ""
+	// config.CertData = []byte{}
+	//
+	// config.Transport = &loghttp.Transport{
+	// 	LogResponse: func(resp *http.Response) {
+	// 		dump, err := httputil.DumpResponse(resp, true)
+	// 		if err != nil {
+	// 			log.Fatal(err)
+	// 		}
+	//
+	// 		log.Debugf("RESPONSE: %q", dump)
+	// 		// log.Debugf("[%p] %d %s", resp.Request, resp.StatusCode, resp.Request.URL)
+	// 	},
+	// 	Transport: &http.Transport{
+	// 		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+	// 	},
 	// }
+
+	restcli, err = rest.RESTClientFor(config)
 
 	if err != nil {
 		return nil, err

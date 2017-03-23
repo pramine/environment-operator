@@ -17,9 +17,10 @@ import (
 // the current client environment. If there are any changes, c is applied
 // to the current config
 func (wrapper *Wrapper) ApplyIfChanged(newConfig *bitesize.Environment) error {
+	log.Infof("Loading namespace: %s", newConfig.Namespace)
 	currentConfig, _ := wrapper.LoadEnvironment(newConfig.Namespace)
 
-	changes := diff.Compare(*currentConfig, *newConfig)
+	changes := diff.Compare(*newConfig, *currentConfig)
 	if changes != "" {
 		log.Infof("Changes: %s", changes)
 		wrapper.ApplyEnvironment(newConfig)

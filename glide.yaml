@@ -12,3 +12,4 @@ import:
 - package: github.com/kylelemons/godebug
   subpackages:
   - pretty
+- package: github.com/motemen/go-loghttp

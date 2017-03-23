@@ -1,5 +1,5 @@
-hash: 54a1068ec29d7f26b4b220515c1a0c7101abe4d6fea73a19ed9f45bfbbdd4b42
-updated: 2017-03-15T12:49:36.528818801Z
+hash: 94d3cae0be70bc1d385f7c71dcd2fd80feb8aa9bea9ee1baf88130e0eed5b6d5
+updated: 2017-03-23T11:37:02.881405264Z
 imports:
 - name: cloud.google.com/go
   version: 3b1ae45394a234c385be014e9a488f2bb6eef821
@@ -76,6 +76,8 @@ imports:
   - buffer
   - jlexer
   - jwriter
+- name: github.com/motemen/go-loghttp
+  version: f1552ae0d8e6d1980d67843f78b761a5fade8f67
 - name: github.com/pborman/uuid
   version: ca53cad383cad2479bbba7f7a1a05797ec1386e4
 - name: github.com/PuerkitoBio/purell

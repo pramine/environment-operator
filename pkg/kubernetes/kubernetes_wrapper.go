@@ -245,23 +245,11 @@ func (w *Wrapper) ApplyEnvironment(e *bitesize.Environment) {
 			}
 
 		} else {
+			log.Infof("Updating thirdpartyresource %s:%s", service.Type, service.Name)
 			if err = w.updateThirdPartyResource(mapper); err != nil {
 				log.Error(err)
 			}
 		}
-		// 	var tprconfig *rest.Config
-		// tprconfig = config
-		// configureClient(tprconfig)
-
-		// tprclient, err := rest.RESTClientFor(tprconfig)
-		// if err != nil {
-		// 	panic(err)
-		// }
-		// err = tprclient.Post().
-		// 	Resource("examples").
-		// 	Namespace(api.NamespaceDefault).
-		// 	Body(example).
-		// 	Do().Into(&result)
 
 	}
 
@@ -318,8 +306,6 @@ func (w *Wrapper) updateDeployment(m *translator.KubeMapper) error {
 
 func (w *Wrapper) updateThirdPartyResource(m *translator.KubeMapper) error {
 	var err error
-	// var result ext.PrsnExternalResource
-	// var rsc ext.PrsnExternalResource
 
 	tpr, err := m.ThirdPartyResource()
 	if err != nil {

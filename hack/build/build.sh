@@ -29,7 +29,7 @@ mkdir -p ${bin_dir} || true
   	-e GOPATH=/usr \
   	-e CGO_ENABLED=1 \
   	geribatai/golang:1.8 \
-   	go build -o ${bin_dir}/environment-operator ./cmd/operator/main.go
+   	go build -v -o ${bin_dir}/environment-operator ./cmd/operator/main.go
 
 
 echo "== Building docker image ${FULL_IMAGE}"

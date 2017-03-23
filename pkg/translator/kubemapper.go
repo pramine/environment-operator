@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"strings"
 
+	log "github.com/Sirupsen/logrus"
+
 	"github.com/pearsontechnology/environment-operator/pkg/bitesize"
 	ext "github.com/pearsontechnology/environment-operator/pkg/k8_extensions"
 	"k8s.io/client-go/pkg/api/unversioned"
@@ -240,10 +242,10 @@ func (w *KubeMapper) Ingress() (*v1beta1.Ingress, error) {
 
 // ThirdPartyResource extracts Kubernetes object from Bitesize definition
 func (w *KubeMapper) ThirdPartyResource() (*ext.PrsnExternalResource, error) {
-
 	retval := &ext.PrsnExternalResource{
 		TypeMeta: unversioned.TypeMeta{
-			Kind: w.BiteService.Type,
+			Kind:       strings.Title(w.BiteService.Type),
+			APIVersion: "prsn.io/v1",
 		},
 		ObjectMeta: api_v1.ObjectMeta{
 			Labels: map[string]string{
@@ -258,6 +260,8 @@ func (w *KubeMapper) ThirdPartyResource() (*ext.PrsnExternalResource, error) {
 			Options: w.BiteService.Options,
 		},
 	}
+
+	log.Debugf("PrsnExternalResource: %+v", *retval)
 
 	return retval, nil
 }
