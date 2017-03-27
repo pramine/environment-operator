@@ -33,7 +33,6 @@ func (client *ThirdPartyResource) Get(name string) (*extensions.PrsnExternalReso
 // Exist checks if named resource exist in k8s cluster
 func (client *ThirdPartyResource) Exist(name string) bool {
 	rsc, _ := client.Get(name)
-	log.Debugf("Resource: %+v", rsc)
 	return rsc != nil
 }
 
@@ -70,15 +69,24 @@ func (client *ThirdPartyResource) Create(resource *extensions.PrsnExternalResour
 
 // Update updates existing resource in k8s
 func (client *ThirdPartyResource) Update(resource *extensions.PrsnExternalResource) error {
-	// Kubernetes 1.5 still does not support PUT for TPRs. Hopefully 1.6 will fix
-	// it.
-	return nil
-	// var result extensions.PrsnExternalResource
-	// return client.Interface.Put().
-	// 	Resource(plural(client.Type)).
-	// 	Namespace(client.Namespace).
-	// 	Body(resource).
-	// 	Do().Into(&result)
+
+	var result extensions.PrsnExternalResource
+	log.Infof("Updating tpr %s", resource.ObjectMeta.Name)
+	builder := client.Put().
+		Resource(plural(client.Type)).
+		Name(resource.ObjectMeta.Name).
+		Namespace(client.Namespace)
+
+	log.Infof("URL: %s", builder.URL())
+	err := client.Put().
+		Resource(plural(client.Type)).
+		Name(resource.ObjectMeta.Name).
+		Namespace(client.Namespace).
+		Body(resource).
+		Do().Into(&result)
+
+	log.Infof("RESULT: %+v", result)
+	return err
 }
 
 // Destroy deletes named resource

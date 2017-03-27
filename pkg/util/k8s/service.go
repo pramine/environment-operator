@@ -10,7 +10,7 @@ type Service struct {
 }
 
 // Get returns service object from the k8s by name
-func (client *Service) Get(name string) (interface{}, error) {
+func (client *Service) Get(name string) (*v1.Service, error) {
 	return client.Core().Services(client.Namespace).Get(name)
 }
 
@@ -21,8 +21,7 @@ func (client *Service) Exist(name string) bool {
 }
 
 // Apply updates or creates service in k8s
-func (client *Service) Apply(i interface{}) error {
-	resource := i.(*v1.Service)
+func (client *Service) Apply(resource *v1.Service) error {
 	if client.Exist(resource.Name) {
 		return client.Update(resource)
 	}
@@ -30,8 +29,7 @@ func (client *Service) Apply(i interface{}) error {
 }
 
 // Create creates new service in k8s
-func (client *Service) Create(i interface{}) error {
-	resource := i.(*v1.Service)
+func (client *Service) Create(resource *v1.Service) error {
 	_, err := client.
 		Core().
 		Services(client.Namespace).
@@ -40,13 +38,11 @@ func (client *Service) Create(i interface{}) error {
 }
 
 // Update updates existing service in k8s
-func (client *Service) Update(i interface{}) error {
-	resource := i.(*v1.Service)
-	ci, err := client.Get(resource.Name)
+func (client *Service) Update(resource *v1.Service) error {
+	current, err := client.Get(resource.Name)
 	if err != nil {
 		return err
 	}
-	current := ci.(*v1.Service)
 	resource.ResourceVersion = current.GetResourceVersion()
 
 	_, err = client.
