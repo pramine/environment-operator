@@ -57,36 +57,22 @@ func (client *ThirdPartyResource) Apply(resource *extensions.PrsnExternalResourc
 // Create creates given tpr in
 func (client *ThirdPartyResource) Create(resource *extensions.PrsnExternalResource) error {
 	var result extensions.PrsnExternalResource
-
-	log.Debugf("Creating resource: %+v", resource)
-	ret := client.Interface.Post().
+	return client.Interface.Post().
 		Resource(plural(client.Type)).
 		Namespace(client.Namespace).
 		Body(resource).
 		Do().Into(&result)
-	return ret
 }
 
 // Update updates existing resource in k8s
 func (client *ThirdPartyResource) Update(resource *extensions.PrsnExternalResource) error {
-
 	var result extensions.PrsnExternalResource
-	log.Infof("Updating tpr %s", resource.ObjectMeta.Name)
-	builder := client.Put().
-		Resource(plural(client.Type)).
-		Name(resource.ObjectMeta.Name).
-		Namespace(client.Namespace)
-
-	log.Infof("URL: %s", builder.URL())
-	err := client.Put().
+	return client.Put().
 		Resource(plural(client.Type)).
 		Name(resource.ObjectMeta.Name).
 		Namespace(client.Namespace).
 		Body(resource).
 		Do().Into(&result)
-
-	log.Infof("RESULT: %+v", result)
-	return err
 }
 
 // Destroy deletes named resource

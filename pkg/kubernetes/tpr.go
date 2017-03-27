@@ -1,13 +1,8 @@
 package kubernetes
 
 import (
-	"crypto/tls"
 	"fmt"
 	"net/http"
-	"net/http/httputil"
-
-	log "github.com/Sirupsen/logrus"
-	loghttp "github.com/motemen/go-loghttp"
 
 	"k8s.io/client-go/pkg/api"
 	"k8s.io/client-go/pkg/api/unversioned"
@@ -36,25 +31,26 @@ func NewTPRClient() (*rest.RESTClient, error) {
 	config.NegotiatedSerializer = serializer.DirectCodecFactory{CodecFactory: api.Codecs}
 
 	// TPR request/response debug stuff below.
-	config.CAFile = ""
-	config.CAData = []byte{}
-	config.CertFile = ""
-	config.CertData = []byte{}
+	//
+	// config.CAFile = ""
+	// config.CAData = []byte{}
+	// config.CertFile = ""
+	// config.CertData = []byte{}
+	//
+	// config.Transport = &loghttp.Transport{
+	// 	LogResponse: func(resp *http.Response) {
+	// 		dump, err := httputil.DumpResponse(resp, true)
+	// 		if err != nil {
+	// 			log.Fatal(err)
+	// 		}
 
-	config.Transport = &loghttp.Transport{
-		LogResponse: func(resp *http.Response) {
-			dump, err := httputil.DumpResponse(resp, true)
-			if err != nil {
-				log.Fatal(err)
-			}
-
-			log.Debugf("RESPONSE: %q", dump)
-			// log.Debugf("[%p] %d %s", resp.Request, resp.StatusCode, resp.Request.URL)
-		},
-		Transport: &http.Transport{
-			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-		},
-	}
+	// log.Debugf("RESPONSE: %q", dump)
+	// log.Debugf("[%p] %d %s", resp.Request, resp.StatusCode, resp.Request.URL)
+	// },
+	// Transport: &http.Transport{
+	// TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+	// },
+	// }
 
 	restcli, err = rest.RESTClientFor(config)
 
