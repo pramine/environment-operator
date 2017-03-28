@@ -30,12 +30,15 @@ func Project() string {
 	return os.Getenv("PROJECT")
 }
 
-// ApplicationImage returns full image name gievn bitesize.Service object
+// ApplicationImage returns full image name given bitesize.Service object
 func ApplicationImage(svc *bitesize.Service) (string, error) {
-	return fmt.Sprintf("%s/%s/%s:%s",
-		Registry(),
-		Project(),
-		svc.Application,
-		svc.Version,
-	), nil
+	return Image(svc.Application, svc.Version), nil
+}
+
+// Image returns full  app image given app and version
+func Image(app, version string) string {
+	return fmt.Sprintf(
+		"%s/%s/%s:%s",
+		Registry(), Project(), app, version,
+	)
 }

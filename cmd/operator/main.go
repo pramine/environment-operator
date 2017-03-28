@@ -1,6 +1,8 @@
 package main
 
 import (
+	"net/http"
+	"os"
 	"path/filepath"
 	"time"
 
@@ -11,6 +13,9 @@ import (
 	"github.com/pearsontechnology/environment-operator/pkg/git"
 	"github.com/pearsontechnology/environment-operator/pkg/reaper"
 	"github.com/pearsontechnology/environment-operator/version"
+	"github.com/pearsontechnology/mergele/pkg/web"
+
+	"github.com/gorilla/handlers"
 )
 
 // Config contains environment variables used to configure the app
@@ -33,8 +38,12 @@ func (c Config) LoadEnvironment() (*bitesize.Environment, error) {
 	return bitesize.LoadEnvironment(fp, c.EnvName)
 }
 
-func main() {
-	var cfg Config
+var cfg Config
+var gitClient *git.Git
+var client *cluster.Cluster
+var reap reaper.Reaper
+
+func init() {
 	err := envconfig.Process("operator", &cfg)
 	if err != nil {
 		log.Fatal(err.Error())
@@ -44,32 +53,45 @@ func main() {
 		log.SetLevel(log.DebugLevel)
 	}
 
-	g := &git.Git{
+	gitClient = &git.Git{
 		LocalPath:  cfg.GitLocalPath,
 		RemotePath: cfg.GitRepo,
 		BranchName: cfg.GitBranch,
 		SSHKey:     cfg.GitKey,
 	}
-	g.Clone()
 
-	client, err := cluster.NewClusterClient()
+	client, err = cluster.NewClusterClient()
 	if err != nil {
 		log.Fatalf("Error creating kubernetes client: %s", err.Error())
 	}
 
-	r := reaper.Reaper{
+	reap = reaper.Reaper{
 		Namespace: cfg.Namespace,
 		Wrapper:   client,
 	}
+}
 
+func webserver() {
+	logged := handlers.CombinedLoggingHandler(os.Stderr, web.Router())
+
+	if err := http.ListenAndServe(":8080", logged); err != nil {
+		log.Fatal(err)
+	}
+}
+
+func main() {
 	log.Infof("Starting up environment-operator version %s", version.Version)
 
+	go webserver()
+
+	gitClient.Clone()
+
 	for {
-		g.Refresh()
+		gitClient.Refresh()
 		gitConfiguration, _ := cfg.LoadEnvironment()
 		client.ApplyIfChanged(gitConfiguration)
 
-		go r.Cleanup(gitConfiguration)
+		go reap.Cleanup(gitConfiguration)
 		time.Sleep(30000 * time.Millisecond)
 	}
 

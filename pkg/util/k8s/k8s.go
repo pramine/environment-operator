@@ -16,6 +16,20 @@ type Client struct {
 	Namespace string
 }
 
+// ClientForNamespace configures REST client to operate in a given namespace
+func ClientForNamespace(ns string) (*Client, error) {
+	restConfig, err := rest.InClusterConfig()
+	if err != nil {
+		return nil, err
+	}
+	clientset, err := kubernetes.NewForConfig(restConfig)
+	if err != nil {
+		return nil, err
+	}
+
+	return &Client{Interface: clientset, Namespace: ns}, nil
+}
+
 // Service builds Service client
 func (c *Client) Service() *Service {
 	return &Service{Interface: c.Interface, Namespace: c.Namespace}
