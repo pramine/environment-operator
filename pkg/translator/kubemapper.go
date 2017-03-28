@@ -10,6 +10,7 @@ import (
 
 	"github.com/pearsontechnology/environment-operator/pkg/bitesize"
 	ext "github.com/pearsontechnology/environment-operator/pkg/k8_extensions"
+	"github.com/pearsontechnology/environment-operator/pkg/util"
 	"k8s.io/client-go/pkg/api/unversioned"
 	api_v1 "k8s.io/client-go/pkg/api/v1"
 	"k8s.io/client-go/pkg/apis/extensions/v1beta1"
@@ -90,6 +91,9 @@ func (w *KubeMapper) Deployment() (*v1beta1.Deployment, error) {
 	if err != nil {
 		return nil, err
 	}
+	if w.BiteService.Version != "" {
+		container.Image, _ = util.ApplicationImage(w.BiteService)
+	}
 
 	volumes, err := w.volumes()
 	if err != nil {
@@ -134,6 +138,7 @@ func (w *KubeMapper) Deployment() (*v1beta1.Deployment, error) {
 			},
 		},
 	}
+
 	return retval, nil
 }
 
@@ -150,7 +155,7 @@ func (w *KubeMapper) container() (*api_v1.Container, error) {
 
 	retval := &api_v1.Container{
 		Name:         w.BiteService.Name,
-		Image:        "", // TODO: we will need to do something here
+		Image:        "",
 		Env:          evars,
 		VolumeMounts: mounts,
 	}

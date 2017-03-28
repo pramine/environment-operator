@@ -84,6 +84,20 @@ func (client *ThirdPartyResource) Destroy(name string) error {
 		Name(name).Do().Into(&result)
 }
 
+// List returns a list of tprs. Depends on kind.
+func (client *ThirdPartyResource) List() ([]extensions.PrsnExternalResource, error) {
+	var result extensions.PrsnExternalResourceList
+	err := client.Interface.Get().
+		Resource(plural(client.Type)).
+		Namespace(client.Namespace).
+		Do().Into(&result)
+	if err != nil {
+		return nil, err
+	}
+
+	return result.Items, nil
+}
+
 func plural(singular string) string {
 	var plural string
 

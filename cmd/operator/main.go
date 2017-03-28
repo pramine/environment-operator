@@ -7,8 +7,8 @@ import (
 	log "github.com/Sirupsen/logrus"
 	"github.com/kelseyhightower/envconfig"
 	"github.com/pearsontechnology/environment-operator/pkg/bitesize"
+	"github.com/pearsontechnology/environment-operator/pkg/cluster"
 	"github.com/pearsontechnology/environment-operator/pkg/git"
-	"github.com/pearsontechnology/environment-operator/pkg/kubernetes"
 	"github.com/pearsontechnology/environment-operator/pkg/reaper"
 	"github.com/pearsontechnology/environment-operator/version"
 )
@@ -52,7 +52,7 @@ func main() {
 	}
 	g.Clone()
 
-	client, err := kubernetes.NewWrapper()
+	client, err := cluster.NewClusterClient()
 	if err != nil {
 		log.Fatalf("Error creating kubernetes client: %s", err.Error())
 	}

@@ -59,10 +59,14 @@ func (client *Deployment) Update(deployment *v1beta1.Deployment) error {
 
 // Create creates new deployment in k8s
 func (client *Deployment) Create(deployment *v1beta1.Deployment) error {
-	_, err := client.
-		Extensions().
-		Deployments(client.Namespace).
-		Create(deployment)
+	var err error
+	if len(deployment.Spec.Template.Spec.Containers) > 0 &&
+		deployment.Spec.Template.Spec.Containers[0].Image != "" {
+		_, err = client.
+			Extensions().
+			Deployments(client.Namespace).
+			Create(deployment)
+	}
 	return err
 }
 
@@ -70,4 +74,13 @@ func (client *Deployment) Create(deployment *v1beta1.Deployment) error {
 func (client *Deployment) Destroy(name string) error {
 	options := &v1.DeleteOptions{}
 	return client.Extensions().Deployments(client.Namespace).Delete(name, options)
+}
+
+// List returns the list of k8s services maintained by pipeline
+func (client *Deployment) List() ([]v1beta1.Deployment, error) {
+	list, err := client.Extensions().Deployments(client.Namespace).List(listOptions())
+	if err != nil {
+		return nil, err
+	}
+	return list.Items, nil
 }

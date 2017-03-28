@@ -5,13 +5,13 @@ import (
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/pearsontechnology/environment-operator/pkg/bitesize"
-	"github.com/pearsontechnology/environment-operator/pkg/kubernetes"
+	"github.com/pearsontechnology/environment-operator/pkg/cluster"
 	"github.com/pearsontechnology/environment-operator/pkg/util/k8s"
 )
 
 // Reaper goes through orphan objects defined in Namespace and deletes them
 type Reaper struct {
-	Wrapper   *kubernetes.Wrapper
+	Wrapper   *cluster.Cluster
 	Namespace string
 }
 

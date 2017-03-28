@@ -64,3 +64,12 @@ func (client *Ingress) Destroy(name string) error {
 	options := &v1.DeleteOptions{}
 	return client.Extensions().Ingresses(client.Namespace).Delete(name, options)
 }
+
+// List returns the list of k8s services maintained by pipeline
+func (client *Ingress) List() ([]v1beta1.Ingress, error) {
+	list, err := client.Extensions().Ingresses(client.Namespace).List(listOptions())
+	if err != nil {
+		return nil, err
+	}
+	return list.Items, nil
+}

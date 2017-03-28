@@ -1,7 +1,9 @@
 package k8s
 
-import "k8s.io/client-go/kubernetes"
-import "k8s.io/client-go/pkg/api/v1"
+import (
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/pkg/api/v1"
+)
 
 // Service type actions on pvcs in k8s cluster
 type Service struct {
@@ -44,6 +46,7 @@ func (client *Service) Update(resource *v1.Service) error {
 		return err
 	}
 	resource.ResourceVersion = current.GetResourceVersion()
+	resource.Spec.ClusterIP = current.Spec.ClusterIP
 
 	_, err = client.
 		Core().
@@ -56,4 +59,13 @@ func (client *Service) Update(resource *v1.Service) error {
 func (client *Service) Destroy(name string) error {
 	options := &v1.DeleteOptions{}
 	return client.Core().Services(client.Namespace).Delete(name, options)
+}
+
+// List returns the list of k8s services maintained by pipeline
+func (client *Service) List() ([]v1.Service, error) {
+	list, err := client.Core().Services(client.Namespace).List(listOptions())
+	if err != nil {
+		return nil, err
+	}
+	return list.Items, nil
 }

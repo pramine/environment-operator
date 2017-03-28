@@ -48,7 +48,17 @@ func TestDeploymentApplyNew(t *testing.T) {
 				"version": "0.0.1",
 			},
 		},
-		Spec: v1beta1.DeploymentSpec{},
+		Spec: v1beta1.DeploymentSpec{
+			Template: v1.PodTemplateSpec{
+				Spec: v1.PodSpec{
+					Containers: []v1.Container{
+						{
+							Image: "test:0.0.1",
+						},
+					},
+				},
+			},
+		},
 	}
 	if err := d.Apply(newDeployment); err != nil {
 		t.Errorf("Unexpected error applying deployment: %s", err.Error())

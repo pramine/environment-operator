@@ -55,5 +55,14 @@ func (client *PersistentVolumeClaim) Update(resource *v1.PersistentVolumeClaim) 
 // Destroy deletes pvc from the k8 cluster
 func (client *PersistentVolumeClaim) Destroy(name string) error {
 	options := &v1.DeleteOptions{}
-	return client.Core().Services(client.Namespace).Delete(name, options)
+	return client.Core().PersistentVolumeClaims(client.Namespace).Delete(name, options)
+}
+
+// List returns the list of k8s services maintained by pipeline
+func (client *PersistentVolumeClaim) List() ([]v1.PersistentVolumeClaim, error) {
+	list, err := client.Core().PersistentVolumeClaims(client.Namespace).List(listOptions())
+	if err != nil {
+		return nil, err
+	}
+	return list.Items, nil
 }

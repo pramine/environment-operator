@@ -1,14 +1,32 @@
-package kubernetes
+package cluster
 
 import (
 	"fmt"
+
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
 
 	log "github.com/Sirupsen/logrus"
 
 	"github.com/pearsontechnology/environment-operator/pkg/bitesize"
 	"github.com/pearsontechnology/environment-operator/pkg/diff"
+	"github.com/pearsontechnology/environment-operator/pkg/translator"
 	"github.com/pearsontechnology/environment-operator/pkg/util/k8s"
 )
+
+// NewClusterClient returns default in-cluster kubernetes client
+func NewClusterClient() (*Cluster, error) {
+	restConfig, err := rest.InClusterConfig()
+	if err != nil {
+		return nil, err
+	}
+	clientset, err := kubernetes.NewForConfig(restConfig)
+	if err != nil {
+		return nil, err
+	}
+
+	return &Cluster{Interface: clientset}, nil
+}
 
 // ApplyIfChanged compares bitesize Environment passed as an argument to
 // the current client environment. If there are any changes, c is applied
@@ -23,6 +41,57 @@ func (cluster *Cluster) ApplyIfChanged(newConfig *bitesize.Environment) error {
 		cluster.ApplyEnvironment(newConfig)
 	}
 	return nil
+}
+
+// ApplyEnvironment executes kubectl apply against ingresses, services, deployments
+// etc.
+func (cluster *Cluster) ApplyEnvironment(e *bitesize.Environment) {
+	var err error
+
+	for _, service := range e.Services {
+
+		mapper := &translator.KubeMapper{
+			BiteService: &service,
+			Namespace:   e.Namespace,
+		}
+
+		client := &k8s.Client{
+			Interface: cluster.Interface,
+			Namespace: e.Namespace,
+		}
+
+		if service.Type == "" {
+			svc, _ := mapper.Service()
+			if err = client.Service().Apply(svc); err != nil {
+				log.Error(err)
+			}
+
+			deployment, _ := mapper.Deployment()
+			if err = client.Deployment().Apply(deployment); err != nil {
+				log.Error(err)
+			}
+
+			pvc, _ := mapper.PersistentVolumeClaims()
+			for _, claim := range pvc {
+				if err = client.PVC().Apply(&claim); err != nil {
+					log.Error(err)
+				}
+			}
+
+			if service.ExternalURL != "" {
+				ingress, _ := mapper.Ingress()
+				if err = client.Ingress().Apply(ingress); err != nil {
+					log.Error(err)
+				}
+			}
+
+		} else {
+			tpr, _ := mapper.ThirdPartyResource()
+			if err = client.ThirdPartyResource(tpr.Kind).Apply(tpr); err != nil {
+				log.Error(err)
+			}
+		}
+	}
 }
 
 // LoadEnvironment returns BitesizeEnvironment object loaded from Kubernetes API

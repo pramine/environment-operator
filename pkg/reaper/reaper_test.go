@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/pearsontechnology/environment-operator/pkg/bitesize"
-	"github.com/pearsontechnology/environment-operator/pkg/kubernetes"
+	"github.com/pearsontechnology/environment-operator/pkg/cluster"
 
 	"k8s.io/client-go/kubernetes/fake"
 	"k8s.io/client-go/pkg/api/v1"
@@ -47,12 +47,12 @@ func TestDeleteService(t *testing.T) {
 			},
 		},
 	)
-	wrapper := &kubernetes.Wrapper{
+	wrapper := &cluster.Cluster{
 		Interface: c,
 	}
 
 	reaper := Reaper{
-		wrapper:   wrapper,
+		Wrapper:   wrapper,
 		Namespace: "sample",
 	}
 
@@ -65,7 +65,7 @@ func TestDeleteService(t *testing.T) {
 	}
 
 	reaperFail := Reaper{
-		wrapper:   wrapper,
+		Wrapper:   wrapper,
 		Namespace: "nonexistent",
 	}
 

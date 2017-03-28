@@ -1,13 +1,104 @@
-package kubernetes
+package cluster
 
 import (
 	"testing"
 
+	"github.com/pearsontechnology/environment-operator/pkg/bitesize"
+	"github.com/pearsontechnology/environment-operator/pkg/diff"
+
+	log "github.com/Sirupsen/logrus"
 	"k8s.io/client-go/kubernetes/fake"
 	"k8s.io/client-go/pkg/api/resource"
 	"k8s.io/client-go/pkg/api/v1"
 	"k8s.io/client-go/pkg/apis/extensions/v1beta1"
 )
+
+func TestKubernetesClusterClient(t *testing.T) {
+	// t.Run("service count", testServiceCount)
+	// t.Run("volumes", testVolumes)
+	t.Run("full bitesize construct", testFullBitesizeEnvironment)
+	// t.Run("a/b deployment service", testABSingleService)
+}
+
+func TestApplyEnvironment(t *testing.T) {
+
+	log.SetLevel(log.FatalLevel)
+	client := fake.NewSimpleClientset(
+		&v1.Namespace{
+			ObjectMeta: v1.ObjectMeta{
+				Name: "environment-dev",
+				Labels: map[string]string{
+					"environment": "environment2",
+				},
+			},
+		},
+	)
+	cluster := Cluster{Interface: client}
+
+	e1, err := bitesize.LoadEnvironment("../../test/assets/environments.bitesize", "environment2")
+	if err != nil {
+		t.Fatalf("Unexpected err: %s", err.Error())
+	}
+
+	cluster.ApplyEnvironment(e1)
+
+	e2, err := cluster.LoadEnvironment("environment-dev")
+	if err != nil {
+		t.Fatalf("Unexpected err: %s", err.Error())
+	}
+
+	if d := diff.Compare(*e1, *e2); d != "" {
+		t.Errorf("Expected loaded environments to be equal, yet diff is: %s", d)
+	}
+}
+
+func newDeployment(namespace, name string) *v1beta1.Deployment {
+	d := v1beta1.Deployment{
+		ObjectMeta: v1.ObjectMeta{
+			Name:      name,
+			Namespace: namespace,
+		},
+		Spec: v1beta1.DeploymentSpec{
+			Template: v1.PodTemplateSpec{},
+		},
+	}
+	return &d
+}
+
+func newService(namespace, serviceName, portName string, portNumber int32) *v1.Service {
+	labels := map[string]string{"creator": "pipeline"}
+
+	service := v1.Service{
+		ObjectMeta: v1.ObjectMeta{
+			Name:      serviceName,
+			Namespace: namespace,
+			Labels:    labels,
+		},
+		Spec: v1.ServiceSpec{
+			ClusterIP: "1.1.1.1",
+			Ports: []v1.ServicePort{
+				{Port: portNumber, Name: portName, Protocol: "TCP"},
+			},
+		},
+	}
+	return &service
+}
+
+func validMeta(namespace, name string) v1.ObjectMeta {
+	validLabels := map[string]string{"creator": "pipeline"}
+
+	if namespace != "" {
+		return v1.ObjectMeta{
+			Name:      name,
+			Namespace: namespace,
+			Labels:    validLabels,
+		}
+	}
+	return v1.ObjectMeta{
+		Name:   name,
+		Labels: validLabels,
+	}
+}
 
 func testFullBitesizeEnvironment(t *testing.T) {
 	capacity, _ := resource.ParseQuantity("59G")
