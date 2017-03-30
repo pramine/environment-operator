@@ -13,3 +13,5 @@ import:
   subpackages:
   - pretty
 - package: github.com/motemen/go-loghttp
+- package: github.com/gorilla/handlers
+  version: ^1.2.0

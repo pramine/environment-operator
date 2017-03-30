@@ -19,13 +19,15 @@ func Compare(config1, config2 bitesize.Environment) string {
 	// XXX: remove tprs for now
 	var newServices bitesize.Services
 	for _, s := range c1.Services {
-		if s.Type == "" {
-			d := c2.Services.FindByName(s.Name)
-			if d != nil {
-				s.Version = d.Version
-			}
-			newServices = append(newServices, s)
+		// if s.Type == "" {
+		d := c2.Services.FindByName(s.Name)
+		s.Status = bitesize.ServiceStatus{}
+		if d != nil {
+			s.Version = d.Version
+			d.Status = bitesize.ServiceStatus{}
 		}
+		newServices = append(newServices, s)
+		// }
 	}
 	c1.Services = newServices
 	// XXX: the end

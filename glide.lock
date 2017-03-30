@@ -1,5 +1,5 @@
-hash: 94d3cae0be70bc1d385f7c71dcd2fd80feb8aa9bea9ee1baf88130e0eed5b6d5
-updated: 2017-03-23T11:37:02.881405264Z
+hash: e2e0bd85d9c91e61acd50e1613e161fbaf6d014a62154a52e2561e1396d5dcef
+updated: 2017-03-29T13:02:52.632274254+01:00
 imports:
 - name: cloud.google.com/go
   version: 3b1ae45394a234c385be014e9a488f2bb6eef821
@@ -59,6 +59,12 @@ imports:
   - proto
 - name: github.com/google/gofuzz
   version: bbcb9da2d746f8bdbd6a936686a0a6067ada0ec5
+- name: github.com/gorilla/context
+  version: 08b5f424b9271eedf6f9f0ce86cb9396ed337a42
+- name: github.com/gorilla/handlers
+  version: 3a5767ca75ece5f7f1440b1d16975247f8d8b221
+- name: github.com/gorilla/mux
+  version: 599cba5e7b6137d46ddf58fb1765f5d928e69604
 - name: github.com/jonboulle/clockwork
   version: 72f9bd7c4e0c2a40055ab3d0f09654f730cce982
 - name: github.com/juju/ratelimit

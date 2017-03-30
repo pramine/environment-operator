@@ -15,7 +15,7 @@ import (
 )
 
 // NewClusterClient returns default in-cluster kubernetes client
-func NewClusterClient() (*Cluster, error) {
+func Client() (*Cluster, error) {
 	restConfig, err := rest.InClusterConfig()
 	if err != nil {
 		return nil, err

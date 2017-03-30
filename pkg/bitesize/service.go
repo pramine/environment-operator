@@ -23,8 +23,16 @@ type Service struct {
 	Options      map[string]string   `yaml:"options,omitempty"`
 	HTTPSOnly    string
 	HTTPSBackend string
-	Type         string `yaml:"type,omitempty"`
+	Type         string        `yaml:"type,omitempty"`
+	Status       ServiceStatus `yaml:"status,omitempty"`
 	// XXX          map[string]interface{} `yaml:",inline"`
+}
+
+type ServiceStatus struct {
+	DeployedAt        string
+	AvailableReplicas int
+	DesiredReplicas   int
+	CurrentReplicas   int
 }
 
 // Services implement sort.Interface

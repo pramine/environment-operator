@@ -63,6 +63,14 @@ func (s ServiceMap) AddDeployment(deployment v1beta1.Deployment) {
 	s[name].HTTPSBackend = getLabel(deployment, "httpsBackend")
 	s[name].EnvVars = envVars(deployment)
 	s[name].HealthCheck = healthCheck(deployment)
+	s[name].Status = bitesize.ServiceStatus{
+
+		AvailableReplicas: int(deployment.Status.AvailableReplicas),
+		DesiredReplicas:   int(deployment.Status.Replicas),
+		CurrentReplicas:   int(deployment.Status.UpdatedReplicas),
+
+		DeployedAt: deployment.CreationTimestamp.String(),
+	}
 }
 
 func (s ServiceMap) AddVolumeClaim(claim v1.PersistentVolumeClaim) {
