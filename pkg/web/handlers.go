@@ -3,6 +3,7 @@ package web
 import (
 	"encoding/json"
 	"net/http"
+	"strings"
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/pearsontechnology/environment-operator/pkg/cluster"
@@ -20,6 +21,28 @@ func Router() *mux.Router {
 	r.HandleFunc("/status", getStatus).Methods("GET")
 
 	return r
+}
+
+func Auth(h http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		var token string
+		tokens, ok := r.Header["Authorization"]
+		if ok && len(tokens) >= 1 {
+			token = tokens[0]
+			token = strings.TrimPrefix(token, "Bearer ")
+		}
+
+		auth, err := NewAuthClient()
+		if err != nil {
+			log.Error(err)
+		}
+		if auth.Authenticate(token) {
+			h.ServeHTTP(w, r)
+		} else {
+			http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
+			return
+		}
+	})
 }
 
 func postDeploy(w http.ResponseWriter, r *http.Request) {

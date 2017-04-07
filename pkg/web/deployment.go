@@ -25,6 +25,8 @@ func GetCurrentDeploymentByName(name string) (*v1beta1.Deployment, error) {
 		return nil, err
 	}
 
+	log.Debugf("ENV: %+v", *environment)
+
 	service := environment.Services.FindByName(name)
 	if service == nil {
 		log.Infof("Services: %q", environment.Services)

@@ -21,10 +21,11 @@ func Compare(config1, config2 bitesize.Environment) string {
 	for _, s := range c1.Services {
 		// if s.Type == "" {
 		d := c2.Services.FindByName(s.Name)
-		s.Status = bitesize.ServiceStatus{}
+
 		if d != nil {
 			s.Version = d.Version
-			d.Status = bitesize.ServiceStatus{}
+			s.Status = d.Status
+			s.Deployment = d.Deployment
 		}
 		newServices = append(newServices, s)
 		// }

@@ -7,6 +7,10 @@ import (
 	"k8s.io/client-go/pkg/api/v1"
 )
 
+var SupportedThirdPartyResources = []string{
+	"mongo", "mysql", "cassandra", "redis",
+}
+
 // PrsnExternalResource represents ThirdpartyResources mapped from
 // kubernetes to externally running services (e.g. RDS, cassandra, mongo etc.)
 type PrsnExternalResource struct {
@@ -20,8 +24,9 @@ type PrsnExternalResource struct {
 // PrsnExternalResourceSpec represents format for these mappings - which is
 // basically it's version and  options
 type PrsnExternalResourceSpec struct {
-	Version string            `json:"version"`
-	Options map[string]string `json:"options"`
+	Version  string            `json:"version"`
+	Options  map[string]string `json:"options"`
+	Replicas int               `json:"replicas"`
 }
 
 // PrsnExternalResourceList is a list of PrsnExternalResource

@@ -16,6 +16,11 @@ type Config struct {
 	EnvFile        string `envconfig:"BITESIZE_FILE"`
 	Namespace      string `envconfig:"NAMESPACE"`
 	DockerRegistry string `envconfig:"DOCKER_REGISTRY" default:"bitesize-registry.default.svc.cluster.local"`
+	// AUTH stuff
+	OIDCIssuerURL     string `envconfig:"OIDC_ISSUER_URL"`
+	OIDCCAFile        string `envconfig:"OIDC_CA_FILE"`
+	OIDCAllowedGroups string `envconfig:"OIDC_ALLOWED_GROUPS"`
+	OIDCClientId      string `envconfig:"OIDC_CLIENT_IT" default:"bitesize"`
 }
 
 func Load() Config {

@@ -10,6 +10,7 @@ import (
 
 	"github.com/pearsontechnology/environment-operator/pkg/bitesize"
 	"github.com/pearsontechnology/environment-operator/pkg/diff"
+	"github.com/pearsontechnology/environment-operator/pkg/k8_extensions"
 	"github.com/pearsontechnology/environment-operator/pkg/translator"
 	"github.com/pearsontechnology/environment-operator/pkg/util/k8s"
 )
@@ -32,7 +33,7 @@ func Client() (*Cluster, error) {
 // the current client environment. If there are any changes, c is applied
 // to the current config
 func (cluster *Cluster) ApplyIfChanged(newConfig *bitesize.Environment) error {
-	log.Infof("Loading namespace: %s", newConfig.Namespace)
+	log.Debugf("Loading namespace: %s", newConfig.Namespace)
 	currentConfig, _ := cluster.LoadEnvironment(newConfig.Namespace)
 
 	changes := diff.Compare(*newConfig, *currentConfig)
@@ -138,6 +139,17 @@ func (cluster *Cluster) LoadEnvironment(namespace string) (*bitesize.Environment
 	claims, _ := client.PVC().List()
 	for _, claim := range claims {
 		serviceMap.AddVolumeClaim(claim)
+	}
+
+	// We need to exclude this part from unit tests as we cannot
+	// fake client.ThirdPartyResource()
+	if cluster.TestMode == false {
+		for _, supported := range k8_extensions.SupportedThirdPartyResources {
+			tprs, _ := client.ThirdPartyResource(supported).List()
+			for _, tpr := range tprs {
+				serviceMap.AddThirdPartyResource(tpr)
+			}
+		}
 	}
 
 	bitesizeConfig := bitesize.Environment{

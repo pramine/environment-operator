@@ -33,7 +33,7 @@ func TestApplyEnvironment(t *testing.T) {
 			},
 		},
 	)
-	cluster := Cluster{Interface: client}
+	cluster := Cluster{Interface: client, TestMode: true}
 
 	e1, err := bitesize.LoadEnvironment("../../test/assets/environments.bitesize", "environment2")
 	if err != nil {
@@ -237,7 +237,7 @@ func testFullBitesizeEnvironment(t *testing.T) {
 			},
 		},
 	)
-	cluster := Cluster{Interface: client}
+	cluster := Cluster{Interface: client, TestMode: true}
 	environment, err := cluster.LoadEnvironment("test")
 	if err != nil {
 		t.Error(err)

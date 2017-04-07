@@ -6,4 +6,5 @@ import "k8s.io/client-go/kubernetes"
 // to interact with
 type Cluster struct {
 	kubernetes.Interface
+	TestMode bool
 }
