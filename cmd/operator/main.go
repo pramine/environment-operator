@@ -37,6 +37,10 @@ func init() {
 		Namespace: cfg.Namespace,
 		Wrapper:   client,
 	}
+
+	if cfg.Debug != "" {
+		log.SetLevel(log.DebugLevel)
+	}
 }
 
 func webserver() {

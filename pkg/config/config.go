@@ -20,7 +20,9 @@ type Config struct {
 	OIDCIssuerURL     string `envconfig:"OIDC_ISSUER_URL"`
 	OIDCCAFile        string `envconfig:"OIDC_CA_FILE"`
 	OIDCAllowedGroups string `envconfig:"OIDC_ALLOWED_GROUPS"`
-	OIDCClientId      string `envconfig:"OIDC_CLIENT_IT" default:"bitesize"`
+	OIDCClientID      string `envconfig:"OIDC_CLIENT_ID" default:"bitesize"`
+
+	Debug string `envconfig:"DEBUG"`
 }
 
 func Load() Config {

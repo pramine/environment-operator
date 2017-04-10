@@ -26,7 +26,7 @@ func NewAuthClient() (*AuthClient, error) {
 		return nil, err
 	}
 
-	clientCredentials := oidc.ClientCredentials{ID: cfg.OIDCClientId}
+	clientCredentials := oidc.ClientCredentials{ID: cfg.OIDCClientID}
 
 	clientConfig := oidc.ClientConfig{
 		ProviderConfig: provider,
@@ -62,6 +62,9 @@ func (a *AuthClient) Authenticate(token string) bool {
 		log.Errorf("Error getting claims from JWT: %s", err.Error())
 		return false
 	}
+
+	log.Debugf("Token claims: %+v", claims)
+
 	groups := claims["groups"].([]interface{})
 	if len(groups) == 0 {
 		log.Errorf("Error getting groups from JWT")
