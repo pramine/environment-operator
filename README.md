@@ -5,13 +5,10 @@ More information on environment operator can be found in https://docs.google.com
 
 ## Running Tests
 
-Unit tests are stored in `test/unit`. To run full unit test suite, run:
-
+Unit tests are stored next to the source files. E2E tests are stored in `test/e2e` (currently none). To run e2e test suite, run
 ```
-% go test -v ./test/unit
+% go test -v ./test/e2e
 ```
-
-End-to-end tests are located in `test/e2e` (currently none).
 
 
 ## Building new docker image
