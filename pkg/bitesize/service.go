@@ -2,6 +2,8 @@ package bitesize
 
 import (
 	"fmt"
+	"strconv"
+	"strings"
 
 	validator "gopkg.in/validator.v2"
 )
@@ -11,7 +13,7 @@ import (
 type Service struct {
 	Name         string              `yaml:"name" validate:"nonzero"`
 	ExternalURL  string              `yaml:"external_url,omitempty" validate:"regexp=^([a-zA-Z\\.\\-]+$)*"`
-	Port         int                 `yaml:"port,omitempty" validate:"max=65535"`
+	Ports        []int               `yaml:"-"` // Ports have custom unmarshaler
 	Ssl          string              `yaml:"ssl,omitempty" validate:"regexp=^(true|false)*$"`
 	Version      string              `yaml:"version,omitempty"`
 	Application  string              `yaml:"application,omitempty"`
@@ -38,26 +40,33 @@ type ServiceStatus struct {
 // Services implement sort.Interface
 type Services []Service
 
+// ServiceWithDefaults returns new *Service object with default values set
+func ServiceWithDefaults() *Service {
+	return &Service{
+		Ports:    []int{80},
+		Replicas: 1,
+	}
+}
+
 // UnmarshalYAML implements the yaml.Unmarshaler interface for BitesizeService.
 func (e *Service) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	var err error
-	ee := &Service{}
+	ee := ServiceWithDefaults()
+
+	ports, err := unmarshalPorts(unmarshal)
+	if err != nil {
+		return fmt.Errorf("service.ports.%s", err.Error())
+	}
+
 	type plain Service
 	if err = unmarshal((*plain)(ee)); err != nil {
 		return fmt.Errorf("service.%s", err.Error())
 	}
 
 	*e = *ee
+	e.Ports = ports
 	if err = validator.Validate(e); err != nil {
 		return fmt.Errorf("service.%s", err.Error())
-	}
-	// Set defaults
-	if e.Type == "" && e.Port == 0 {
-		e.Port = 80
-	}
-
-	if e.Replicas == 0 {
-		e.Replicas = 1
 	}
 
 	return nil
@@ -83,4 +92,39 @@ func (slice Services) FindByName(name string) *Service {
 		}
 	}
 	return nil
+}
+
+func unmarshalPorts(unmarshal func(interface{}) error) ([]int, error) {
+	var portYAML struct {
+		Port  string `yaml:"port,omitempty"`
+		Ports string `yaml:"ports,omitempty"`
+	}
+
+	var ports []int
+
+	if err := unmarshal(&portYAML); err != nil {
+		return ports, err
+	}
+
+	if portYAML.Ports != "" {
+		ports = stringToIntArray(portYAML.Ports)
+	} else if portYAML.Port != "" {
+		ports = stringToIntArray(portYAML.Port)
+	} else {
+		ports = []int{80}
+	}
+	return ports, nil
+}
+
+func stringToIntArray(str string) []int {
+	var retval []int
+
+	pstr := strings.Split(str, ",")
+	for _, p := range pstr {
+		j, err := strconv.Atoi(p)
+		if err == nil {
+			retval = append(retval, j)
+		}
+	}
+	return retval
 }
