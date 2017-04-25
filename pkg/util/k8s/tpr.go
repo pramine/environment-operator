@@ -26,13 +26,15 @@ func (client *ThirdPartyResource) Get(name string) (*extensions.PrsnExternalReso
 
 	if err != nil {
 		log.Debugf("Got error on get: %s", err.Error())
+		return nil, err
 	}
-	return &rsc, err
+	return &rsc, nil
 }
 
 // Exist checks if named resource exist in k8s cluster
 func (client *ThirdPartyResource) Exist(name string) bool {
 	rsc, _ := client.Get(name)
+	log.Debugf("Got existing tpr: %+v", rsc)
 	return rsc != nil
 }
 
