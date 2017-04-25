@@ -2,6 +2,7 @@ package web
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strings"
 
@@ -55,7 +56,8 @@ func postDeploy(w http.ResponseWriter, r *http.Request) {
 
 	d, err := ParseDeployRequest(r.Body)
 	if err != nil {
-		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+		log.Errorf("Could not parse request body: %s", err.Error())
+		http.Error(w, fmt.Sprintf("Bad request body: %s", err.Error()), http.StatusBadRequest)
 	}
 
 	deployment, err := GetCurrentDeploymentByName(d.Name)
@@ -67,7 +69,7 @@ func postDeploy(w http.ResponseWriter, r *http.Request) {
 
 	deployment.Spec.Template.Spec.Containers[0].Image = util.Image(d.Application, d.Version)
 
-	if err = client.Deployment().Update(deployment); err != nil {
+	if err = client.Deployment().Apply(deployment); err != nil {
 		log.Errorf("Error updating deployment %s: %s", d.Name, err.Error())
 		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 		return
