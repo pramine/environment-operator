@@ -65,6 +65,11 @@ func (e *Service) UnmarshalYAML(unmarshal func(interface{}) error) error {
 
 	*e = *ee
 	e.Ports = ports
+
+	if e.Type != "" {
+		e.Ports = nil
+	}
+
 	if err = validator.Validate(e); err != nil {
 		return fmt.Errorf("service.%s", err.Error())
 	}

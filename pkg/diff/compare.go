@@ -15,6 +15,8 @@ func Compare(config1, config2 bitesize.Environment) string {
 	c2.Tests = []bitesize.Test{}
 	c1.Deployment = nil
 	c2.Deployment = nil
+	c1.Name = ""
+	c2.Name = ""
 
 	// XXX: remove tprs for now
 	var newServices bitesize.Services

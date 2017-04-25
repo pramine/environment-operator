@@ -17,8 +17,8 @@ func TestDiffEmpty(t *testing.T) {
 }
 
 func TestIgnoreTestFields(t *testing.T) {
-	a := bitesize.Environment{Tests: []bitesize.Test{}}
-	b := bitesize.Environment{Tests: []bitesize.Test{
+	a := bitesize.Environment{Name: "E", Tests: []bitesize.Test{}}
+	b := bitesize.Environment{Name: "A", Tests: []bitesize.Test{
 		{Name: "a"},
 	}}
 
@@ -70,7 +70,7 @@ func TestDiffNames(t *testing.T) {
 	a := bitesize.Environment{Name: "asd"}
 	b := bitesize.Environment{Name: "asdf"}
 
-	if Compare(a, b) == "" {
+	if Compare(a, b) != "" {
 		t.Error("Expected diff, got the same")
 	}
 }

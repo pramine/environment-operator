@@ -68,7 +68,7 @@ func testPortsWithInvalidValue(t *testing.T) {
 		t.Errorf("could not unmarshal yaml: %s", err.Error())
 	}
 
-	if !eqIntArrays(svc.Ports, []int{81, 82}) {
+	if !util.EqualArrays(svc.Ports, []int{81, 82}) {
 		t.Errorf("Unexpected ports: %v", svc.Ports)
 	}
 }
@@ -82,7 +82,7 @@ func testPortsEmpty(t *testing.T) {
 		t.Errorf("could not unmarshal yaml: %s", err.Error())
 	}
 
-	if !eqIntArrays(svc.Ports, []int{80}) {
+	if !util.EqualArrays(svc.Ports, []int{80}) {
 		t.Errorf("Unexpected ports: %v", svc.Ports)
 	}
 }
