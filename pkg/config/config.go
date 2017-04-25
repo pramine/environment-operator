@@ -15,7 +15,7 @@ type Config struct {
 	EnvName        string `envconfig:"ENVIRONMENT_NAME"`
 	EnvFile        string `envconfig:"BITESIZE_FILE"`
 	Namespace      string `envconfig:"NAMESPACE"`
-	DockerRegistry string `envconfig:"DOCKER_REGISTRY" default:"bitesize-registry.default.svc.cluster.local"`
+	DockerRegistry string `envconfig:"DOCKER_REGISTRY" default:"bitesize-registry.default.svc.cluster.local:5000"`
 	// AUTH stuff
 	OIDCIssuerURL     string `envconfig:"OIDC_ISSUER_URL"`
 	OIDCCAFile        string `envconfig:"OIDC_CA_FILE"`
