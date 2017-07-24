@@ -25,7 +25,7 @@ spec:
       - name: environment-operator
         env:
         - name: GIT_REMOTE_REPOSITORY
-          value: git@bitbucket.org:pearson-techops/sample-app.git
+          value: git@github.com:pearsontechnology/jenkins-sample-app.git
         - name: GIT_PRIVATE_KEY
           valueFrom:
             secretKeyRef:
