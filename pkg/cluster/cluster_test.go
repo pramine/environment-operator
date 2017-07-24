@@ -5,14 +5,43 @@ import (
 
 	"github.com/pearsontechnology/environment-operator/pkg/bitesize"
 	"github.com/pearsontechnology/environment-operator/pkg/diff"
+	ext "github.com/pearsontechnology/environment-operator/pkg/k8_extensions"
 	"github.com/pearsontechnology/environment-operator/pkg/util"
 
 	log "github.com/Sirupsen/logrus"
 	"k8s.io/client-go/kubernetes/fake"
 	"k8s.io/client-go/pkg/api/resource"
+	"k8s.io/client-go/pkg/api/unversioned"
 	"k8s.io/client-go/pkg/api/v1"
+	"k8s.io/client-go/pkg/apimachinery"
+	// "k8s.io/client-go/pkg/api/meta"
+
+	"k8s.io/client-go/pkg/apimachinery/registered"
 	"k8s.io/client-go/pkg/apis/extensions/v1beta1"
+	fakerest "k8s.io/client-go/rest/fake"
+
+	faketpr "github.com/pearsontechnology/environment-operator/pkg/util/k8s/fake"
 )
+
+func init() {
+	// Let our fake server handle our tprs
+	// by registering prsn.io/v1 resources
+	// it's easier in client-go v1.6
+	m := registered.DefaultAPIRegistrationManager
+
+	groupversion := unversioned.GroupVersion{
+		Group:   "prsn.io",
+		Version: "v1",
+	}
+	groupversions := []unversioned.GroupVersion{groupversion}
+	groupmeta := apimachinery.GroupMeta{
+		GroupVersion: groupversion,
+	}
+
+	m.RegisterVersions(groupversions)
+	m.AddThirdPartyAPIGroupVersions(groupversion)
+	m.RegisterGroup(groupmeta)
+}
 
 func TestKubernetesClusterClient(t *testing.T) {
 	// t.Run("service count", testServiceCount)
@@ -35,7 +64,11 @@ func TestApplyEnvironment(t *testing.T) {
 			},
 		},
 	)
-	cluster := Cluster{Interface: client, TestMode: true}
+	tprclient := loadTestTPRS()
+	cluster := Cluster{
+		Interface: client,
+		TPRClient: tprclient,
+	}
 
 	e1, err := bitesize.LoadEnvironment("../../test/assets/environments.bitesize", "environment2")
 	if err != nil {
@@ -45,6 +78,7 @@ func TestApplyEnvironment(t *testing.T) {
 	cluster.ApplyEnvironment(e1)
 
 	e2, err := cluster.LoadEnvironment("environment-dev")
+
 	if err != nil {
 		t.Fatalf("Unexpected err: %s", err.Error())
 	}
@@ -100,6 +134,26 @@ func validMeta(namespace, name string) v1.ObjectMeta {
 		Name:   name,
 		Labels: validLabels,
 	}
+}
+
+func loadTestTPRS() *fakerest.RESTClient {
+	return faketpr.TPRClient(
+		&ext.PrsnExternalResource{
+			TypeMeta: unversioned.TypeMeta{
+				Kind:       "Mysql",
+				APIVersion: "prsn.io/v1",
+			},
+			ObjectMeta: v1.ObjectMeta{
+				Name: "testdb",
+				Labels: map[string]string{
+					"creator": "pipeline",
+				},
+			},
+			Spec: ext.PrsnExternalResourceSpec{
+				Version: "5.6",
+			},
+		},
+	)
 }
 
 func loadTestEnvironment() *fake.Clientset {
@@ -169,6 +223,14 @@ func loadTestEnvironment() *fake.Clientset {
 									{
 										Name:  "test3",
 										Value: "3",
+									},
+									{
+										Name: "test4",
+										ValueFrom: &v1.EnvVarSource{
+											SecretKeyRef: &v1.SecretKeySelector{
+												Key: "ttt",
+											},
+										},
 									},
 								},
 
@@ -248,7 +310,11 @@ func loadTestEnvironment() *fake.Clientset {
 
 func testServicePorts(t *testing.T) {
 	client := loadTestEnvironment()
-	cluster := Cluster{Interface: client, TestMode: true}
+	tprclient := loadTestTPRS()
+	cluster := Cluster{
+		Interface: client,
+		TPRClient: tprclient,
+	}
 	environment, err := cluster.LoadEnvironment("test")
 	if err != nil {
 		t.Error(err)
@@ -263,7 +329,11 @@ func testServicePorts(t *testing.T) {
 func testFullBitesizeEnvironment(t *testing.T) {
 
 	client := loadTestEnvironment()
-	cluster := Cluster{Interface: client, TestMode: true}
+	tprclient := loadTestTPRS()
+	cluster := Cluster{
+		Interface: client,
+		TPRClient: tprclient,
+	}
 	environment, err := cluster.LoadEnvironment("test")
 	if err != nil {
 		t.Error(err)
@@ -276,8 +346,8 @@ func testFullBitesizeEnvironment(t *testing.T) {
 		t.Errorf("Unexpected environment name: %s", environment.Name)
 	}
 
-	if len(environment.Services) != 2 {
-		t.Errorf("Unexpected service count: %d, expected: 2", len(environment.Services))
+	if len(environment.Services) != 3 {
+		t.Errorf("Unexpected service count: %d, expected: 3", len(environment.Services))
 	}
 
 	svc := environment.Services[0]
@@ -290,7 +360,13 @@ func testFullBitesizeEnvironment(t *testing.T) {
 		t.Errorf("Unexpected external URL: %s, expected: www.test.com", svc.ExternalURL)
 	}
 
-	if len(svc.EnvVars) != 3 {
-		t.Errorf("Unexpected environment variable count: %d, expected: 3", len(svc.EnvVars))
+	if len(svc.EnvVars) != 4 {
+		t.Errorf("Unexpected environment variable count: %d, expected: 4", len(svc.EnvVars))
+	}
+
+	secretEnvVar := svc.EnvVars[3]
+
+	if secretEnvVar.Secret != "test4" || secretEnvVar.Value != "ttt" {
+		t.Errorf("Unexpected envvar[3]: %+v", secretEnvVar)
 	}
 }
