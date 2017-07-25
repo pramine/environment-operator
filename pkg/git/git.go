@@ -3,6 +3,7 @@ package git
 import (
 	"os"
 
+	log "github.com/Sirupsen/logrus"
 	"github.com/pearsontechnology/environment-operator/pkg/config"
 
 	git2go "gopkg.in/libgit2/git2go.v24"
@@ -17,13 +18,11 @@ type Git struct {
 }
 
 func Client() *Git {
-	cfg := config.Load()
-
 	return &Git{
-		LocalPath:  cfg.GitLocalPath,
-		RemotePath: cfg.GitRepo,
-		BranchName: cfg.GitBranch,
-		SSHKey:     cfg.GitKey,
+		LocalPath:  config.Env.GitLocalPath,
+		RemotePath: config.Env.GitRepo,
+		BranchName: config.Env.GitBranch,
+		SSHKey:     config.Env.GitKey,
 	}
 }
 
@@ -38,6 +37,7 @@ func (g *Git) CloneOrPull() error {
 
 func (g *Git) credentialsCallback(url string, username string, allowedTypes git2go.CredType) (git2go.ErrorCode, *git2go.Cred) {
 	ret, cred := git2go.NewCredSshKeyFromMemory("git", "", g.SSHKey, "")
+	log.Debugf("credentialsCallback: Auth with key %s", g.SSHKey)
 	return git2go.ErrorCode(ret), &cred
 }
 

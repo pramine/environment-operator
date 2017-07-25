@@ -12,6 +12,7 @@ type Config struct {
 	GitRepo        string `envconfig:"GIT_REMOTE_REPOSITORY"`
 	GitBranch      string `envconfig:"GIT_BRANCH" default:"master"`
 	GitKey         string `envconfig:"GIT_PRIVATE_KEY"`
+	GitKeyPath     string `envconfig:"GIT_PRIVATE_KEY_PATH" default:"/etc/git/key"`
 	GitLocalPath   string `envconfig:"GIT_LOCAL_PATH" default:"/tmp/repository"`
 	EnvName        string `envconfig:"ENVIRONMENT_NAME"`
 	EnvFile        string `envconfig:"BITESIZE_FILE"`
@@ -28,15 +29,15 @@ type Config struct {
 	Debug string `envconfig:"DEBUG"`
 }
 
-func Load() Config {
-	var cfg Config
-	err := envconfig.Process("operator", &cfg)
+var Env Config
+
+func init() {
+	err := envconfig.Process("operator", &Env)
 	if err != nil {
 		log.Fatal(err.Error())
 	}
 
-	if cfg.LogLevel == "debug" {
+	if Env.LogLevel == "debug" {
 		log.SetLevel(log.DebugLevel)
 	}
-	return cfg
 }

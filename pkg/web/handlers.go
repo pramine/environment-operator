@@ -92,8 +92,7 @@ func getStatus(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 	}
 
-	cfg := config.Load()
-	e, err := client.LoadEnvironment(cfg.Namespace)
+	e, err := client.LoadEnvironment(config.Env.Namespace)
 	if err != nil {
 		log.Errorf("Error getting cluster client: %s", err.Error())
 		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
@@ -146,8 +145,7 @@ func getServiceStatus(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 	}
 
-	cfg := config.Load()
-	e, err := client.LoadEnvironment(cfg.Namespace)
+	e, err := client.LoadEnvironment(config.Env.Namespace)
 	if err != nil {
 		log.Errorf("Error getting cluster client: %s", err.Error())
 		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)

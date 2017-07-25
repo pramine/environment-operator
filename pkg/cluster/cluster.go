@@ -1,6 +1,7 @@
 package cluster
 
 import (
+	"errors"
 	"fmt"
 
 	"k8s.io/client-go/kubernetes"
@@ -38,6 +39,9 @@ func Client() (*Cluster, error) {
 // the current client environment. If there are any changes, c is applied
 // to the current config
 func (cluster *Cluster) ApplyIfChanged(newConfig *bitesize.Environment) error {
+	if newConfig == nil {
+		return errors.New("Could not compare against config (nil)")
+	}
 	log.Debugf("Loading namespace: %s", newConfig.Namespace)
 	currentConfig, _ := cluster.LoadEnvironment(newConfig.Namespace)
 

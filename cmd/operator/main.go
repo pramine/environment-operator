@@ -17,7 +17,6 @@ import (
 	"github.com/gorilla/handlers"
 )
 
-var cfg config.Config
 var gitClient *git.Git
 var client *cluster.Cluster
 var reap reaper.Reaper
@@ -25,7 +24,6 @@ var reap reaper.Reaper
 func init() {
 	var err error
 
-	cfg = config.Load()
 	gitClient = git.Client()
 
 	client, err = cluster.Client()
@@ -34,11 +32,11 @@ func init() {
 	}
 
 	reap = reaper.Reaper{
-		Namespace: cfg.Namespace,
+		Namespace: config.Env.Namespace,
 		Wrapper:   client,
 	}
 
-	if cfg.Debug != "" {
+	if config.Env.Debug != "" {
 		log.SetLevel(log.DebugLevel)
 	}
 }
@@ -47,7 +45,7 @@ func webserver() {
 	logged := handlers.CombinedLoggingHandler(os.Stderr, web.Router())
 	authenticated := logged
 
-	if cfg.UseAuth {
+	if config.Env.UseAuth {
 		authenticated = web.Auth(logged)
 	}
 
@@ -61,11 +59,14 @@ func main() {
 
 	go webserver()
 
-	gitClient.Clone()
+	err := gitClient.Clone()
+	if err != nil {
+		log.Errorf("Git clone error: %s", err.Error())
+	}
 
 	for {
 		gitClient.Refresh()
-		gitConfiguration, _ := bitesize.LoadEnvironmentFromConfig(cfg)
+		gitConfiguration, _ := bitesize.LoadEnvironmentFromConfig(config.Env)
 		client.ApplyIfChanged(gitConfiguration)
 
 		go reap.Cleanup(gitConfiguration)

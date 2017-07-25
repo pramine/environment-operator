@@ -19,13 +19,12 @@ type AuthClient struct {
 }
 
 func NewAuthClient() (*AuthClient, error) {
-	cfg := config.Load()
 
 	retval := &AuthClient{}
 
 	// Handle AUTH_TOKEN_FILE
-	if cfg.TokenFile != "" {
-		b, err := ioutil.ReadFile(cfg.TokenFile)
+	if config.Env.TokenFile != "" {
+		b, err := ioutil.ReadFile(config.Env.TokenFile)
 		if err != nil {
 			return nil, err
 		}
@@ -33,12 +32,12 @@ func NewAuthClient() (*AuthClient, error) {
 		return retval, nil
 	}
 
-	provider, err := oidc.FetchProviderConfig(http.DefaultClient, cfg.OIDCIssuerURL)
+	provider, err := oidc.FetchProviderConfig(http.DefaultClient, config.Env.OIDCIssuerURL)
 	if err != nil {
 		return nil, err
 	}
 
-	clientCredentials := oidc.ClientCredentials{ID: cfg.OIDCClientID}
+	clientCredentials := oidc.ClientCredentials{ID: config.Env.OIDCClientID}
 
 	clientConfig := oidc.ClientConfig{
 		ProviderConfig: provider,
@@ -50,7 +49,7 @@ func NewAuthClient() (*AuthClient, error) {
 		return nil, err
 	}
 
-	retval.AllowedGroups = strings.Split(cfg.OIDCAllowedGroups, ",")
+	retval.AllowedGroups = strings.Split(config.Env.OIDCAllowedGroups, ",")
 	retval.Client = client
 
 	return retval, nil

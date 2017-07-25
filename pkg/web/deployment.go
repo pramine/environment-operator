@@ -18,8 +18,7 @@ func GetCurrentDeploymentByName(name string) (*v1beta1.Deployment, error) {
 	gitClient := git.Client()
 	gitClient.Refresh()
 
-	cfg := config.Load()
-	environment, err := bitesize.LoadEnvironmentFromConfig(cfg)
+	environment, err := bitesize.LoadEnvironmentFromConfig(config.Env)
 	if err != nil {
 		log.Errorf("Could not load env: %s", err.Error())
 		return nil, err
