@@ -49,7 +49,7 @@ func Auth(h http.Handler) http.Handler {
 
 func postDeploy(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-type", "application/json")
-	client, err := k8s.ClientForNamespace("sample-app-dev")
+	client, err := k8s.ClientForNamespace(config.Env.Namespace)
 
 	if err != nil {
 		log.Errorf("Error creating kubernetes client: %s", err.Error())
