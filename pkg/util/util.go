@@ -35,6 +35,10 @@ func Project() string {
 
 // Image returns full  app image given app and version
 func Image(app, version string) string {
+	if Registry() == "" {
+		return fmt.Sprintf("%s/%s:%s", Project(), app, version)
+	}
+
 	return fmt.Sprintf(
 		"%s/%s/%s:%s",
 		Registry(), Project(), app, version,
