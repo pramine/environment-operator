@@ -37,7 +37,6 @@ func (g *Git) CloneOrPull() error {
 
 func (g *Git) credentialsCallback(url string, username string, allowedTypes git2go.CredType) (git2go.ErrorCode, *git2go.Cred) {
 	ret, cred := git2go.NewCredSshKeyFromMemory(username, "", g.SSHKey, "")
-	log.Debugf("credentialsCallback: %s auth %s with key %s", username, url, g.SSHKey)
 	return git2go.ErrorCode(ret), &cred
 }
 

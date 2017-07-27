@@ -25,7 +25,7 @@ func (r *Reaper) Cleanup(cfg *bitesize.Environment) error {
 	}
 
 	for _, service := range current.Services {
-		if cfg.Services.FindByName(service.Name) == nil {
+		if cfg.Services != nil && cfg.Services.FindByName(service.Name) == nil {
 			log.Infof("REAPER: Found orphan service %s, deleting.", service.Name)
 			r.deleteService(service)
 		}
