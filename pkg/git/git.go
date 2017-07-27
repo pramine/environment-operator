@@ -1,12 +1,9 @@
 package git
 
 import (
-	"os"
-
-	log "github.com/Sirupsen/logrus"
 	"github.com/pearsontechnology/environment-operator/pkg/config"
-
 	git2go "gopkg.in/libgit2/git2go.v24"
+	"os"
 )
 
 // Git represents repository object and wraps git2go calls
