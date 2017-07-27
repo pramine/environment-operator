@@ -69,6 +69,8 @@ func postDeploy(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 		return
 	}
+	deployment.ObjectMeta.Labels["version"] = d.Version
+	deployment.ObjectMeta.Labels["application"] = d.Application
 
 	deployment.Spec.Template.Spec.Containers[0].Image = util.Image(d.Application, d.Version)
 
