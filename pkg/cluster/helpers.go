@@ -45,12 +45,14 @@ func healthCheck(deployment v1beta1.Deployment) *bitesize.HealthCheck {
 	return retval
 }
 
-func getLabel(resource v1beta1.Deployment, label string) string {
-	if (len(resource.ObjectMeta.Labels) > 0) &&
-		(resource.ObjectMeta.Labels[label] != "") {
-		return resource.ObjectMeta.Labels[label]
-	}
-	return ""
+func getLabel(metadata v1.ObjectMeta, label string) string {
+	//if (len(resource.ObjectMeta.Labels) > 0) &&
+	//		(resource.ObjectMeta.Labels[label] != "") {
+	//		return resource.ObjectMeta.Labels[label]
+	//	}
+	//	return ""
+	labels := metadata.GetLabels()
+	return labels[label]
 }
 
 func getAccessModesAsString(modes []v1.PersistentVolumeAccessMode) string {

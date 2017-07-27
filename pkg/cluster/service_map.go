@@ -43,6 +43,7 @@ func (s ServiceMap) Services() bitesize.Services {
 func (s ServiceMap) AddService(svc v1.Service) {
 	name := svc.Name
 	biteservice := s.CreateOrGet(name)
+	biteservice.Application = getLabel(svc.ObjectMeta, "application")
 
 	for _, port := range svc.Spec.Ports {
 		biteservice.Ports = append(biteservice.Ports, int(port.Port))
@@ -57,11 +58,11 @@ func (s ServiceMap) AddDeployment(deployment v1beta1.Deployment) {
 	if deployment.Spec.Replicas != nil {
 		biteservice.Replicas = int(*deployment.Spec.Replicas)
 	}
-	biteservice.Ssl = getLabel(deployment, "ssl") // kubeDeployment.Labels["ssl"]
-	biteservice.Version = getLabel(deployment, "version")
-	biteservice.Application = getLabel(deployment, "application")
-	biteservice.HTTPSOnly = getLabel(deployment, "httpsOnly")
-	biteservice.HTTPSBackend = getLabel(deployment, "httpsBackend")
+	biteservice.Ssl = getLabel(deployment.ObjectMeta, "ssl") // kubeDeployment.Labels["ssl"]
+	biteservice.Version = getLabel(deployment.ObjectMeta, "version")
+	biteservice.Application = getLabel(deployment.ObjectMeta, "application")
+	biteservice.HTTPSOnly = getLabel(deployment.ObjectMeta, "httpsOnly")
+	biteservice.HTTPSBackend = getLabel(deployment.ObjectMeta, "httpsBackend")
 	biteservice.EnvVars = envVars(deployment)
 	biteservice.HealthCheck = healthCheck(deployment)
 	biteservice.Status = bitesize.ServiceStatus{

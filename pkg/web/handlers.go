@@ -2,11 +2,13 @@ package web
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"strings"
 
 	log "github.com/Sirupsen/logrus"
+	"github.com/pearsontechnology/environment-operator/pkg/bitesize"
 	"github.com/pearsontechnology/environment-operator/pkg/cluster"
 	"github.com/pearsontechnology/environment-operator/pkg/config"
 	"github.com/pearsontechnology/environment-operator/pkg/util"
@@ -105,27 +107,7 @@ func getStatus(w http.ResponseWriter, r *http.Request) {
 	}
 
 	for _, svc := range e.Services {
-		status := "red"
-		if svc.Status.AvailableReplicas == svc.Status.DesiredReplicas {
-			status = "orange"
-		}
-
-		if svc.Status.AvailableReplicas == svc.Status.DesiredReplicas &&
-			svc.Status.DesiredReplicas == svc.Status.CurrentReplicas {
-			status = "green"
-		}
-
-		statusService := StatusService{
-			Name:       svc.Name,
-			Version:    svc.Version,
-			DeployedAt: svc.Status.DeployedAt,
-			Status:     status,
-			Replicas: StatusReplicas{
-				Available: svc.Status.AvailableReplicas,
-				UpToDate:  svc.Status.CurrentReplicas,
-				Desired:   svc.Status.DesiredReplicas,
-			},
-		}
+		statusService := statusForService(svc)
 		s.Services = append(s.Services, statusService)
 	}
 	json.NewEncoder(w).Encode(s)
@@ -139,34 +121,46 @@ func getServiceStatus(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 
+	svc, err := loadService(serviceName)
+	if err != nil {
+		log.Error(err.Error())
+		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+		return
+	}
+	statusService := statusForService(svc)
+	json.NewEncoder(w).Encode(statusService)
+}
+
+func loadService(name string) (bitesize.Service, error) {
 	client, err := cluster.Client()
 	if err != nil {
-		log.Errorf("Error getting cluster client: %s", err.Error())
-		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+		return bitesize.Service{}, errors.New(fmt.Sprintf("Error cluster client: %s", err.Error()))
 	}
 
 	e, err := client.LoadEnvironment(config.Env.Namespace)
 	if err != nil {
-		log.Errorf("Error getting cluster client: %s", err.Error())
-		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
-		return
+		return bitesize.Service{}, errors.New(fmt.Sprintf("Error getting environment: %s", err.Error()))
 	}
 
-	svc := e.Services.FindByName(serviceName)
-	if svc == nil {
-		log.Errorf("Error getting service: %s", err.Error())
-		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
-		return
+	s := e.Services.FindByName(name)
+	if s == nil {
+		return bitesize.Service{}, errors.New("Error getting service: name")
 	}
+	return *s, nil
+}
+
+func statusForService(svc bitesize.Service) StatusService {
 	status := "red"
 	if svc.Status.AvailableReplicas == svc.Status.DesiredReplicas {
 		status = "orange"
-	} else if svc.Status.AvailableReplicas == svc.Status.DesiredReplicas &&
+	}
+
+	if svc.Status.AvailableReplicas == svc.Status.DesiredReplicas &&
 		svc.Status.DesiredReplicas == svc.Status.CurrentReplicas {
 		status = "green"
 	}
 
-	statusService := StatusService{
+	return StatusService{
 		Name:       svc.Name,
 		Version:    svc.Version,
 		DeployedAt: svc.Status.DeployedAt,
@@ -177,6 +171,4 @@ func getServiceStatus(w http.ResponseWriter, r *http.Request) {
 			Desired:   svc.Status.DesiredReplicas,
 		},
 	}
-
-	json.NewEncoder(w).Encode(statusService)
 }
