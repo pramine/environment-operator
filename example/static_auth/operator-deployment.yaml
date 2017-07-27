@@ -40,7 +40,7 @@ spec:
         - name: BITESIZE_FILE
           value: environments.bitesize
         - name: AUTH_TOKEN_FILE
-          value: /auth/token
+          value: /etc/auth/token
         - name: DEBUG
           value: "true"
         - name: NAMESPACE
