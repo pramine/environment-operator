@@ -55,8 +55,8 @@ func (w *KubeMapper) Service() (*v1.Service, error) {
 		Spec: v1.ServiceSpec{
 			Ports: ports,
 			Selector: map[string]string{
-				"creator":     "pipeline",
-				"name":        w.BiteService.Name,
+				"creator": "pipeline",
+				"name":    w.BiteService.Name,
 			},
 		},
 	}
@@ -179,11 +179,26 @@ func (w *KubeMapper) envVars() ([]v1.EnvVar, error) {
 	for _, e := range w.BiteService.EnvVars {
 		var evar v1.EnvVar
 		if e.Secret != "" {
+			kv := strings.Split(e.Value, "/")
+			secretName := ""
+			secretDataKey := ""
+
+			if len(kv) == 2 {
+				secretName = kv[0]
+				secretDataKey = kv[1]
+			} else {
+				secretName = kv[0]
+				secretDataKey = secretName
+			}
+
 			evar = v1.EnvVar{
 				Name: e.Secret,
 				ValueFrom: &v1.EnvVarSource{
 					SecretKeyRef: &v1.SecretKeySelector{
-						Key: e.Value,
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: secretName,
+						},
+						Key: secretDataKey,
 					},
 				},
 			}
