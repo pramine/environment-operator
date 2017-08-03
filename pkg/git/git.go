@@ -43,7 +43,9 @@ func certificateCheckCallback(cert *git2go.Certificate, valid bool, hostname str
 }
 
 func (g *Git) cloneOptions() *git2go.CloneOptions {
-	opts := &git2go.CloneOptions{}
+	opts := &git2go.CloneOptions{
+		CheckoutBranch: g.BranchName,
+	}
 	opts.FetchOptions = g.fetchOptions()
 	return opts
 }
