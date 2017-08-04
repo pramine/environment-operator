@@ -19,6 +19,10 @@ type Reaper struct {
 // deletes them from the cluster
 func (r *Reaper) Cleanup(cfg *bitesize.Environment) error {
 
+	if cfg == nil {
+		return fmt.Error("REAPER Error with bitesize file, configuration is nil")
+	}
+
 	current, err := r.Wrapper.LoadEnvironment(r.Namespace)
 	if err != nil {
 		return fmt.Errorf("REAPER Error loading environment: %s", err.Error())
