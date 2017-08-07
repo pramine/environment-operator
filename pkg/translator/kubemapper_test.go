@@ -1,9 +1,10 @@
 package translator
 
 import (
-	"testing"
-
 	"github.com/pearsontechnology/environment-operator/pkg/bitesize"
+	"k8s.io/client-go/pkg/api/v1"
+	"os"
+	"testing"
 )
 
 func TestThirdPartyResource(t *testing.T) {
@@ -36,6 +37,22 @@ func testTranslatorIngressSSl(t *testing.T) {
 
 	if ingress.Labels["ssl"] != "true" {
 		t.Errorf("Unexpected ingress ssl value: %+v", ingress.Labels["ssl"])
+	}
+}
+
+func TestDockerPullSecrets(t *testing.T) {
+	w := BuildKubeMapper()
+	os.Setenv("DOCKER_PULL_SECRETS", "pullsecret")
+	deploy, _ := w.Deployment()
+	os.Unsetenv("DOCKER_PULL_SECRETS")
+	var testValue []v1.LocalObjectReference
+	testValue = []v1.LocalObjectReference{{Name: "pullsecret"}}
+	for i := range testValue {
+		var deployImagePullSecret []v1.LocalObjectReference
+		deployImagePullSecret = deploy.Spec.Template.Spec.ImagePullSecrets
+		if testValue[i] != deployImagePullSecret[i] {
+			t.Errorf("Unexpected Value for ImagePullSecret. Expected= %+v Actual= %+v", testValue[i], deployImagePullSecret[i])
+		}
 	}
 }
 
