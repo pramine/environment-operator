@@ -35,7 +35,7 @@ will merge dev into the master branch and then test, compile source, and build a
 
 * Update environment-operator/CHANGELOG.md to specify a new release 
   * example: In the changelog, modify the current candidate to a released version with a date: 
-    * "**[0.0.4]**" ---> "**[0.0.4] - YYYY-MM-DD [RELEASED]**"
+    * "**[0.0.5]**" ---> "**[0.0.5] - YYYY-MM-DD [RELEASED]**"
 
 * Update environment-operator/version/version.go  to contain the new release version
 
