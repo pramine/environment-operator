@@ -263,6 +263,9 @@ func loadTestEnvironment() *fake.Clientset {
 						Name:      "test",
 						Namespace: "test",
 						Labels:    validLabels,
+						Annotations: map[string]string{
+							"existing_annotation": "exist",
+						},
 					},
 					Spec: v1.PodSpec{
 						Containers: []v1.Container{
@@ -437,8 +440,8 @@ func TestEnvironmentAnnotations(t *testing.T) {
 	environment, _ := cluster.LoadEnvironment("test")
 	testService := environment.Services.FindByName("test")
 
-	if testService.Annotations["deployment.kubernetes.io/revision"] != "1" {
-		t.Error("Revision annotation is not loaded from the cluster before apply")
+	if testService.Annotations["existing_annotation"] != "exist" {
+		t.Error("Existing annotation is not loaded from the cluster before apply")
 	}
 
 	e1, _ := bitesize.LoadEnvironment("../../test/assets/annotations.bitesize", "test")
@@ -447,8 +450,8 @@ func TestEnvironmentAnnotations(t *testing.T) {
 	e2, _ := cluster.LoadEnvironment("test")
 	testService = e2.Services.FindByName("test")
 
-	if testService.Annotations["deployment.kubernetes.io/revision"] != "1" {
-		t.Error("Revision annotation is not loaded from the cluster after apply")
+	if testService.Annotations["existing_annotation"] != "exist" {
+		t.Error("Existing annotation is not loaded from the cluster after apply")
 	}
 
 }
