@@ -4,6 +4,9 @@ The purpose of Environment Operator is to provide a seamless application deploym
 <br>
 Each environment (development, staging, production) has it’s own definition and a separate endpoint to perform deployments.
 
+Currently Environment Operator supports Deployments, Services, Ingress and HorizonPodAutoscaler.
+We are actively working on Jobs and Stateful sets.
+
 <br>
 <br>
 Users of Environment Operator should start with our [User Guide](https://github.com/pearsontechnology/environment-operator/blob/dev/User_Guide.md)
