@@ -75,7 +75,7 @@ and use it as a volume:
 ## Creating Ingress
 
 
-See environment-operator examples dir.
+See [environment-operator examples dir](https://github.com/pearsontechnology/environment-operator/tree/dev/example).
 
 ## Troubleshooting
 
