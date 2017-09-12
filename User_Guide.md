@@ -8,14 +8,12 @@ The purpose of environment operator is to act as an application deployment mecha
 
 Deployment definition is fully compatible with `environments.bitesize` definition, so you can refer to the [guide describing various options for that file](https://github.com/pearsontechnology/deployment-pipeline-jenkins-plugin#environmentsbitesize). As every environment operator maintains a single environment, it takes a predefined section from `environments.bitesize` file to action on. For example, your dev cluster's namespace will have environment-operator configured to watch for changes in  "development" section of your `environments.bitesize`, in your own git repository. It will automatically apply changes such as number of application instances running, load balancer endpoint configuration or environment variables passed to your application.
 
-Please note the `environments.bitesize` file in your git repo is what is referenced by environment operator. no other file name will suffice.
-
 Other integral part of environment-operator is to provide endpoints to manage your deployments. The most common of them are `/deploy` and `/status/${service}` endpoints.
 
 
 ## Deploying your application manually
 
-You can use `curl` to perform deployments to your environment manually. All you need is to have an application endpoint and authentication token setup when environment-operator was deployed:
+You can use `curl` to perform deployments to your environment manually. All you need is to have an application endpoint and [authentication setup](https://github.com/pearsontechnology/environment-operator/blob/dev/Operatonal_Guide.md) when environment-operator was deployed:
 
 ```
 $ curl -k -XPOST \
