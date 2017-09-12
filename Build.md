@@ -1,10 +1,5 @@
 # environment-operator
 
-
-More information on environment operator can be found in https://docs.google.com/document/d/1VYarE5SepyvVFjkXJfnpM3JAgybxkBT53TZzqsOv_pc
-
-
-
 ## Building new docker image
 
 `hack/build/build.sh` script helps building docker image. It requires you to have
@@ -15,13 +10,13 @@ for all PRs against the environment-operator repository. Information on travisCI
 
 ## TravisCI
 
-**PR Build:** TravisCI will test, compile source, and then build docker images for all PRs opened against the environment-operator repository in Github. 
+**PR Build:** TravisCI will test, compile source, and then build docker images for all PRs opened against the environment-operator repository in Github.
 For PRs, the environment-operator image will be tagged with the github branch name (ex. pearsontechnology/environment-operator:$branchname) on Dockerhub.
 
-**Dev Build:** When a PR completd and merged to the "dev" branch, travisCI will test, compile source, and build a new 
+**Dev Build:** When a PR completd and merged to the "dev" branch, travisCI will test, compile source, and build a new
 docker image named: pearsontechnology/environment-operator:dev on Dockerhub
 
-**Master Build:** Once dev branch is successfully built by TravisCI, if a new release tag is present in the changelog, travisCI 
+**Master Build:** Once dev branch is successfully built by TravisCI, if a new release tag is present in the changelog, travisCI
 will merge dev into the master branch and then test, compile source, and build a docker image named: pearsontechnology/environment-operator:$releaseVersion on Docker hub.
 
 ## Releasing a New Version of Environment Operator
@@ -33,8 +28,8 @@ will merge dev into the master branch and then test, compile source, and build a
  cd /tmp/environment-operator
 ```
 
-* Update environment-operator/CHANGELOG.md to specify a new release 
-  * example: In the changelog, modify the current candidate to a released version with a date: 
+* Update environment-operator/CHANGELOG.md to specify a new release
+  * example: In the changelog, modify the current candidate to a released version with a date:
     * "**[0.0.6]**" ---> "**[0.0.6] - YYYY-MM-DD [RELEASED]**"
 
 * Update environment-operator/version/version.go  to contain the new release version
@@ -48,14 +43,14 @@ git commit -m "Initiating new release"
 git push
 ```
 
-* After pushing to git, travisCI will build the dev branch (detecting the new release version). Upon success, dev will be merged 
-to master and tagged with the new release version. A new environment-operator image will also be pushed to Dockerhub as 
+* After pushing to git, travisCI will build the dev branch (detecting the new release version). Upon success, dev will be merged
+to master and tagged with the new release version. A new environment-operator image will also be pushed to Dockerhub as
 pearsontechnology/environment-operator:$releaseVersion
 
 
 ## Running Tests
 
-Unit tests are stored next to the source files. Unit tests for each package are executed via the hack/build/build.sh 
+Unit tests are stored next to the source files. Unit tests for each package are executed via the hack/build/build.sh
 script above or as a part of every TravisCI build.
 
 ## Deploying sample environment-operator
