@@ -3,7 +3,7 @@
 ## Building new docker image
 
 `hack/build/build.sh` script helps building docker image. It requires you to have
-`IMAGE` environment variable set (e.g. `IMAGE=bitesize-registry.default.svc.cluster.local:5000/core/environment-operator`).
+`IMAGE` environment variable set (e.g. `IMAGE=https://hub.docker.com/r/pearsontechnology/golang/`).
 By default, image will be tagged with the HEAD commit tag. If you want to override
 it and release versioned image, set `IMAGE_TAG` environment variable.  Additionally, travisCI will build docker images
 for all PRs against the environment-operator repository. Information on travisCI is documented below.
