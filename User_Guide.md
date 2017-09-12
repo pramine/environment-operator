@@ -6,14 +6,14 @@ name: Environment operator user guide
 
 The purpose of environment operator is to allow you to define your environment and provide an application deployment mechanism to that environment. Each of your environments (development, staging, production) will have it's own definition and a separate endpoint to perform deployments.
 
-Deployment definition is fully compatible with `environments.bitesize` definition, so you can refer to the guide describing various options for that file. As every environment operator maintains a single environment, it takes a predefined section from Bitesize file to action on. For example, your dev cluster's namespace will have environment-operator configured to watch for changes in  "Development" section of your `environments.bitesize`, in your own git repository. It will automatically apply changes such as number of application instances running, load balancer endpoint configuration or environment variables passed to your application.
+Deployment definition is fully compatible with `environments.bitesize` definition, so you can refer to the [guide describing various options for that file](https://github.com/pearsontechnology/deployment-pipeline-jenkins-plugin#environmentsbitesize). As every environment operator maintains a single environment, it takes a predefined section from Bitesize file to action on. For example, your dev cluster's namespace will have environment-operator configured to watch for changes in  "Development" section of your `environments.bitesize`, in your own git repository. It will automatically apply changes such as number of application instances running, load balancer endpoint configuration or environment variables passed to your application.
 
 Other integral part of environment-operator is to provide endpoints to manage your deployments. The most common of them are `/deploy` and `/status/${service}` endpoints.
 
 
 ## Deploying your application manually
 
-You can use `curl` to perform deployments to your environment manually. All you need is to have an application endpoint and authentication token provided by Bitesize team:
+You can use `curl` to perform deployments to your environment manually. All you need is to have an application endpoint and authentication token setup when environment-operator was deployed:
 
 ```
 $ curl -k -XPOST \
@@ -99,7 +99,7 @@ $ curl -k -XGET \
 ```
 ## Installing Jenkins plugin for environment operator
 
-We provide Jenkins plugin to integrate deployments into your Jenkins pipeline seamlessly. To install plugin please upload hpi file provided by Bitesize team to Jenkins:
+We provide Jenkins plugin to integrate deployments into your Jenkins pipeline seamlessly. To install plugin please upload hpi file provided at [environment-operator-jenkins-plugin](https://github.com/pearsontechnology/environment-operator-jenkins-plugin/tree/master/plugin) to Jenkins:
 
     Manage Jenkins -> Manage Plugins -> Advanced -> Upload Plugin
 
