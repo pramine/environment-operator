@@ -4,16 +4,16 @@ name: Environment operator user guide
 
 # Environment operator user guide
 
-The purpose of environment operator is to allow you to define your environment and provide an application deployment mechanism to that environment. Each of your environments (development, staging, production) will have it's own definition and a separate endpoint to perform deployments.
+The purpose of environment operator is to act as an application deployment mechanism to a given environment. This largely equates to a Kubernetes namespace. Each of your environments (development, staging, production) will have it's own definition and a separate endpoint to perform deployments.
 
-Deployment definition is fully compatible with `environments.bitesize` definition, so you can refer to the guide describing various options for that file. As every environment operator maintains a single environment, it takes a predefined section from Bitesize file to action on. For example, your dev cluster's namespace will have environment-operator configured to watch for changes in  "Development" section of your `environments.bitesize`, in your own git repository. It will automatically apply changes such as number of application instances running, load balancer endpoint configuration or environment variables passed to your application.
+Deployment definition is fully compatible with `environments.bitesize` definition, so you can refer to the [guide describing various options for that file](https://github.com/pearsontechnology/deployment-pipeline-jenkins-plugin#environmentsbitesize). As every environment operator maintains a single environment, it takes a predefined section from `environments.bitesize` file to action on. For example, your dev cluster's namespace will have environment-operator configured to watch for changes in  "development" section of your `environments.bitesize`, in your own git repository. It will automatically apply changes such as number of application instances running, load balancer endpoint configuration or environment variables passed to your application.
 
 Other integral part of environment-operator is to provide endpoints to manage your deployments. The most common of them are `/deploy` and `/status/${service}` endpoints.
 
 
 ## Deploying your application manually
 
-You can use `curl` to perform deployments to your environment manually. All you need is to have an application endpoint and authentication token provided by Bitesize team:
+You can use `curl` to perform deployments to your environment manually. All you need is to have an application endpoint and [authentication setup](https://github.com/pearsontechnology/environment-operator/blob/dev/Operatonal_Guide.md) when environment-operator was deployed:
 
 ```
 $ curl -k -XPOST \
@@ -99,26 +99,26 @@ $ curl -k -XGET \
 ```
 ## Installing Jenkins plugin for environment operator
 
-We provide Jenkins plugin to integrate deployments into your Jenkins pipeline seamlessly. To install plugin please upload hpi file provided by Bitesize team to Jenkins:
+We provide a Jenkins plugin to integrate deployments into your Jenkins pipeline seamlessly. To install plugin please upload hpi file provided at [environment-operator-jenkins-plugin](https://github.com/pearsontechnology/environment-operator-jenkins-plugin/tree/master/plugin) to Jenkins:
 
     Manage Jenkins -> Manage Plugins -> Advanced -> Upload Plugin
 
-![install](../images/install.png)
+![install](./images/install.png)
 
 
 Once plugin is installed, you can use it as a build step in your Jenkins Jobs:
 
-![build_step](../images/build_step.png)
+![build_step](./images/build_step.png)
 
 Fields you will need to configure are similar to the parameters you need to specify to curl command. Make sure you specify Endpoint URL (be sure to include http:// on the URL) and Authentication Token in advanced options.
 
 Name, application and version fields can be parameterized inputs. You can parameterize one or all of them, based on your pipeline needs. The following example uses name and application fields as a static inputs, and just uses VERSION as parameter:
 
-![build_parameter](../images/build_parameter.png)
+![build_parameter](./images/build_parameter.png)
 
 Then it could be used in build step settings:
 
-![deploy_field](../images/deploy_field.png)
+![deploy_field](./images/deploy_field.png)
 
 Build step will either fail or succeed based on deployment status.
 
