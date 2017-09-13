@@ -196,7 +196,7 @@ spec:
           valueFrom:
             fieldRef:
               fieldPath: metadata.namespace
-        image: bsomogyi/environment-operator:967f43e1deee2f1c75ab10b6d5b483eee5c58618
+        image: pearsontechnology/environment-operator
         imagePullPolicy: Always
         securityContext:
           runAsUser: 1000
@@ -258,7 +258,7 @@ multiple different docker accounts when pulling images. For more information on 
 found [here](https://kubernetes.io/docs/concepts/containers/images/#specifying-imagepullsecrets-on-a-pod)
 
 Note: The following example of environment will pull images from $DOCKER_REGISTRY/$PROJECT/$app:$version
-(index.docker.io/bsomogyi/$app:$version) where app and version come from the environemts.bitesize file.  
+(index.docker.io/pearsontechnology/$app:$version) where app and version come from the environemts.bitesize file.  
 
 
 ```
@@ -300,7 +300,7 @@ spec:
         - name: DOCKER_PULL_SECRETS
           value: myregistrykey
         - name: PROJECT
-          value: bsomogyi
+          value: myproject
         - name: ENVIRONMENT_NAME
           value: dev
         - name: BITESIZE_FILE
