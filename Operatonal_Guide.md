@@ -15,7 +15,7 @@ Environment operator runs as a deployment in the namespace it manages. Example d
 * `BITESIZE_FILE` - usually `environments.bitesize`, but can be anything, to suit project's needs better (for example, you can have file per environment, or per kubernetes cluster).
 * `ENVIRONMENT_NAME` - corresponds to the "name" field in bitesize file. This is the environment that operator manages.
 * `DOCKER_REGISTRY` - registry to download application images from.
-* `DOCKER_PULL_SECRETS` - A comma delimited list of k8s secret names in your applications k8s namespace that will be used to pull images from your private DOCKER_REGISTRY. If you are using the Bitesize S3 private registry, this environment variable may be ommited from the environment operator config. More information on using a Private Docker Registry is found [here](/docs/howto/private_registry)
+* `DOCKER_PULL_SECRETS` - A comma delimited list of k8s secret names in your applications k8s namespace that will be used to pull images from your private DOCKER_REGISTRY.
 * `PROJECT`  - used for metadata (e.g. tags for managed services).
 * `OIDC_ISSUER_URL` - issuer ID for OpenID Connect.
 * `OIDC_ALLOWED_GROUPS` - comma separated list of Keycloak provided groups, that can perform HTTP actions against environment-operator.
@@ -77,39 +77,8 @@ and use it as a volume:
 
 See [environment-operator examples dir](https://github.com/pearsontechnology/environment-operator/tree/dev/example).
 
-## Troubleshooting
 
-This section describes common issues and troubleshooting steps when something does not work.
-
-### Environment operator fails to clone git repository
-
-Usual symptom is these lines in the system output log:
-
-```
-time="2017-07-27T11:38:34Z" level=error msg="Git clone error: Failed to authenticate SSH session: Waiting for USERAUTH response"
-time="2017-07-27T11:38:34Z" level=error msg="Failed to resolve path '/tmp/repository': No such file or directory"
-```
-
-Second line indicates that repository clone has failed (could be wrong GIT_REMOTE_REPOSITORY or GIT_PRIVATE_KEY). However, first line indicates that there was user authentication error (most likely, the wrong GIT_PRIVATE_KEY set).
-
-To verify this is the case, you will need to exec into container:
-
-```
-kubectl exec -ti $(kubectl get pods | awk '/environment-operator/{print $1}') /bin/bash
-```
-
-Then execute the following commands to verify git clone fails:
-
-```
-echo $GIT_PRIVATE_KEY > /tmp/key
-chmod 0400 /tmp/key
-export GIT_SSH_COMMAND="ssh -i /tmp/key"
-git clone $GIT_REMOTE_POSITORY
-```
-
-This should give you the error environment-operator encounters.
-
-# Environment operator private registry support
+# Private registry support
 
 The environment operator allows Docker images to be deployed into a Kubernetes namespace from private registries like
 DockerHub as well as Google Container Registry. This document details the process for configuring the environment operator
@@ -227,7 +196,7 @@ spec:
           valueFrom:
             fieldRef:
               fieldPath: metadata.namespace
-        image: bsomogyi/environment-operator:967f43e1deee2f1c75ab10b6d5b483eee5c58618
+        image: pearsontechnology/environment-operator
         imagePullPolicy: Always
         securityContext:
           runAsUser: 1000
@@ -289,7 +258,7 @@ multiple different docker accounts when pulling images. For more information on 
 found [here](https://kubernetes.io/docs/concepts/containers/images/#specifying-imagepullsecrets-on-a-pod)
 
 Note: The following example of environment will pull images from $DOCKER_REGISTRY/$PROJECT/$app:$version
-(index.docker.io/bsomogyi/$app:$version) where app and version come from the environemts.bitesize file.  
+(index.docker.io/pearsontechnology/$app:$version) where app and version come from the environemts.bitesize file.  
 
 
 ```
@@ -331,7 +300,7 @@ spec:
         - name: DOCKER_PULL_SECRETS
           value: myregistrykey
         - name: PROJECT
-          value: bsomogyi
+          value: myproject
         - name: ENVIRONMENT_NAME
           value: dev
         - name: BITESIZE_FILE
@@ -344,7 +313,7 @@ spec:
           valueFrom:
             fieldRef:
               fieldPath: metadata.namespace
-        image: bsomogyi/environment-operator:967f43e1deee2f1c75ab10b6d5b483eee5c58618
+        image: pearsontechnology/environment-operator
         imagePullPolicy: Always
         securityContext:
           runAsUser: 1000
@@ -369,85 +338,34 @@ spec:
 ```
 
 
+## Troubleshooting
 
-## Bitesize S3 Private Registry
+This section describes common issues and troubleshooting steps when something does not work.
 
-If images are being pulled from the Bitesize S3 Registry the DOCKER_PULL_SECRETS env variable should be ommited as registry
- secrets are not needed by the pod. We handle access through amazons IAM service. Below is a sample environment-operator yaml file that pulls
-pod images from the Bitesize S3 registry:
+### Environment operator fails to clone git repository
 
-```
-apiVersion: extensions/v1beta1
-kind: Deployment
-metadata:
-  labels:
-    name: environment-operator
-  name: environment-operator
-  namespace: somogyi-app
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      name: environment-operator
-  strategy:
-    rollingUpdate:
-      maxSurge: 1
-      maxUnavailable: 1
-    type: RollingUpdate
-  template:
-    metadata:
-      labels:
-        name: environment-operator
-      name: environment-operator
-    spec:
-      containers:
-      - name: environment-operator
-        env:
-        - name: GIT_REMOTE_REPOSITORY
-          value: git@github.com:pearsontechnology/somogyi-temp-test-app.git
-        - name: GIT_PRIVATE_KEY
-          valueFrom:
-            secretKeyRef:
-              name: git-private-key
-              key: key
-        - name: DOCKER_REGISTRY
-          value: "bitesize-registry.default.svc.cluster.local:5000"
-        - name: PROJECT
-          value: somogyi-app
-        - name: ENVIRONMENT_NAME
-          value: dev
-        - name: BITESIZE_FILE
-          value: environments.bitesize
-        - name: AUTH_TOKEN_FILE
-          value: /auth/token
-        - name: DEBUG
-          value: "true"
-        - name: NAMESPACE
-          valueFrom:
-            fieldRef:
-              fieldPath: metadata.namespace
-        image: bsomogyi/environment-operator:1e25ad1da3de87d4b3e06c99ebd85d618fdb85af
-        imagePullPolicy: Always
-        securityContext:
-          runAsUser: 1000
-        volumeMounts:
-        - name: "auth-token"
-          mountPath: "/etc/auth"
-          readOnly: true
-        - name: "git-key"
-          mountPath: "/etc/git"
-          readOnly: true
-        ports:
-        - containerPort: 8080
-          protocol: TCP
-        resources: {}
-        terminationMessagePath: /dev/termination-log
-      volumes:
-      - name: "auth-token"
-        secret:
-          secretName: "auth-token-file"
-      - name: "git-key"
-        secret:
-
+Usual symptom is these lines in the system output log:
 
 ```
+time="2017-07-27T11:38:34Z" level=error msg="Git clone error: Failed to authenticate SSH session: Waiting for USERAUTH response"
+time="2017-07-27T11:38:34Z" level=error msg="Failed to resolve path '/tmp/repository': No such file or directory"
+```
+
+Second line indicates that repository clone has failed (could be wrong GIT_REMOTE_REPOSITORY or GIT_PRIVATE_KEY). However, first line indicates that there was user authentication error (most likely, the wrong GIT_PRIVATE_KEY set).
+
+To verify this is the case, you will need to exec into container:
+
+```
+kubectl exec -ti $(kubectl get pods | awk '/environment-operator/{print $1}') /bin/bash
+```
+
+Then execute the following commands to verify git clone fails:
+
+```
+echo $GIT_PRIVATE_KEY > /tmp/key
+chmod 0400 /tmp/key
+export GIT_SSH_COMMAND="ssh -i /tmp/key"
+git clone $GIT_REMOTE_POSITORY
+```
+
+This should give you the error environment-operator encounters.
