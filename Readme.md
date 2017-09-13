@@ -17,3 +17,8 @@ We also provide and [Operations Guide](https://github.com/pearsontechnology/envi
 <br>
 <br>
 And finally if interested in developing against Environment Operator, check our our [Builder Guide](https://github.com/pearsontechnology/environment-operator/blob/dev/Build.md)
+
+
+<br>
+<br>
+![workflow](./images/environment_operator_workflow.png)
