@@ -15,7 +15,7 @@ Environment operator runs as a deployment in the namespace it manages. Example d
 * `BITESIZE_FILE` - usually `environments.bitesize`, but can be anything, to suit project's needs better (for example, you can have file per environment, or per kubernetes cluster).
 * `ENVIRONMENT_NAME` - corresponds to the "name" field in bitesize file. This is the environment that operator manages.
 * `DOCKER_REGISTRY` - registry to download application images from.
-* `DOCKER_PULL_SECRETS` - A comma delimited list of k8s secret names in your applications k8s namespace that will be used to pull images from your private DOCKER_REGISTRY. If you are using the Bitesize S3 private registry, this environment variable may be ommited from the environment operator config.
+* `DOCKER_PULL_SECRETS` - A comma delimited list of k8s secret names in your applications k8s namespace that will be used to pull images from your private DOCKER_REGISTRY.
 * `PROJECT`  - used for metadata (e.g. tags for managed services).
 * `OIDC_ISSUER_URL` - issuer ID for OpenID Connect.
 * `OIDC_ALLOWED_GROUPS` - comma separated list of Keycloak provided groups, that can perform HTTP actions against environment-operator.
