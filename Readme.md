@@ -21,4 +21,4 @@ And finally if interested in developing against Environment Operator, check our 
 
 <br>
 <br>
-![workflow](./images/environment_operator_workflow.png)
+![workflow](./images/workflow.png)
