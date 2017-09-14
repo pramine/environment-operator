@@ -48,14 +48,14 @@ func (cluster *Cluster) ApplyIfChanged(newConfig *bitesize.Environment) error {
 	changes := diff.Compare(*newConfig, *currentConfig)
 	if changes != "" {
 		log.Infof("Changes: %s", changes)
-		err = cluster.ApplyEnvironment(newConfig)
+		err = cluster.ApplyEnvironment(currentConfig, newConfig)
 	}
 	return err
 }
 
 // ApplyEnvironment executes kubectl apply against ingresses, services, deployments
 // etc.
-func (cluster *Cluster) ApplyEnvironment(e *bitesize.Environment) error {
+func (cluster *Cluster) ApplyEnvironment(current_e, e *bitesize.Environment) error {
 	var err error
 
 	for _, service := range e.Services {
@@ -72,36 +72,40 @@ func (cluster *Cluster) ApplyEnvironment(e *bitesize.Environment) error {
 		}
 
 		if service.Type == "" {
-			svc, _ := mapper.Service()
-			if err = client.Service().Apply(svc); err != nil {
-				log.Error(err)
-			}
+			current_service := current_e.Services.FindByName(service.Name)
+			if current_service != nil { //Verify the old/current service existed before applying resources
+				if current_service.Status.DeployedAt != "" { //Only apply k8s resources if the BiteService has actually been deployed
+					deployment, err := mapper.Deployment()
+					if err != nil {
+						return err
+					}
+					if err = client.Deployment().Apply(deployment); err != nil {
+						log.Error(err)
+					}
 
-			deployment, err := mapper.Deployment()
-			if err != nil {
-				return err
-			}
+					svc, _ := mapper.Service()
+					if err = client.Service().Apply(svc); err != nil {
+						log.Error(err)
+					}
 
-			if err = client.Deployment().Apply(deployment); err != nil {
-				log.Error(err)
-			}
+					hpa, _ := mapper.HPA()
+					if err = client.HorizontalPodAutoscaler().Apply(&hpa); err != nil {
+						log.Error(err)
+					}
 
-			hpa, _ := mapper.HPA()
-			if err = client.HorizontalPodAutoscaler().Apply(&hpa); err != nil {
-				log.Error(err)
-			}
+					pvc, _ := mapper.PersistentVolumeClaims()
+					for _, claim := range pvc {
+						if err = client.PVC().Apply(&claim); err != nil {
+							log.Error(err)
+						}
+					}
 
-			pvc, _ := mapper.PersistentVolumeClaims()
-			for _, claim := range pvc {
-				if err = client.PVC().Apply(&claim); err != nil {
-					log.Error(err)
-				}
-			}
-
-			if service.ExternalURL != "" {
-				ingress, _ := mapper.Ingress()
-				if err = client.Ingress().Apply(ingress); err != nil {
-					log.Error(err)
+					if service.ExternalURL != "" {
+						ingress, _ := mapper.Ingress()
+						if err = client.Ingress().Apply(ingress); err != nil {
+							log.Error(err)
+						}
+					}
 				}
 			}
 
