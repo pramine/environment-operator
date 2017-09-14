@@ -228,7 +228,9 @@ func (cluster *Cluster) LoadEnvironment(namespace string) (*bitesize.Environment
 //Only deploy k8s resources when the environment was actually deployed or if the service has specified a version
 func shouldDeploy(currentE, e *bitesize.Environment, serviceName string) bool {
 	currentService := currentE.Services.FindByName(serviceName)
-	if (currentService != nil && currentService.Status.DeployedAt != "") || e.Services.FindByName(serviceName).Version != "" {
+	updatedService := e.Services.FindByName(serviceName)
+
+	if (currentService != nil && currentService.Status.DeployedAt != "") || (updatedService != nil && updatedService.Version != "") {
 		return true
 	}
 	return false
