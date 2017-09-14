@@ -72,38 +72,40 @@ func (cluster *Cluster) ApplyEnvironment(current_e, e *bitesize.Environment) err
 		}
 
 		if service.Type == "" {
-			currentService := current_e.Services.FindByName(service.Name)
-			if (currentService != nil && currentService.Status.DeployedAt != "") || e.Services.FindByName(service.Name).Version != "" { //Verify if service was deployed before apply resources or that it has a version
-				deployment, err := mapper.Deployment()
-				if err != nil {
-					return err
-				}
-				if err = client.Deployment().Apply(deployment); err != nil {
+
+			if !shouldDeploy(current_e, e, service.Name) {
+				continue
+			}
+
+			deployment, err := mapper.Deployment()
+			if err != nil {
+				return err
+			}
+			if err = client.Deployment().Apply(deployment); err != nil {
+				log.Error(err)
+			}
+
+			svc, _ := mapper.Service()
+			if err = client.Service().Apply(svc); err != nil {
+				log.Error(err)
+			}
+
+			hpa, _ := mapper.HPA()
+			if err = client.HorizontalPodAutoscaler().Apply(&hpa); err != nil {
+				log.Error(err)
+			}
+
+			pvc, _ := mapper.PersistentVolumeClaims()
+			for _, claim := range pvc {
+				if err = client.PVC().Apply(&claim); err != nil {
 					log.Error(err)
 				}
+			}
 
-				svc, _ := mapper.Service()
-				if err = client.Service().Apply(svc); err != nil {
+			if service.ExternalURL != "" {
+				ingress, _ := mapper.Ingress()
+				if err = client.Ingress().Apply(ingress); err != nil {
 					log.Error(err)
-				}
-
-				hpa, _ := mapper.HPA()
-				if err = client.HorizontalPodAutoscaler().Apply(&hpa); err != nil {
-					log.Error(err)
-				}
-
-				pvc, _ := mapper.PersistentVolumeClaims()
-				for _, claim := range pvc {
-					if err = client.PVC().Apply(&claim); err != nil {
-						log.Error(err)
-					}
-				}
-
-				if service.ExternalURL != "" {
-					ingress, _ := mapper.Ingress()
-					if err = client.Ingress().Apply(ingress); err != nil {
-						log.Error(err)
-					}
 				}
 			}
 
@@ -221,4 +223,13 @@ func (cluster *Cluster) LoadEnvironment(namespace string) (*bitesize.Environment
 	}
 
 	return &bitesizeConfig, nil
+}
+
+//Only deploy k8s resources when the environment was actually deployed or if the service has specified a version
+func shouldDeploy(currentE, e *bitesize.Environment, serviceName string) bool {
+	currentService := currentE.Services.FindByName(serviceName)
+	if (currentService != nil && currentService.Status.DeployedAt != "") || e.Services.FindByName(serviceName).Version != "" {
+		return true
+	}
+	return false
 }
