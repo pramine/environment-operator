@@ -72,19 +72,27 @@ func TestApplyEnvironment(t *testing.T) {
 	}
 
 	e1, err := bitesize.LoadEnvironment("../../test/assets/environments.bitesize", "environment2")
-	if err != nil {
-		t.Fatalf("Unexpected err: %s", err.Error())
-	}
 
-	cluster.ApplyEnvironment(e1)
-
-	e2, err := cluster.LoadEnvironment("environment-dev")
+	e2 := e1
 
 	if err != nil {
 		t.Fatalf("Unexpected err: %s", err.Error())
 	}
 
-	if d := diff.Compare(*e1, *e2); d != "" {
+	//Make sure the old environment reflects that services were deployed
+	for i, _ := range e1.Services {
+		e1.Services[i].Status.DeployedAt = "Current Time"
+	}
+
+	cluster.ApplyEnvironment(e1, e2)
+
+	e3, err := cluster.LoadEnvironment("environment-dev")
+
+	if err != nil {
+		t.Fatalf("Unexpected err: %s", err.Error())
+	}
+
+	if d := diff.Compare(*e2, *e3); d != "" {
 		t.Errorf("Expected loaded environments to be equal, yet diff is: %s", d)
 	}
 }
@@ -445,7 +453,7 @@ func TestEnvironmentAnnotations(t *testing.T) {
 	}
 
 	e1, _ := bitesize.LoadEnvironment("../../test/assets/annotations.bitesize", "test")
-	cluster.ApplyEnvironment(e1)
+	cluster.ApplyEnvironment(e1, e1)
 
 	e2, _ := cluster.LoadEnvironment("test")
 	testService = e2.Services.FindByName("test")
@@ -480,7 +488,7 @@ func TestApplyNewHPA(t *testing.T) {
 		t.Fatalf("Unexpected err: %s", err.Error())
 	}
 
-	cluster.ApplyEnvironment(e1)
+	cluster.ApplyEnvironment(e1, e1)
 
 	e2, err := cluster.LoadEnvironment("environment-dev")
 
@@ -552,7 +560,7 @@ func TestApplyExistingHPA(t *testing.T) {
 		t.Fatalf("Unexpected err: %s", err.Error())
 	}
 
-	cluster.ApplyEnvironment(e1)
+	cluster.ApplyEnvironment(e1, e1)
 
 	e2, err := cluster.LoadEnvironment("environment-dev")
 

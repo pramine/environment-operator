@@ -9,6 +9,12 @@ This project adheres to [Semantic Versioning](http://semver.org/). Additionally,
 - **Fixed** for any bug fixes.
 - **Security** for any security changes or fixes for vulnerabilities.
 
+### **[0.0.6] - 2017-09-13 [RELEASED]**
+
+#### Fixed
+
+*  Ensure k8s resources are only applied if a deployment is made for that Bitesize Service. [[BITE-1634] (https://agile-jira.pearson.com/browse/BITE-1634)]
+
 ### **[0.0.5] - 2017-09-06 [RELEASED]**
 
 #### Fixed

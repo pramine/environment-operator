@@ -31,7 +31,9 @@ func Compare(config1, config2 bitesize.Environment) string {
 		// compare configs only if deployment is found in cluster
 		// and git service has no version set
 		if (s.Version != "") || (d != nil && d.Version != "") {
-			alignServices(&s, d)
+			if d != nil {
+				alignServices(&s, d)
+			}
 
 			serviceDiff := compareConfig.Compare(d, s)
 
@@ -44,6 +46,7 @@ func Compare(config1, config2 bitesize.Environment) string {
 
 // Can't think of a better word
 func alignServices(src, dest *bitesize.Service) {
+	//log.Debugf("Aligning Service %s", src.Name)
 	// Copy version from dest if source version is empty
 	if src.Version == "" {
 		src.Version = dest.Version

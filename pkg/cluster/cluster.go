@@ -48,14 +48,14 @@ func (cluster *Cluster) ApplyIfChanged(newConfig *bitesize.Environment) error {
 	changes := diff.Compare(*newConfig, *currentConfig)
 	if changes != "" {
 		log.Infof("Changes: %s", changes)
-		err = cluster.ApplyEnvironment(newConfig)
+		err = cluster.ApplyEnvironment(currentConfig, newConfig)
 	}
 	return err
 }
 
 // ApplyEnvironment executes kubectl apply against ingresses, services, deployments
 // etc.
-func (cluster *Cluster) ApplyEnvironment(e *bitesize.Environment) error {
+func (cluster *Cluster) ApplyEnvironment(current_e, e *bitesize.Environment) error {
 	var err error
 
 	for _, service := range e.Services {
@@ -72,17 +72,21 @@ func (cluster *Cluster) ApplyEnvironment(e *bitesize.Environment) error {
 		}
 
 		if service.Type == "" {
-			svc, _ := mapper.Service()
-			if err = client.Service().Apply(svc); err != nil {
-				log.Error(err)
+
+			if !shouldDeploy(current_e, e, service.Name) {
+				continue
 			}
 
 			deployment, err := mapper.Deployment()
 			if err != nil {
 				return err
 			}
-
 			if err = client.Deployment().Apply(deployment); err != nil {
+				log.Error(err)
+			}
+
+			svc, _ := mapper.Service()
+			if err = client.Service().Apply(svc); err != nil {
 				log.Error(err)
 			}
 
@@ -219,4 +223,15 @@ func (cluster *Cluster) LoadEnvironment(namespace string) (*bitesize.Environment
 	}
 
 	return &bitesizeConfig, nil
+}
+
+//Only deploy k8s resources when the environment was actually deployed or if the service has specified a version
+func shouldDeploy(currentE, e *bitesize.Environment, serviceName string) bool {
+	currentService := currentE.Services.FindByName(serviceName)
+	updatedService := e.Services.FindByName(serviceName)
+
+	if (currentService != nil && currentService.Status.DeployedAt != "") || (updatedService != nil && updatedService.Version != "") {
+		return true
+	}
+	return false
 }
