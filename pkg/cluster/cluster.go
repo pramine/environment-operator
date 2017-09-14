@@ -72,39 +72,37 @@ func (cluster *Cluster) ApplyEnvironment(current_e, e *bitesize.Environment) err
 		}
 
 		if service.Type == "" {
-			current_service := current_e.Services.FindByName(service.Name)
-			if current_service != nil { //Verify the old/current service existed before applying resources
-				if current_service.Status.DeployedAt != "" { //Only apply k8s resources if the BiteService has actually been deployed
-					deployment, err := mapper.Deployment()
-					if err != nil {
-						return err
-					}
-					if err = client.Deployment().Apply(deployment); err != nil {
+			currentService := current_e.Services.FindByName(service.Name)
+			if (currentService != nil && currentService.Status.DeployedAt != "") || e.Services.FindByName(service.Name).Version != "" { //Verify if service was deployed before apply resources or that it has a version
+				deployment, err := mapper.Deployment()
+				if err != nil {
+					return err
+				}
+				if err = client.Deployment().Apply(deployment); err != nil {
+					log.Error(err)
+				}
+
+				svc, _ := mapper.Service()
+				if err = client.Service().Apply(svc); err != nil {
+					log.Error(err)
+				}
+
+				hpa, _ := mapper.HPA()
+				if err = client.HorizontalPodAutoscaler().Apply(&hpa); err != nil {
+					log.Error(err)
+				}
+
+				pvc, _ := mapper.PersistentVolumeClaims()
+				for _, claim := range pvc {
+					if err = client.PVC().Apply(&claim); err != nil {
 						log.Error(err)
 					}
+				}
 
-					svc, _ := mapper.Service()
-					if err = client.Service().Apply(svc); err != nil {
+				if service.ExternalURL != "" {
+					ingress, _ := mapper.Ingress()
+					if err = client.Ingress().Apply(ingress); err != nil {
 						log.Error(err)
-					}
-
-					hpa, _ := mapper.HPA()
-					if err = client.HorizontalPodAutoscaler().Apply(&hpa); err != nil {
-						log.Error(err)
-					}
-
-					pvc, _ := mapper.PersistentVolumeClaims()
-					for _, claim := range pvc {
-						if err = client.PVC().Apply(&claim); err != nil {
-							log.Error(err)
-						}
-					}
-
-					if service.ExternalURL != "" {
-						ingress, _ := mapper.Ingress()
-						if err = client.Ingress().Apply(ingress); err != nil {
-							log.Error(err)
-						}
 					}
 				}
 			}
