@@ -3,16 +3,14 @@ package cluster
 import (
 	"errors"
 	"fmt"
-
-	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/rest"
-
 	log "github.com/Sirupsen/logrus"
 	"github.com/pearsontechnology/environment-operator/pkg/bitesize"
 	"github.com/pearsontechnology/environment-operator/pkg/diff"
 	"github.com/pearsontechnology/environment-operator/pkg/k8_extensions"
 	"github.com/pearsontechnology/environment-operator/pkg/translator"
 	"github.com/pearsontechnology/environment-operator/pkg/util/k8s"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
 )
 
 // NewClusterClient returns default in-cluster kubernetes client
@@ -45,35 +43,35 @@ func (cluster *Cluster) ApplyIfChanged(newConfig *bitesize.Environment) error {
 	log.Debugf("Loading namespace: %s", newConfig.Namespace)
 	currentConfig, _ := cluster.LoadEnvironment(newConfig.Namespace)
 
-	changes := diff.Compare(*newConfig, *currentConfig)
-	if changes != "" {
-		log.Infof("Changes: %s", changes)
-		err = cluster.ApplyEnvironment(currentConfig, newConfig)
+	changeMap := diff.Compare(*newConfig, *currentConfig)
+
+	if len(changeMap) != 0 {
+		err = cluster.ApplyEnvironment(currentConfig, newConfig, changeMap)
 	}
 	return err
 }
 
 // ApplyEnvironment executes kubectl apply against ingresses, services, deployments
 // etc.
-func (cluster *Cluster) ApplyEnvironment(current_e, e *bitesize.Environment) error {
+func (cluster *Cluster) ApplyEnvironment(currentEnvironment, newEnvironment *bitesize.Environment, changeMap map[string]string) error {
 	var err error
 
-	for _, service := range e.Services {
+	for _, service := range newEnvironment.Services {
 
 		mapper := &translator.KubeMapper{
 			BiteService: &service,
-			Namespace:   e.Namespace,
+			Namespace:   newEnvironment.Namespace,
 		}
 
 		client := &k8s.Client{
 			Interface: cluster.Interface,
-			Namespace: e.Namespace,
+			Namespace: newEnvironment.Namespace,
 			TPRClient: cluster.TPRClient,
 		}
 
 		if service.Type == "" {
 
-			if !shouldDeploy(current_e, e, service.Name) {
+			if !shouldDeploy(currentEnvironment, newEnvironment, service.Name, changeMap) {
 				continue
 			}
 
@@ -223,13 +221,17 @@ func (cluster *Cluster) LoadEnvironment(namespace string) (*bitesize.Environment
 	return &bitesizeConfig, nil
 }
 
-//Only deploy k8s resources when the environment was actually deployed or if the service has specified a version
-func shouldDeploy(currentE, e *bitesize.Environment, serviceName string) bool {
-	currentService := currentE.Services.FindByName(serviceName)
-	updatedService := e.Services.FindByName(serviceName)
+//Only deploy k8s resources when the environment was actually deployed and changed or if the service has specified a version
+func shouldDeploy(currentEnvironment, newEnvironment *bitesize.Environment, serviceName string, changeMap map[string]string) bool {
+	currentService := currentEnvironment.Services.FindByName(serviceName)
+	updatedService := newEnvironment.Services.FindByName(serviceName)
+	val, serviceChangeExists := changeMap[serviceName]
 
 	if (currentService != nil && currentService.Status.DeployedAt != "") || (updatedService != nil && updatedService.Version != "") {
-		return true
+		if serviceChangeExists {
+			log.Debugf("Applying changes to the '%s' service:\n %s", serviceName, val)
+			return true
+		}
 	}
 	return false
 }

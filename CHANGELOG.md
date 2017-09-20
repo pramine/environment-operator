@@ -14,6 +14,7 @@ This project adheres to [Semantic Versioning](http://semver.org/). Additionally,
 #### Fixed
 
 *  Enable unit tests for all environment-operator packages. [[BITE-1472](https://agile-jira.pearson.com/browse/BITE-1472)]
+*  Apply/Update services that are only associated with the environment change. [[BITE-1650](https://agile-jira.pearson.com/browse/BITE-1650)]
 
 ### **[0.0.6] - 2017-09-13 [RELEASED]**
 

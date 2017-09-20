@@ -7,11 +7,12 @@ import (
 
 // Compare returns unified diff between two bitesize Environment configs
 // in a string
-func Compare(config1, config2 bitesize.Environment) string {
+func Compare(config1, config2 bitesize.Environment) map[string]string {
+	var m map[string]string
+	m = make(map[string]string)
 	c1 := config1
 	c2 := config2
 
-	diff := ""
 	// Following fields are ignored for diff purposes
 	c1.Tests = []bitesize.Test{}
 	c2.Tests = []bitesize.Test{}
@@ -36,12 +37,13 @@ func Compare(config1, config2 bitesize.Environment) string {
 			}
 
 			serviceDiff := compareConfig.Compare(d, s)
-
-			diff = diff + serviceDiff
+			if serviceDiff != "" {
+				m[s.Name] = serviceDiff
+			}
 		}
 	}
 
-	return diff
+	return m
 }
 
 // Can't think of a better word

@@ -1,0 +1,30 @@
+project: test
+environments:
+- name: environment2
+  namespace: environment-dev
+  services:
+  - name: service1_environment2
+    external_url: www.test.com
+    volumes:
+    - name: vol1
+      size: 1G
+      path: /tmp/asd
+      modes: ReadWriteMany
+  - name: service2_environment2
+  - name: hpaservice
+    application: gummybears
+    version: 1
+    requests:
+      cpu: 500m
+    hpa:
+      min_replicas: 2
+      max_replicas: 5
+      target_cpu_utilization_percentage: 75
+  - name: annotated_service
+    version: 1
+    annotations:
+      - name: prometheus.io/scrape
+        value: true
+      - name: prometheus.io/path
+        value: /metrics
+
