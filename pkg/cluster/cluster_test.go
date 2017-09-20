@@ -19,7 +19,6 @@ import (
 	"k8s.io/client-go/pkg/apis/extensions/v1beta1"
 	fakerest "k8s.io/client-go/rest/fake"
 
-	"fmt"
 	faketpr "github.com/pearsontechnology/environment-operator/pkg/util/k8s/fake"
 )
 
