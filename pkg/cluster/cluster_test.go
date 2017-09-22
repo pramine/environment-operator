@@ -86,7 +86,7 @@ func TestApplyEnvironment(t *testing.T) {
 	//There should be no changes between environments e1 and e2 (they will be synced with the apply below)
 	diff.Compare(*e1, *e2)
 	cluster.ApplyEnvironment(e1, e2)
-	if !diff.Compare(*e1, *e2) {
+	if diff.Compare(*e1, *e2) {
 		t.Errorf("Expected loaded environments to be equal, yet diff is: %s", changeMap)
 	}
 
