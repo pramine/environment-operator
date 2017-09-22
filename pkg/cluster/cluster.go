@@ -1,7 +1,6 @@
 package cluster
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	log "github.com/Sirupsen/logrus"
@@ -46,8 +45,7 @@ func (cluster *Cluster) ApplyIfChanged(newConfig *bitesize.Environment) error {
 
 	if diff.Compare(*newConfig, *currentConfig) {
 
-		content, _ := json.MarshalIndent(diff.Changes(), "", "  ")
-		log.Infof("Changes:\n %s", content)
+		log.Infof("Changes:\n %s", diff.Changes())
 		err = cluster.ApplyEnvironment(currentConfig, newConfig)
 	}
 	return err
