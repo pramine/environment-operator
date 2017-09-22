@@ -84,25 +84,24 @@ func TestApplyEnvironment(t *testing.T) {
 	}
 
 	//There should be no changes between environments e1 and e2 (they will be synced with the apply below)
-	changeMap = diff.Compare(*e1, *e2)
-	cluster.ApplyEnvironment(e1, e2, changeMap)
-	changeMap = diff.Compare(*e1, *e2)
-	if len(changeMap) != 0 {
+	diff.Compare(*e1, *e2)
+	cluster.ApplyEnvironment(e1, e2)
+	diff.Compare(*e1, *e2)
+	if len(diff.Changes()) != 0 {
 		t.Errorf("Expected loaded environments to be equal, yet diff is: %s", changeMap)
 	}
 
 	//environments2.bitesize removes annotated_service2 and testdb from environment2
 	//The diff between e2 and e3 should only contain the testdb change as annotated_service2 didn't have a "version" field in the source config
 	e3, err := bitesize.LoadEnvironment("../../test/assets/environments2.bitesize", "environment2")
-	changeMap = diff.Compare(*e2, *e3)
-	_, exists := changeMap["testdb"]
+	diff.Compare(*e2, *e3)
+	_, exists := diff.Changes()["testdb"]
 	if !exists {
 		t.Errorf("Expected testdb to exist in the diff, yet it does not exist: %s", changeMap)
 	}
 }
 
 func TestShouldDeploy(t *testing.T) {
-	var changeMap map[string]string
 
 	log.SetLevel(log.FatalLevel)
 
@@ -123,15 +122,15 @@ func TestShouldDeploy(t *testing.T) {
 		t.Fatalf("Unexpected err: %s", err.Error())
 	}
 
-	changeMap = diff.Compare(*e1, *e2)
+	diff.Compare(*e1, *e2)
 
-	deploy := shouldDeploy(e1, e2, "annotated_service2", changeMap)
+	deploy := shouldDeploy(e1, e2, "annotated_service2")
 
 	if deploy {
 		t.Error("Expected that the annotated_service2 service should not be marked for deploy, but it was.")
 	}
 
-	deploy = shouldDeploy(e1, e2, "testdb", changeMap)
+	deploy = shouldDeploy(e1, e2, "testdb")
 
 	if !deploy {
 		t.Error("Expected that the testdb service should be marked for deploy, but it was not.")
@@ -495,8 +494,7 @@ func TestEnvironmentAnnotations(t *testing.T) {
 	}
 
 	e1, _ := bitesize.LoadEnvironment("../../test/assets/annotations.bitesize", "test")
-	var changeMap map[string]string
-	cluster.ApplyEnvironment(e1, e1, changeMap)
+	cluster.ApplyEnvironment(e1, e1)
 
 	e2, _ := cluster.LoadEnvironment("test")
 	testService = e2.Services.FindByName("test")
@@ -508,7 +506,6 @@ func TestEnvironmentAnnotations(t *testing.T) {
 }
 
 func TestApplyNewHPA(t *testing.T) {
-	var changeMap map[string]string
 
 	tprclient := loadEmptyTPRS()
 	client := fake.NewSimpleClientset(
@@ -532,7 +529,7 @@ func TestApplyNewHPA(t *testing.T) {
 		t.Fatalf("Unexpected err: %s", err.Error())
 	}
 
-	cluster.ApplyEnvironment(e1, e1, changeMap)
+	cluster.ApplyEnvironment(e1, e1)
 
 	e2, err := cluster.LoadEnvironment("environment-dev")
 
@@ -540,14 +537,13 @@ func TestApplyNewHPA(t *testing.T) {
 		t.Fatalf("Unexpected err: %s", err.Error())
 	}
 
-	if d := diff.Compare(*e1, *e2); len(d) != 0 {
-		t.Errorf("Expected loaded environments to be equal, yet diff is: %s", d)
+	if diff.Compare(*e1, *e2); len(diff.Changes()) != 0 {
+		t.Errorf("Expected loaded environments to be equal, yet diff is: %s", diff.Changes())
 	}
 }
 
 func TestApplyExistingHPA(t *testing.T) {
 	var min, target int32 = 2, 75
-	var changeMap map[string]string
 	tprclient := loadEmptyTPRS()
 	client := fake.NewSimpleClientset(
 		&v1.Namespace{
@@ -604,7 +600,7 @@ func TestApplyExistingHPA(t *testing.T) {
 		t.Fatalf("Unexpected err: %s", err.Error())
 	}
 
-	cluster.ApplyEnvironment(e1, e1, changeMap)
+	cluster.ApplyEnvironment(e1, e1)
 
 	e2, err := cluster.LoadEnvironment("environment-dev")
 
@@ -612,8 +608,8 @@ func TestApplyExistingHPA(t *testing.T) {
 		t.Fatalf("Unexpected err: %s", err.Error())
 	}
 
-	if d := diff.Compare(*e1, *e2); len(d) != 0 {
-		t.Errorf("Expected loaded environments to be equal, yet diff is: %s", d)
+	if diff.Compare(*e1, *e2); len(diff.Changes()) != 0 {
+		t.Errorf("Expected loaded environments to be equal, yet diff is: %s", diff.Changes())
 	}
 }
 func loadEmptyTPRS() *fakerest.RESTClient {

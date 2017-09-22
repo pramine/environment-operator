@@ -1,6 +1,7 @@
 package cluster
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	log "github.com/Sirupsen/logrus"
@@ -43,17 +44,19 @@ func (cluster *Cluster) ApplyIfChanged(newConfig *bitesize.Environment) error {
 	log.Debugf("Loading namespace: %s", newConfig.Namespace)
 	currentConfig, _ := cluster.LoadEnvironment(newConfig.Namespace)
 
-	changeMap := diff.Compare(*newConfig, *currentConfig)
+	diff.Compare(*newConfig, *currentConfig)
 
-	if len(changeMap) != 0 {
-		err = cluster.ApplyEnvironment(currentConfig, newConfig, changeMap)
+	if len(diff.Changes()) != 0 {
+		content, _ := json.MarshalIndent(diff.Changes(), "", "  ")
+		log.Infof("Changes:\n %s", content)
+		err = cluster.ApplyEnvironment(currentConfig, newConfig)
 	}
 	return err
 }
 
 // ApplyEnvironment executes kubectl apply against ingresses, services, deployments
 // etc.
-func (cluster *Cluster) ApplyEnvironment(currentEnvironment, newEnvironment *bitesize.Environment, changeMap map[string]string) error {
+func (cluster *Cluster) ApplyEnvironment(currentEnvironment, newEnvironment *bitesize.Environment) error {
 	var err error
 
 	for _, service := range newEnvironment.Services {
@@ -71,7 +74,7 @@ func (cluster *Cluster) ApplyEnvironment(currentEnvironment, newEnvironment *bit
 
 		if service.Type == "" {
 
-			if !shouldDeploy(currentEnvironment, newEnvironment, service.Name, changeMap) {
+			if !shouldDeploy(currentEnvironment, newEnvironment, service.Name) {
 				continue
 			}
 
@@ -222,14 +225,13 @@ func (cluster *Cluster) LoadEnvironment(namespace string) (*bitesize.Environment
 }
 
 //Only deploy k8s resources when the environment was actually deployed and changed or if the service has specified a version
-func shouldDeploy(currentEnvironment, newEnvironment *bitesize.Environment, serviceName string, changeMap map[string]string) bool {
+func shouldDeploy(currentEnvironment, newEnvironment *bitesize.Environment, serviceName string) bool {
 	currentService := currentEnvironment.Services.FindByName(serviceName)
 	updatedService := newEnvironment.Services.FindByName(serviceName)
-	val, serviceChangeExists := changeMap[serviceName]
 
 	if (currentService != nil && currentService.Status.DeployedAt != "") || (updatedService != nil && updatedService.Version != "") {
-		if serviceChangeExists {
-			log.Debugf("Applying changes to the '%s' service:\n %s", serviceName, val)
+		if diff.ServiceChanged(serviceName) {
+			log.Debugf("Applying changes to the '%s' service", serviceName)
 			return true
 		}
 	}
