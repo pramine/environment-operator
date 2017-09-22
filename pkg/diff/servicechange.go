@@ -15,9 +15,9 @@ func addServiceChange(svc, diff string) {
 }
 
 func ServiceChanged(serviceName string) bool {
-	val, serviceChangeExists := changeMap[serviceName]
+	_, serviceChangeExists := changeMap[serviceName]
+
 	if serviceChangeExists {
-		log.Debugf("Applying changes to the '%s' service:\n %s", serviceName, val)
 		return true
 	}
 	return false
