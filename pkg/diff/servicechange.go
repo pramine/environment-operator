@@ -1,9 +1,5 @@
 package diff
 
-import (
-	log "github.com/Sirupsen/logrus"
-)
-
 var changeMap map[string]string
 
 func newChangeMap() {

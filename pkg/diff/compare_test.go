@@ -10,7 +10,7 @@ func TestDiffEmpty(t *testing.T) {
 	a := bitesize.Environment{}
 	b := bitesize.Environment{}
 
-	if Compare(a, b); len(Changes()) != 0 {
+	if Compare(a, b) {
 		t.Errorf("Expected diff to be empty, got: %s", Changes())
 	}
 
@@ -22,7 +22,7 @@ func TestIgnoreTestFields(t *testing.T) {
 		{Name: "a"},
 	}}
 
-	if Compare(a, b); len(Changes()) != 0 {
+	if Compare(a, b) {
 		t.Errorf("Expected diff to be empty, got: %s", Changes())
 	}
 }
@@ -33,7 +33,7 @@ func TestIgnoreDeploymentFields(t *testing.T) {
 		Method: "bluegreen",
 	}}
 
-	if Compare(a, b); len(Changes()) != 0 {
+	if Compare(a, b) {
 		t.Errorf("Expected diff to be empty, got: %s", Changes())
 	}
 }
@@ -61,7 +61,7 @@ func TestIgnoreStatusFields(t *testing.T) {
 		},
 	}
 
-	if Compare(a, b); len(Changes()) != 0 {
+	if Compare(a, b) {
 		t.Errorf("Expected diff to be empty, got: %s", Changes())
 	}
 }
@@ -70,7 +70,7 @@ func TestDiffNames(t *testing.T) {
 	a := bitesize.Environment{Name: "asd"}
 	b := bitesize.Environment{Name: "asdf"}
 
-	if Compare(a, b); len(Changes()) != 0 {
+	if Compare(a, b) {
 		t.Error("Expected diff, got the same")
 	}
 }
@@ -79,12 +79,12 @@ func TestDiffVersionsSame(t *testing.T) {
 	var saTests = []struct {
 		versionA string
 		versionB string
-		expected int
+		expected bool
 	}{
-		{"1", "1", 0},
-		{"1", "2", 1},
-		{"", "1", 0}, // assume the same if environments.bitesize does not have version
-		{"1", "", 1}, // assume diff  if cluster is not deployed
+		{"1", "1", false},
+		{"1", "2", true},
+		{"", "1", false}, // assume the same if environments.bitesize does not have version
+		{"1", "", true},  // assume diff  if cluster is not deployed
 	}
 
 	for _, tst := range saTests {
@@ -95,7 +95,7 @@ func TestDiffVersionsSame(t *testing.T) {
 			Name: "a", Services: []bitesize.Service{{Name: "a", Version: tst.versionB}},
 		}
 
-		if Compare(a, b); len(Changes()) != tst.expected {
+		if Compare(a, b) != tst.expected {
 			t.Errorf(
 				"Unexpected version compare(%s,%s) should be %t\n%s\n A %+v\n B %+v",
 				tst.versionA, tst.versionB, tst.expected, Changes(), a.Services, b.Services,

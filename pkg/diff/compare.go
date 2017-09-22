@@ -5,9 +5,9 @@ import (
 	"github.com/pearsontechnology/environment-operator/pkg/bitesize"
 )
 
-// Compare returns unified diff between two bitesize Environment configs
-// in a string
-func Compare(config1, config2 bitesize.Environment) {
+// Compare creates a changeMap for the diff between environment configs and returns a boolean if changes were detected
+func Compare(config1, config2 bitesize.Environment) bool {
+	changeDetected := false
 
 	newChangeMap()
 
@@ -40,9 +40,11 @@ func Compare(config1, config2 bitesize.Environment) {
 			serviceDiff := compareConfig.Compare(d, s)
 			if serviceDiff != "" {
 				addServiceChange(s.Name, serviceDiff)
+				changeDetected = true
 			}
 		}
 	}
+	return changeDetected
 }
 
 // Can't think of a better word

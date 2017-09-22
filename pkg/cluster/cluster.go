@@ -44,9 +44,8 @@ func (cluster *Cluster) ApplyIfChanged(newConfig *bitesize.Environment) error {
 	log.Debugf("Loading namespace: %s", newConfig.Namespace)
 	currentConfig, _ := cluster.LoadEnvironment(newConfig.Namespace)
 
-	diff.Compare(*newConfig, *currentConfig)
+	if !diff.Compare(*newConfig, *currentConfig) {
 
-	if len(diff.Changes()) != 0 {
 		content, _ := json.MarshalIndent(diff.Changes(), "", "  ")
 		log.Infof("Changes:\n %s", content)
 		err = cluster.ApplyEnvironment(currentConfig, newConfig)

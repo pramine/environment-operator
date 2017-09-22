@@ -86,8 +86,7 @@ func TestApplyEnvironment(t *testing.T) {
 	//There should be no changes between environments e1 and e2 (they will be synced with the apply below)
 	diff.Compare(*e1, *e2)
 	cluster.ApplyEnvironment(e1, e2)
-	diff.Compare(*e1, *e2)
-	if len(diff.Changes()) != 0 {
+	if !diff.Compare(*e1, *e2) {
 		t.Errorf("Expected loaded environments to be equal, yet diff is: %s", changeMap)
 	}
 
@@ -537,7 +536,7 @@ func TestApplyNewHPA(t *testing.T) {
 		t.Fatalf("Unexpected err: %s", err.Error())
 	}
 
-	if diff.Compare(*e1, *e2); len(diff.Changes()) != 0 {
+	if diff.Compare(*e1, *e2) {
 		t.Errorf("Expected loaded environments to be equal, yet diff is: %s", diff.Changes())
 	}
 }
@@ -608,7 +607,7 @@ func TestApplyExistingHPA(t *testing.T) {
 		t.Fatalf("Unexpected err: %s", err.Error())
 	}
 
-	if diff.Compare(*e1, *e2); len(diff.Changes()) != 0 {
+	if diff.Compare(*e1, *e2) {
 		t.Errorf("Expected loaded environments to be equal, yet diff is: %s", diff.Changes())
 	}
 }
