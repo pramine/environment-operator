@@ -10,8 +10,8 @@ func TestDiffEmpty(t *testing.T) {
 	a := bitesize.Environment{}
 	b := bitesize.Environment{}
 
-	if d := Compare(a, b); d != "" {
-		t.Errorf("Expected diff to be empty, got: %s", d)
+	if Compare(a, b) {
+		t.Errorf("Expected diff to be empty, got: %s", Changes())
 	}
 
 }
@@ -22,8 +22,8 @@ func TestIgnoreTestFields(t *testing.T) {
 		{Name: "a"},
 	}}
 
-	if d := Compare(a, b); d != "" {
-		t.Errorf("Expected diff to be empty, got: %s", d)
+	if Compare(a, b) {
+		t.Errorf("Expected diff to be empty, got: %s", Changes())
 	}
 }
 
@@ -33,8 +33,8 @@ func TestIgnoreDeploymentFields(t *testing.T) {
 		Method: "bluegreen",
 	}}
 
-	if d := Compare(a, b); d != "" {
-		t.Errorf("Expected diff to be empty, got: %s", d)
+	if Compare(a, b) {
+		t.Errorf("Expected diff to be empty, got: %s", Changes())
 	}
 }
 
@@ -61,8 +61,8 @@ func TestIgnoreStatusFields(t *testing.T) {
 		},
 	}
 
-	if d := Compare(a, b); d != "" {
-		t.Errorf("Expected diff to be empty, got: %s", d)
+	if Compare(a, b) {
+		t.Errorf("Expected diff to be empty, got: %s", Changes())
 	}
 }
 
@@ -70,7 +70,7 @@ func TestDiffNames(t *testing.T) {
 	a := bitesize.Environment{Name: "asd"}
 	b := bitesize.Environment{Name: "asdf"}
 
-	if Compare(a, b) != "" {
+	if Compare(a, b) {
 		t.Error("Expected diff, got the same")
 	}
 }
@@ -81,10 +81,10 @@ func TestDiffVersionsSame(t *testing.T) {
 		versionB string
 		expected bool
 	}{
-		{"1", "1", true},
-		{"1", "2", false},
-		{"", "1", true},  // assume the same if environments.bitesize does not have version
-		{"1", "", false}, // assume diff  if cluster is not deployed
+		{"1", "1", false},
+		{"1", "2", true},
+		{"", "1", false}, // assume the same if environments.bitesize does not have version
+		{"1", "", true},  // assume diff  if cluster is not deployed
 	}
 
 	for _, tst := range saTests {
@@ -95,10 +95,10 @@ func TestDiffVersionsSame(t *testing.T) {
 			Name: "a", Services: []bitesize.Service{{Name: "a", Version: tst.versionB}},
 		}
 
-		if res := Compare(a, b); (res == "") != tst.expected {
+		if Compare(a, b) != tst.expected {
 			t.Errorf(
 				"Unexpected version compare(%s,%s) should be %t\n%s\n A %+v\n B %+v",
-				tst.versionA, tst.versionB, tst.expected, res, a.Services, b.Services,
+				tst.versionA, tst.versionB, tst.expected, Changes(), a.Services, b.Services,
 			)
 		}
 	}

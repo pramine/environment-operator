@@ -1,20 +1,18 @@
 package cluster
 
 import (
-	"testing"
-
+	log "github.com/Sirupsen/logrus"
 	"github.com/pearsontechnology/environment-operator/pkg/bitesize"
 	"github.com/pearsontechnology/environment-operator/pkg/diff"
 	ext "github.com/pearsontechnology/environment-operator/pkg/k8_extensions"
 	"github.com/pearsontechnology/environment-operator/pkg/util"
-
-	log "github.com/Sirupsen/logrus"
 	"k8s.io/client-go/kubernetes/fake"
 	"k8s.io/client-go/pkg/api/resource"
 	"k8s.io/client-go/pkg/api/unversioned"
 	"k8s.io/client-go/pkg/api/v1"
 	"k8s.io/client-go/pkg/apimachinery"
 	autoscale_v1 "k8s.io/client-go/pkg/apis/autoscaling/v1"
+	"testing"
 	// "k8s.io/client-go/pkg/api/meta"
 
 	"k8s.io/client-go/pkg/apimachinery/registered"
@@ -53,6 +51,7 @@ func TestKubernetesClusterClient(t *testing.T) {
 }
 
 func TestApplyEnvironment(t *testing.T) {
+	var changeMap map[string]string
 
 	log.SetLevel(log.FatalLevel)
 	client := fake.NewSimpleClientset(
@@ -73,28 +72,69 @@ func TestApplyEnvironment(t *testing.T) {
 
 	e1, err := bitesize.LoadEnvironment("../../test/assets/environments.bitesize", "environment2")
 
-	e2 := e1
+	if err != nil {
+		t.Fatalf("Unexpected err: %s", err.Error())
+	}
+
+	cluster.ApplyIfChanged(e1)
+
+	e2, err := cluster.LoadEnvironment("environment-dev")
+	if err != nil {
+		t.Fatalf("Unexpected err: %s", err.Error())
+	}
+
+	//There should be no changes between environments e1 and e2 (they will be synced with the apply below)
+	diff.Compare(*e1, *e2)
+	cluster.ApplyEnvironment(e1, e2)
+	if diff.Compare(*e1, *e2) {
+		t.Errorf("Expected loaded environments to be equal, yet diff is: %s", changeMap)
+	}
+
+	//environments2.bitesize removes annotated_service2 and testdb from environment2
+	//The diff between e2 and e3 should only contain the testdb change as annotated_service2 didn't have a "version" field in the source config
+	e3, err := bitesize.LoadEnvironment("../../test/assets/environments2.bitesize", "environment2")
+	diff.Compare(*e2, *e3)
+	_, exists := diff.Changes()["testdb"]
+	if !exists {
+		t.Errorf("Expected testdb to exist in the diff, yet it does not exist: %s", changeMap)
+	}
+}
+
+func TestShouldDeploy(t *testing.T) {
+
+	log.SetLevel(log.FatalLevel)
+
+	e1, err := bitesize.LoadEnvironment("../../test/assets/environments.bitesize", "environment2")
 
 	if err != nil {
 		t.Fatalf("Unexpected err: %s", err.Error())
 	}
 
-	//Make sure the old environment reflects that services were deployed
+	//Mark all services in the initial environment as deployed
 	for i, _ := range e1.Services {
 		e1.Services[i].Status.DeployedAt = "Current Time"
 	}
 
-	cluster.ApplyEnvironment(e1, e2)
-
-	e3, err := cluster.LoadEnvironment("environment-dev")
+	e2, err := bitesize.LoadEnvironment("../../test/assets/environments2.bitesize", "environment2")
 
 	if err != nil {
 		t.Fatalf("Unexpected err: %s", err.Error())
 	}
 
-	if d := diff.Compare(*e2, *e3); d != "" {
-		t.Errorf("Expected loaded environments to be equal, yet diff is: %s", d)
+	diff.Compare(*e1, *e2)
+
+	deploy := shouldDeploy(e1, e2, "annotated_service2")
+
+	if deploy {
+		t.Error("Expected that the annotated_service2 service should not be marked for deploy, but it was.")
 	}
+
+	deploy = shouldDeploy(e1, e2, "testdb")
+
+	if !deploy {
+		t.Error("Expected that the testdb service should be marked for deploy, but it was not.")
+	}
+
 }
 
 /*
@@ -496,14 +536,13 @@ func TestApplyNewHPA(t *testing.T) {
 		t.Fatalf("Unexpected err: %s", err.Error())
 	}
 
-	if d := diff.Compare(*e1, *e2); d != "" {
-		t.Errorf("Expected loaded environments to be equal, yet diff is: %s", d)
+	if diff.Compare(*e1, *e2) {
+		t.Errorf("Expected loaded environments to be equal, yet diff is: %s", diff.Changes())
 	}
 }
 
 func TestApplyExistingHPA(t *testing.T) {
 	var min, target int32 = 2, 75
-
 	tprclient := loadEmptyTPRS()
 	client := fake.NewSimpleClientset(
 		&v1.Namespace{
@@ -568,11 +607,10 @@ func TestApplyExistingHPA(t *testing.T) {
 		t.Fatalf("Unexpected err: %s", err.Error())
 	}
 
-	if d := diff.Compare(*e1, *e2); d != "" {
-		t.Errorf("Expected loaded environments to be equal, yet diff is: %s", d)
+	if diff.Compare(*e1, *e2) {
+		t.Errorf("Expected loaded environments to be equal, yet diff is: %s", diff.Changes())
 	}
 }
-
 func loadEmptyTPRS() *fakerest.RESTClient {
 	return faketpr.TPRClient()
 }

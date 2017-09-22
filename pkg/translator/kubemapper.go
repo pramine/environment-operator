@@ -160,13 +160,17 @@ func (w *KubeMapper) Deployment() (*v1beta1.Deployment, error) {
 func (w *KubeMapper) imagePullSecrets() ([]v1.LocalObjectReference, error) {
 	var retval []v1.LocalObjectReference
 
-	result := strings.Split(util.RegistrySecrets(), ",")
-	for i := range result {
-		var namevalue v1.LocalObjectReference
-		namevalue = v1.LocalObjectReference{
-			Name: result[i],
+	pullSecrets := util.RegistrySecrets()
+
+	if pullSecrets != "" {
+		result := strings.Split(util.RegistrySecrets(), ",")
+		for i := range result {
+			var namevalue v1.LocalObjectReference
+			namevalue = v1.LocalObjectReference{
+				Name: result[i],
+			}
+			retval = append(retval, namevalue)
 		}
-		retval = append(retval, namevalue)
 	}
 
 	return retval, nil
