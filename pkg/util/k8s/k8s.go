@@ -109,6 +109,11 @@ func (c *Client) Ingress() *Ingress {
 	return &Ingress{Interface: c.Interface, Namespace: c.Namespace}
 }
 
+// StatefulSet builds Statefulset client
+func (c *Client) StatefulSet() *StatefulSet {
+	return &StatefulSet{Interface: c.Interface, Namespace: c.Namespace}
+}
+
 // Ns builds Ingress client
 func (c *Client) Ns() *Namespace {
 	return &Namespace{Interface: c.Interface, Namespace: c.Namespace}

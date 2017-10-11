@@ -51,3 +51,29 @@ environments:
       min_replicas: 2
       max_replicas: 5
       target_cpu_utilization_percentage: 75
+- name: environment4
+  namespace: environment-mongo
+  services:
+  - name: mongo
+    namespace: environment-mongo
+    command: ['mongod','--replSet','mongo','--smallfiles','--noprealloc']
+    database_type: mongo
+    version: 3.4
+    graceperiod: 10
+    replicas: 3
+    port: 27017
+    volumes:
+      - name: mongo-persistent-storage
+        path: /data/db
+        modes: ReadWriteOnce
+        size: 10G
+        env:
+          - name: MONGO_PORT
+            value: 27017
+          - name: KUBE_NAMESPACE
+            value: 'somogyi-app'
+          - name: MONGO_SIDECAR_POD_LABELS
+            value: "role=mongo,name=mongo"
+          - name: KUBERNETES_MONGO_SERVICE_NAME
+            value: "mongo"
+

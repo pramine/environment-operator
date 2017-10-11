@@ -22,3 +22,7 @@ func ServiceChanged(serviceName string) bool {
 func Changes() map[string]string {
 	return changeMap
 }
+
+func GetServiceChange(serviceName string) string {
+	return changeMap[serviceName]
+}

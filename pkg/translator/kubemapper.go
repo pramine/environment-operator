@@ -17,8 +17,9 @@ import (
 	"k8s.io/client-go/pkg/api/resource"
 	"k8s.io/client-go/pkg/api/unversioned"
 	"k8s.io/client-go/pkg/api/v1"
+	v1beta1_apps "k8s.io/client-go/pkg/apis/apps/v1beta1"
 	autoscale_v1 "k8s.io/client-go/pkg/apis/autoscaling/v1"
-	"k8s.io/client-go/pkg/apis/extensions/v1beta1"
+	v1beta1_ext "k8s.io/client-go/pkg/apis/extensions/v1beta1"
 	"k8s.io/client-go/pkg/util/intstr"
 )
 
@@ -35,7 +36,6 @@ type KubeMapper struct {
 // Service extracts Kubernetes object from Bitesize definition
 func (w *KubeMapper) Service() (*v1.Service, error) {
 	var ports []v1.ServicePort
-
 	for _, p := range w.BiteService.Ports {
 		servicePort := v1.ServicePort{
 			Port:       int32(p),
@@ -60,6 +60,40 @@ func (w *KubeMapper) Service() (*v1.Service, error) {
 				"creator": "pipeline",
 				"name":    w.BiteService.Name,
 			},
+		},
+	}
+	return retval, nil
+}
+
+// Service extracts Kubernetes Headless Service object (No ClusterIP) from Bitesize definition
+func (w *KubeMapper) HeadlessService() (*v1.Service, error) {
+	var ports []v1.ServicePort
+	//Need to update this to have an option to create the headless service (no loadbalancing with Cluster IP not getting set)
+	for _, p := range w.BiteService.Ports {
+		servicePort := v1.ServicePort{
+			Port:       int32(p),
+			TargetPort: intstr.FromInt(p),
+			Name:       fmt.Sprintf("tcp-port-%d", p),
+		}
+		ports = append(ports, servicePort)
+	}
+	retval := &v1.Service{
+		ObjectMeta: v1.ObjectMeta{
+			Name:      w.BiteService.Name,
+			Namespace: w.Namespace,
+			Labels: map[string]string{
+				"creator":     "pipeline",
+				"name":        w.BiteService.Name,
+				"application": w.BiteService.Application,
+			},
+		},
+		Spec: v1.ServiceSpec{
+			Ports: ports,
+			Selector: map[string]string{
+				"creator": "pipeline",
+				"name":    w.BiteService.Name,
+			},
+			ClusterIP: v1.ClusterIPNone,
 		},
 	}
 	return retval, nil
@@ -97,8 +131,113 @@ func (w *KubeMapper) PersistentVolumeClaims() ([]v1.PersistentVolumeClaim, error
 	return retval, nil
 }
 
+// Stateful set extracts Kubernetes object from Bitesize definition
+func (w *KubeMapper) MongoStatefulSet() (*v1beta1_apps.StatefulSet, error) {
+	replicas := int32(w.BiteService.Replicas)
+	imagePullSecrets, err := w.imagePullSecrets()
+	if err != nil {
+		return nil, err
+	}
+	mounts, err := w.volumeMounts()
+	if err != nil {
+		return nil, err
+	}
+	evars, err := w.envVars()
+	if err != nil {
+		return nil, err
+	}
+
+	retval := &v1beta1_apps.StatefulSet{
+		ObjectMeta: v1.ObjectMeta{
+			Name:      w.BiteService.Name,
+			Namespace: w.Namespace,
+			Labels: map[string]string{
+				"creator":     "pipeline",
+				"name":        w.BiteService.Name,
+				"application": w.BiteService.Application,
+				"version":     w.BiteService.Version,
+			},
+		},
+		Spec: v1beta1_apps.StatefulSetSpec{
+			ServiceName: w.BiteService.Name,
+			Replicas:    &replicas,
+			Template: v1.PodTemplateSpec{
+				ObjectMeta: v1.ObjectMeta{
+					Name:      w.BiteService.Name,
+					Namespace: w.Namespace,
+					Labels: map[string]string{
+						"creator":     "pipeline",
+						"application": w.BiteService.Application,
+						"name":        w.BiteService.Name,
+						"version":     w.BiteService.Version,
+						"role":        "mongo",
+					},
+					Annotations: w.BiteService.Annotations,
+				},
+				Spec: v1.PodSpec{
+					TerminationGracePeriodSeconds: w.BiteService.GracePeriod,
+					NodeSelector:                  map[string]string{"role": "minion"},
+					Containers: []v1.Container{
+						{
+							Name:            w.BiteService.DatabaseType,
+							Image:           fmt.Sprintf("%s:%s", w.BiteService.DatabaseType, w.BiteService.Version),
+							ImagePullPolicy: v1.PullAlways,
+							Command: []string{
+								"mongod",
+								"--replSet",
+								"mongo",
+								"--smallfiles",
+								"--noprealloc",
+							},
+							Ports: []v1.ContainerPort{
+								{
+									ContainerPort: int32(w.BiteService.Ports[0]),
+								},
+							},
+							VolumeMounts: mounts,
+						},
+						{
+							Name:            "mongo-sidecar",
+							Image:           fmt.Sprintf("%s/%s:%s", "pearsontechnology", "mongo-sidecar", "1.0.0"),
+							ImagePullPolicy: v1.PullAlways,
+							Env:             evars,
+						},
+					},
+					ImagePullSecrets: imagePullSecrets,
+				},
+			},
+			VolumeClaimTemplates: []v1.PersistentVolumeClaim{
+				{
+					ObjectMeta: v1.ObjectMeta{
+						Name:      w.BiteService.Volumes[0].Name,
+						Namespace: w.Namespace,
+						Annotations: map[string]string{
+							"volume.beta.kubernetes.io/storage-class": "aws-ebs",
+						},
+						Labels: map[string]string{
+							"creator":    "pipeline",
+							"deployment": w.BiteService.Name,
+							"mount_path": w.BiteService.Volumes[0].Path,
+							"size":       w.BiteService.Volumes[0].Size,
+						},
+					},
+					Spec: v1.PersistentVolumeClaimSpec{
+						AccessModes: getAccessModesFromString(w.BiteService.Volumes[0].Modes),
+						Resources: v1.ResourceRequirements{
+							Requests: v1.ResourceList{
+								v1.ResourceName(v1.ResourceStorage): resource.MustParse(w.BiteService.Volumes[0].Size),
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+	return retval, nil
+}
+
 // Deployment extracts Kubernetes object from Bitesize definition
-func (w *KubeMapper) Deployment() (*v1beta1.Deployment, error) {
+func (w *KubeMapper) Deployment() (*v1beta1_ext.Deployment, error) {
 	replicas := int32(w.BiteService.Replicas)
 	container, err := w.container()
 	if err != nil {
@@ -114,7 +253,7 @@ func (w *KubeMapper) Deployment() (*v1beta1.Deployment, error) {
 		return nil, err
 	}
 
-	retval := &v1beta1.Deployment{
+	retval := &v1beta1_ext.Deployment{
 		ObjectMeta: v1.ObjectMeta{
 			Name:      w.BiteService.Name,
 			Namespace: w.Namespace,
@@ -125,7 +264,7 @@ func (w *KubeMapper) Deployment() (*v1beta1.Deployment, error) {
 				"version":     w.BiteService.Version,
 			},
 		},
-		Spec: v1beta1.DeploymentSpec{
+		Spec: v1beta1_ext.DeploymentSpec{
 			Replicas: &replicas,
 			Selector: &unversioned.LabelSelector{
 				MatchLabels: map[string]string{
@@ -146,10 +285,11 @@ func (w *KubeMapper) Deployment() (*v1beta1.Deployment, error) {
 					Annotations: w.BiteService.Annotations,
 				},
 				Spec: v1.PodSpec{
-					NodeSelector:     map[string]string{"role": "minion"},
-					Containers:       []v1.Container{*container},
-					ImagePullSecrets: imagePullSecrets,
-					Volumes:          volumes,
+					TerminationGracePeriodSeconds: w.BiteService.GracePeriod,
+					NodeSelector:                  map[string]string{"role": "minion"},
+					Containers:                    []v1.Container{*container},
+					ImagePullSecrets:              imagePullSecrets,
+					Volumes:                       volumes,
 				},
 			},
 		},
@@ -229,6 +369,7 @@ func (w *KubeMapper) container() (*v1.Container, error) {
 			Env:          evars,
 			VolumeMounts: mounts,
 			Resources:    resources,
+			Command:      w.BiteService.Commands,
 		}
 	} else {
 		retval = &v1.Container{
@@ -236,6 +377,7 @@ func (w *KubeMapper) container() (*v1.Container, error) {
 			Image:        "",
 			Env:          evars,
 			VolumeMounts: mounts,
+			Command:      w.BiteService.Commands,
 		}
 	}
 
@@ -323,7 +465,7 @@ func (w *KubeMapper) volumes() ([]v1.Volume, error) {
 }
 
 // Ingress extracts Kubernetes object from Bitesize definition
-func (w *KubeMapper) Ingress() (*v1beta1.Ingress, error) {
+func (w *KubeMapper) Ingress() (*v1beta1_ext.Ingress, error) {
 	labels := map[string]string{
 		"creator":     "pipeline",
 		"application": w.BiteService.Application,
@@ -343,23 +485,23 @@ func (w *KubeMapper) Ingress() (*v1beta1.Ingress, error) {
 	}
 
 	port := intstr.FromInt(w.BiteService.Ports[0])
-	retval := &v1beta1.Ingress{
+	retval := &v1beta1_ext.Ingress{
 		ObjectMeta: v1.ObjectMeta{
 			Name:      w.BiteService.Name,
 			Namespace: w.Namespace,
 			Labels:    labels,
 		},
-		Spec: v1beta1.IngressSpec{
-			Rules: []v1beta1.IngressRule{
+		Spec: v1beta1_ext.IngressSpec{
+			Rules: []v1beta1_ext.IngressRule{
 				{
 					Host: w.BiteService.ExternalURL,
 
-					IngressRuleValue: v1beta1.IngressRuleValue{
-						HTTP: &v1beta1.HTTPIngressRuleValue{
-							Paths: []v1beta1.HTTPIngressPath{
+					IngressRuleValue: v1beta1_ext.IngressRuleValue{
+						HTTP: &v1beta1_ext.HTTPIngressRuleValue{
+							Paths: []v1beta1_ext.HTTPIngressPath{
 								{
 									Path: "/",
-									Backend: v1beta1.IngressBackend{
+									Backend: v1beta1_ext.IngressBackend{
 										ServiceName: w.BiteService.Name,
 										ServicePort: port,
 									},

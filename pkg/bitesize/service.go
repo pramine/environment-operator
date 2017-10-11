@@ -23,6 +23,7 @@ type Service struct {
 	Requests     ContainerRequests       `yaml:"requests" validate:"requests"`
 	HealthCheck  *HealthCheck            `yaml:"health_check,omitempty"`
 	EnvVars      []EnvVar                `yaml:"env,omitempty"`
+	Commands     []string                `yaml:"command,omitempty"`
 	Annotations  map[string]string       `yaml:"-"` // Annotations have custom unmarshaler
 	Volumes      []Volume                `yaml:"volumes,omitempty"`
 	Options      map[string]string       `yaml:"options,omitempty"`
@@ -30,6 +31,8 @@ type Service struct {
 	HTTPSBackend string                  `yaml:"httpsBackend,omitempty" validate:"regexp=^(true|false)*$"`
 	Type         string                  `yaml:"type,omitempty"`
 	Status       ServiceStatus           `yaml:"status,omitempty"`
+	DatabaseType string                  `yaml:"database_type,omitempty" validate:"regexp=^(mongo)*$"`
+	GracePeriod  *int64                  `yaml:"graceperiod,omitempty"`
 	// XXX          map[string]interface{} `yaml:",inline"`
 }
 
