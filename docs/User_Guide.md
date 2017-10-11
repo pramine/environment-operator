@@ -1,7 +1,3 @@
----
-name: Environment operator user guide
----
-
 # Environment operator user guide
 
 The purpose of environment operator is to act as an application deployment mechanism to a given environment. This largely equates to a Kubernetes namespace. Each of your environments (development, staging, production) will have it's own definition and a separate endpoint to perform deployments.
@@ -103,22 +99,22 @@ We provide a Jenkins plugin to integrate deployments into your Jenkins pipeline 
 
     Manage Jenkins -> Manage Plugins -> Advanced -> Upload Plugin
 
-![install](./images/install.png)
+![install](images/install.png)
 
 
 Once plugin is installed, you can use it as a build step in your Jenkins Jobs:
 
-![build_step](./images/build_step.png)
+![build_step](images/build_step.png)
 
 Fields you will need to configure are similar to the parameters you need to specify to curl command. Make sure you specify Endpoint URL (be sure to include http:// on the URL) and Authentication Token in advanced options.
 
 Name, application and version fields can be parameterized inputs. You can parameterize one or all of them, based on your pipeline needs. The following example uses name and application fields as a static inputs, and just uses VERSION as parameter:
 
-![build_parameter](./images/build_parameter.png)
+![build_parameter](images/build_parameter.png)
 
 Then it could be used in build step settings:
 
-![deploy_field](./images/deploy_field.png)
+![deploy_field](images/deploy_field.png)
 
 Build step will either fail or succeed based on deployment status.
 

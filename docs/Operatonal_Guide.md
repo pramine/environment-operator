@@ -1,7 +1,3 @@
----
-name: Environment operator operational guide
----
-
 # Environment operator operational guide.
 
 Environment operator runs as a deployment in the namespace it manages. Example deployment (with local keycloak setup) can be found in [example](https://github.com/pearsontechnology/environment-operator/tree/master/example) directory in code repository.
