@@ -265,7 +265,7 @@ spec:
 
 ## Bitesize S3 Private Registry
 
-If images are being pulled from the Bitesize S3 Registry the DOCKER_PULL_SECRETS env variable should be ommited as registry
+If images are being pulled from the Bitesize S3 Registry (The Bitesize Registry is specific for our Pearson Project) the DOCKER_PULL_SECRETS env variable should be ommited as registry
  secrets are not needed by the pod. We handle access through amazons IAM service. Below is a sample environment-operator yaml file that pulls 
 pod images from the Bitesize S3 registry:
 
