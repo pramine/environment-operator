@@ -1,7 +1,3 @@
----
-name: Environment Operator and Private Registries 
----
-
 # Environment operator private registry support 
 
 The environment operator allows Docker images to be deployed into a Kubernetes namespace from private registries like 

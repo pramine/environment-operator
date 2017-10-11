@@ -1,7 +1,3 @@
----
-name: Environment operator user guide
----
-
 # Environment operator user guide
 
 The purpose of environment operator is to act as an application deployment mechanism to a given environment. This largely equates to a Kubernetes namespace. Each of your environments (development, staging, production) will have it's own definition and a separate endpoint to perform deployments.

@@ -26,9 +26,12 @@ For those interested in developing against Environment Operator, check our our [
 
 *******************
 
+![workflow](https://github.com/pearsontechnology/environment-operator/blob/dev/docs/images/workflow.png)
+
+*******************
+
 **Other documentation on Environment Operator:**
 * [Using Private Registries (Dockerhub, Google Container Registry)](https://github.com/pearsontechnology/environment-operator/blob/dev/docs/Private_Registry.md)
 
 
 
-![workflow](https://github.com/pearsontechnology/environment-operator/blob/dev/docs/images/workflow.png)
