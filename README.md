@@ -14,20 +14,20 @@ We are actively working on Jobs and Stateful sets.
 
 
 
-Users of Environment Operator should start with our [User Guide](https://github.com/pearsontechnology/environment-operator/blob/master/docs/User_Guide.md)
+Users of Environment Operator should start with our [User Guide](https://github.com/pearsontechnology/environment-operator/blob/dev/docs/User_Guide.md)
 
 
 
-We also provide and [Operations Guide](https://github.com/pearsontechnology/environment-operator/blob/master/docs/Operatonal_Guide.md) for those deploying and managing Environment Operator itself.
+We also provide and [Operations Guide](https://github.com/pearsontechnology/environment-operator/blob/dev/docs/Operatonal_Guide.md) for those deploying and managing Environment Operator itself.
 
 
 
-For those interested in developing against Environment Operator, check our our [Builder Guide](https://github.com/pearsontechnology/environment-operator/blob/master/docs/Build.md)
+For those interested in developing against Environment Operator, check our our [Builder Guide](https://github.com/pearsontechnology/environment-operator/blob/dev/docs/Build.md)
 
 
 Some other documentation on Environment Operator:
-* [Using Private Registries instead of the Bitesize S3 Registry](https://github.com/pearsontechnology/environment-operator/blob/master/docs/Private_Registry.md)
+* [Using Private Registries instead of the Bitesize S3 Registry](https://github.com/pearsontechnology/environment-operator/blob/dev/docs/Private_Registry.md)
 
 
 
-![workflow](https://github.com/pearsontechnology/environment-operator/blob/master/docs/images/workflow.png)
+![workflow](https://github.com/pearsontechnology/environment-operator/blob/dev/docs/images/workflow.png)
