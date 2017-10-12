@@ -1,8 +1,7 @@
 # Environment operator
 
 
-<img src="environmentoperatoricon.png" alt="EnvironmentOperator" style="width: 250px;"/>
-
+![environmentoperatoricon](https://github.com/pearsontechnology/environment-operator/blob/dev/docs/images/environmentoperatoricon.png)
 
 The purpose of Environment Operator is to provide a seamless application deployment capability for a given environment within Kubernetes. It can easily hook into existing CI/CD pipeline capabilities including our [CI/CD pipeline](https://github.com/pearsontechnology/deployment-pipeline-jenkins-plugin) as well as a typical Jenkins server through a [Jenkins plugin](https://github.com/pearsontechnology/environment-operator-jenkins-plugin).
 
