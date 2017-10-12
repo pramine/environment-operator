@@ -19,7 +19,7 @@ buildDocker(){
 bin_dir="_output/bin"
 mkdir -p ${bin_dir} || true
 
-docker login -u $DOCKER_USER -p $DOCKER_PASS
+docker login -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD"
 
 echo "*******************************************************************************************"
 echo "***************** Building Source *********************************************************"
