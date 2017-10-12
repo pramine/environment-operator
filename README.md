@@ -1,4 +1,4 @@
-# Environment operator
+# Environment operator [![dev](https://travis-ci.org/pearsontechnology/environment-operator.svg?branch=dev)](https://travis-ci.org/pearsontechnology/environment-operator/branches)
 
 ![environmentoperatoricon](https://github.com/pearsontechnology/environment-operator/blob/dev/docs/images/environmentoperatoricon.png)
 
