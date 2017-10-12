@@ -23,8 +23,8 @@ tagmaster(){
 }
 
 
-#If it's not a PR, the branch is dev and there is a releaseVersion, push dev to master and tag master.
-if [ $TRAVIS_PULL_REQUEST == "false" ] && [ $TRAVIS_BRANCH == "dev" ] && [ ! -z "$releaseVersion" ]; then
+#If it's not a PR, the branch is dev and it is a release , push dev to master and tag master.
+if [ $TRAVIS_PULL_REQUEST == "false" ] && [ $TRAVIS_BRANCH == "dev" ] && [ $release == "true" ]; then
 
         echo "---------------------------------------------------------------------------------------------------------------------------------"
         echo "------------------------  Merge 'dev' to 'master' and Tag Release -----------------------------------------------------------"
