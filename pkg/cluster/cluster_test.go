@@ -674,39 +674,16 @@ func TestApplyMongoStatefulSet(t *testing.T) {
 						TerminationGracePeriodSeconds: &[]int64{10}[0],
 						Containers: []v1.Container{
 							{
-
-								Command: []string{
-									"mongod",
-									"--replSet",
-									"mongo",
-									"--smallfiles",
-									"--noprealloc",
-								},
 								VolumeMounts: []v1.VolumeMount{
 									{
 										Name:      "mongo-persistent-storage",
 										MountPath: "/data/db",
 										ReadOnly:  true,
 									},
-								},
-							},
-							{
-								Env: []v1.EnvVar{
 									{
-										Name:  "MONGO_PORT",
-										Value: "27017",
-									},
-									{
-										Name:  "KUBE_NAMESPACE",
-										Value: "environment-mongo",
-									},
-									{
-										Name:  "MONGO_SIDECAR_POD_LABELS",
-										Value: "role=mongo,name=mongo",
-									},
-									{
-										Name:  "KUBERNETES_MONGO_SERVICE_NAME",
-										Value: "mongo",
+										Name:      "secrets-volume",
+										MountPath: "/etc/secrets-volume",
+										ReadOnly:  true,
 									},
 								},
 							},
@@ -717,6 +694,15 @@ func TestApplyMongoStatefulSet(t *testing.T) {
 								VolumeSource: v1.VolumeSource{
 									PersistentVolumeClaim: &v1.PersistentVolumeClaimVolumeSource{
 										ClaimName: "test",
+									},
+								},
+							},
+							{
+								Name: "secrets-volume",
+								VolumeSource: v1.VolumeSource{
+									Secret: &v1.SecretVolumeSource{
+										SecretName:  "shared-bootstrap-data",
+										DefaultMode: &[]int32{256}[0],
 									},
 								},
 							},

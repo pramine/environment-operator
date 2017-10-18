@@ -142,10 +142,13 @@ func (w *KubeMapper) MongoStatefulSet() (*v1beta1_apps.StatefulSet, error) {
 	if err != nil {
 		return nil, err
 	}
-	evars, err := w.envVars()
-	if err != nil {
-		return nil, err
+	vol := v1.VolumeMount{
+		Name:      "secrets-volume",
+		MountPath: "/etc/secrets-volume",
+		ReadOnly:  true,
 	}
+
+	mounts = append(mounts, vol)
 
 	retval := &v1beta1_apps.StatefulSet{
 		ObjectMeta: v1.ObjectMeta{
@@ -175,8 +178,19 @@ func (w *KubeMapper) MongoStatefulSet() (*v1beta1_apps.StatefulSet, error) {
 					Annotations: w.BiteService.Annotations,
 				},
 				Spec: v1.PodSpec{
-					TerminationGracePeriodSeconds: w.BiteService.GracePeriod,
-					NodeSelector:                  map[string]string{"role": "minion"},
+					TerminationGracePeriodSeconds: &[]int64{10}[0],
+					Volumes: []v1.Volume{
+						{
+							Name: "secrets-volume",
+							VolumeSource: v1.VolumeSource{
+								Secret: &v1.SecretVolumeSource{
+									SecretName:  "shared-bootstrap-data",
+									DefaultMode: &[]int32{256}[0],
+								},
+							},
+						},
+					},
+					NodeSelector: map[string]string{"role": "minion"},
 					Containers: []v1.Container{
 						{
 							Name:            w.BiteService.DatabaseType,
@@ -186,8 +200,15 @@ func (w *KubeMapper) MongoStatefulSet() (*v1beta1_apps.StatefulSet, error) {
 								"mongod",
 								"--replSet",
 								"mongo",
+								"--auth",
 								"--smallfiles",
 								"--noprealloc",
+								"--clusterAuthMode",
+								"keyFile",
+								"--keyFile",
+								"/etc/secrets-volume/internal-auth-mongodb-keyfile",
+								"--setParameter",
+								"authenticationMechanisms=SCRAM-SHA-1",
 							},
 							Ports: []v1.ContainerPort{
 								{
@@ -195,12 +216,6 @@ func (w *KubeMapper) MongoStatefulSet() (*v1beta1_apps.StatefulSet, error) {
 								},
 							},
 							VolumeMounts: mounts,
-						},
-						{
-							Name:            "mongo-sidecar",
-							Image:           fmt.Sprintf("%s/%s:%s", "pearsontechnology", "mongo-sidecar", "1.0.0"),
-							ImagePullPolicy: v1.PullAlways,
-							Env:             evars,
 						},
 					},
 					ImagePullSecrets: imagePullSecrets,

@@ -182,16 +182,16 @@ func (s ServiceMap) AddMongoStatefulSet(statefulset v1beta1_apps.StatefulSet) {
 	biteservice.Application = getLabel(statefulset.ObjectMeta, "application")
 	biteservice.HTTPSOnly = getLabel(statefulset.ObjectMeta, "httpsOnly")
 	biteservice.HTTPSBackend = getLabel(statefulset.ObjectMeta, "httpsBackend")
-	biteservice.EnvVars = envVarsStatefulset(statefulset)
 	biteservice.HealthCheck = healthCheckStatefulset(statefulset)
 
-	for _, cmd := range statefulset.Spec.Template.Spec.Containers[0].Command {
-		biteservice.Commands = append(biteservice.Commands, string(cmd))
-	}
+	//Commands and Termination Period for mongo containers are hardcoded in the spec, so no need to sync up the Bitesize service
 
-	if statefulset.Spec.Template.Spec.TerminationGracePeriodSeconds != nil {
-		biteservice.GracePeriod = statefulset.Spec.Template.Spec.TerminationGracePeriodSeconds
-	}
+	//for _, cmd := range statefulset.Spec.Template.Spec.Containers[0].Command {
+	//	biteservice.Commands = append(biteservice.Commands, string(cmd))
+	//}
+	//if statefulset.Spec.Template.Spec.TerminationGracePeriodSeconds != nil {
+	//	biteservice.GracePeriod = statefulset.Spec.Template.Spec.TerminationGracePeriodSeconds
+	//}
 
 	if statefulset.Spec.Template.ObjectMeta.Annotations != nil {
 		biteservice.Annotations = statefulset.Spec.Template.ObjectMeta.Annotations
