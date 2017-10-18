@@ -57,8 +57,7 @@ a database service and that it should deploy it as a statefulset and also create
 Parameters in the environments.bitesize file are used as follows when specifying a mongo database service:
 
 - **database_type**: As noted before, "mongo" is the only type supported. We may add other DB statefulsets in the future.
-- **version**: This is the version of [mongo](https://hub.docker.com/_/mongo/) that will be deployed. Note: the [mongo sidecar](https://github.com/pearsontechnology/mongo-k8s-sidecar)), which is a nodejs app
-utilized to configure the mongo cluster has only been tested with version 3.2 and 3.4 of mongo.
+- **version**: This is the version of [mongo](https://hub.docker.com/_/mongo/) that will be deployed. 
 - **replicas**: Number of mongo pods you would like. A replica value of 3 will provision a Primary and two Secondaries. This value can be changed to scale your mongo cluster up and down.
 - **port**: The port your mongo service will accept requests on. Typically this is 27017 for a mongo database.
 - **volumes**: This is the size of the EBS volume that will be dynamically provisioned and mounted into your Mongo containers. 
