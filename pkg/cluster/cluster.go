@@ -77,6 +77,19 @@ func (cluster *Cluster) ApplyEnvironment(currentEnvironment, newEnvironment *bit
 
 			if service.DatabaseType == "mongo" {
 				log.Debugf("Applying Stateful set for Mongo DB Service: %s ", service.Name)
+
+				secret, _ := mapper.MongoInternalSecret()
+
+				//Only apply the secret if it doesnt exist. Changing this secret would cause a deployed mongo
+				//cluster from being able to communicate between replicas.  Need a way to update this secret
+				// and redploy the mongo statefulset. For now, just protect against changing the secret
+				// via environment operator
+				if !client.Secret().Exists(secret.Name) {
+					if err = client.Secret().Apply(secret); err != nil {
+						log.Error(err)
+					}
+				}
+
 				statefulset, _ := mapper.MongoStatefulSet()
 				if err = client.StatefulSet().Apply(statefulset); err != nil {
 					log.Error(err)

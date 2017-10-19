@@ -13,6 +13,7 @@ import (
 	ext "github.com/pearsontechnology/environment-operator/pkg/k8_extensions"
 	"github.com/pearsontechnology/environment-operator/pkg/util"
 	// metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"encoding/base64"
 	"github.com/pearsontechnology/environment-operator/pkg/util/k8s"
 	"k8s.io/client-go/pkg/api/resource"
 	"k8s.io/client-go/pkg/api/unversioned"
@@ -21,6 +22,8 @@ import (
 	autoscale_v1 "k8s.io/client-go/pkg/apis/autoscaling/v1"
 	v1beta1_ext "k8s.io/client-go/pkg/apis/extensions/v1beta1"
 	"k8s.io/client-go/pkg/util/intstr"
+	"math/rand"
+	"time"
 )
 
 // KubeMapper maps BitesizeService object to Kubernetes objects
@@ -131,6 +134,39 @@ func (w *KubeMapper) PersistentVolumeClaims() ([]v1.PersistentVolumeClaim, error
 	return retval, nil
 }
 
+// MongoInternalSecret returns a secret to be used for mongo internal Auth
+func (w *KubeMapper) MongoInternalSecret() (*v1.Secret, error) {
+
+	const charset = "abcdefghijklmnopqrstuvwxyz" +
+		"ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+	var seededRand *rand.Rand = rand.New(
+		rand.NewSource(time.Now().UnixNano()))
+	b := make([]byte, 700)
+	for i := range b {
+		b[i] = charset[seededRand.Intn(len(charset))]
+	}
+
+	value := base64.StdEncoding.EncodeToString(b)
+
+	s := map[string]string{
+		"internal-auth-mongodb-keyfile": value,
+	}
+
+	ret := &v1.Secret{
+		ObjectMeta: v1.ObjectMeta{
+			Name:      "mongo-bootstrap-data",
+			Namespace: w.Namespace,
+			Labels: map[string]string{
+				"creator":    "pipeline",
+				"deployment": w.BiteService.Name,
+			},
+		},
+		StringData: s,
+	}
+
+	return ret, nil
+}
+
 // Stateful set extracts Kubernetes object from Bitesize definition
 func (w *KubeMapper) MongoStatefulSet() (*v1beta1_apps.StatefulSet, error) {
 	replicas := int32(w.BiteService.Replicas)
@@ -184,7 +220,7 @@ func (w *KubeMapper) MongoStatefulSet() (*v1beta1_apps.StatefulSet, error) {
 							Name: "secrets-volume",
 							VolumeSource: v1.VolumeSource{
 								Secret: &v1.SecretVolumeSource{
-									SecretName:  "shared-bootstrap-data",
+									SecretName:  "mongo-bootstrap-data",
 									DefaultMode: &[]int32{256}[0],
 								},
 							},
@@ -300,11 +336,10 @@ func (w *KubeMapper) Deployment() (*v1beta1_ext.Deployment, error) {
 					Annotations: w.BiteService.Annotations,
 				},
 				Spec: v1.PodSpec{
-					TerminationGracePeriodSeconds: w.BiteService.GracePeriod,
-					NodeSelector:                  map[string]string{"role": "minion"},
-					Containers:                    []v1.Container{*container},
-					ImagePullSecrets:              imagePullSecrets,
-					Volumes:                       volumes,
+					NodeSelector:     map[string]string{"role": "minion"},
+					Containers:       []v1.Container{*container},
+					ImagePullSecrets: imagePullSecrets,
+					Volumes:          volumes,
 				},
 			},
 		},
