@@ -1,15 +1,15 @@
 package cluster
 
 import (
-	"sort"
-	"strings"
-
 	"github.com/pearsontechnology/environment-operator/pkg/bitesize"
 	"github.com/pearsontechnology/environment-operator/pkg/k8_extensions"
 	"k8s.io/client-go/pkg/api/resource"
 	"k8s.io/client-go/pkg/api/v1"
+	v1beta1_apps "k8s.io/client-go/pkg/apis/apps/v1beta1"
 	autoscale_v1 "k8s.io/client-go/pkg/apis/autoscaling/v1"
-	"k8s.io/client-go/pkg/apis/extensions/v1beta1"
+	v1beta1_ext "k8s.io/client-go/pkg/apis/extensions/v1beta1"
+	"sort"
+	"strings"
 )
 
 // ServiceMap holds a list of bitesize.Service objects, representing the
@@ -52,7 +52,7 @@ func (s ServiceMap) AddService(svc v1.Service) {
 	}
 }
 
-func (s ServiceMap) AddDeployment(deployment v1beta1.Deployment) {
+func (s ServiceMap) AddDeployment(deployment v1beta1_ext.Deployment) {
 	name := deployment.Name
 
 	biteservice := s.CreateOrGet(name)
@@ -69,13 +69,23 @@ func (s ServiceMap) AddDeployment(deployment v1beta1.Deployment) {
 		//		biteservice.Requests.Memory = memoryQuantity.String()
 	}
 
-	biteservice.Ssl = getLabel(deployment.ObjectMeta, "ssl") // kubeDeployment.Labels["ssl"]
+	if getLabel(deployment.ObjectMeta, "ssl") != "" {
+		biteservice.Ssl = getLabel(deployment.ObjectMeta, "ssl") // kubeDeployment.Labels["ssl"]
+	}
 	biteservice.Version = getLabel(deployment.ObjectMeta, "version")
 	biteservice.Application = getLabel(deployment.ObjectMeta, "application")
 	biteservice.HTTPSOnly = getLabel(deployment.ObjectMeta, "httpsOnly")
 	biteservice.HTTPSBackend = getLabel(deployment.ObjectMeta, "httpsBackend")
 	biteservice.EnvVars = envVars(deployment)
 	biteservice.HealthCheck = healthCheck(deployment)
+
+	for _, cmd := range deployment.Spec.Template.Spec.Containers[0].Command {
+		biteservice.Commands = append(biteservice.Commands, string(cmd))
+	}
+
+	if deployment.Spec.Template.Spec.TerminationGracePeriodSeconds != nil {
+		biteservice.GracePeriod = deployment.Spec.Template.Spec.TerminationGracePeriodSeconds
+	}
 
 	if deployment.Spec.Template.ObjectMeta.Annotations != nil {
 		biteservice.Annotations = deployment.Spec.Template.ObjectMeta.Annotations
@@ -128,7 +138,7 @@ func (s ServiceMap) AddThirdPartyResource(tpr k8_extensions.PrsnExternalResource
 	}
 }
 
-func (s ServiceMap) AddIngress(ingress v1beta1.Ingress) {
+func (s ServiceMap) AddIngress(ingress v1beta1_ext.Ingress) {
 	var externalURL string
 
 	name := ingress.Name
@@ -146,4 +156,62 @@ func (s ServiceMap) AddIngress(ingress v1beta1.Ingress) {
 	biteservice.HTTPSBackend = httpsBackend
 	biteservice.HTTPSOnly = httpsOnly
 	biteservice.Ssl = ssl
+}
+
+func (s ServiceMap) AddMongoStatefulSet(statefulset v1beta1_apps.StatefulSet) {
+	name := statefulset.Name
+
+	biteservice := s.CreateOrGet(name)
+
+	if statefulset.Spec.Replicas != nil {
+		biteservice.Replicas = int(*statefulset.Spec.Replicas)
+	}
+
+	if len(statefulset.Spec.Template.Spec.Containers[0].Resources.Requests) != 0 {
+		cpuQuantity := new(resource.Quantity)
+		*cpuQuantity = statefulset.Spec.Template.Spec.Containers[0].Resources.Requests["cpu"]
+		biteservice.Requests.CPU = cpuQuantity.String()
+	}
+
+	biteservice.DatabaseType = "mongo"
+
+	if getLabel(statefulset.ObjectMeta, "ssl") != "" {
+		biteservice.Ssl = getLabel(statefulset.ObjectMeta, "ssl")
+	}
+	biteservice.Version = getLabel(statefulset.ObjectMeta, "version")
+	biteservice.Application = getLabel(statefulset.ObjectMeta, "application")
+	biteservice.HTTPSOnly = getLabel(statefulset.ObjectMeta, "httpsOnly")
+	biteservice.HTTPSBackend = getLabel(statefulset.ObjectMeta, "httpsBackend")
+	biteservice.HealthCheck = healthCheckStatefulset(statefulset)
+
+	//Commands and Termination Period for mongo containers are hardcoded in the spec, so no need to sync up the Bitesize service
+
+	//for _, cmd := range statefulset.Spec.Template.Spec.Containers[0].Command {
+	//	biteservice.Commands = append(biteservice.Commands, string(cmd))
+	//}
+	//if statefulset.Spec.Template.Spec.TerminationGracePeriodSeconds != nil {
+	//	biteservice.GracePeriod = statefulset.Spec.Template.Spec.TerminationGracePeriodSeconds
+	//}
+
+	if statefulset.Spec.Template.ObjectMeta.Annotations != nil {
+		biteservice.Annotations = statefulset.Spec.Template.ObjectMeta.Annotations
+	} else {
+		biteservice.Annotations = map[string]string{}
+	}
+
+	for _, claim := range statefulset.Spec.VolumeClaimTemplates {
+		vol := bitesize.Volume{
+			Path:  claim.ObjectMeta.Labels["mount_path"],
+			Modes: getAccessModesAsString(claim.Spec.AccessModes),
+			Name:  claim.ObjectMeta.Name,
+			Size:  claim.ObjectMeta.Labels["size"],
+		}
+		biteservice.Volumes = append(biteservice.Volumes, vol)
+	}
+
+	biteservice.Status = bitesize.ServiceStatus{
+
+		CurrentReplicas: int(statefulset.Status.Replicas),
+		DeployedAt:      statefulset.CreationTimestamp.String(),
+	}
 }

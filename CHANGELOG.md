@@ -11,11 +11,9 @@ This project adheres to [Semantic Versioning](http://semver.org/). Additionally,
 
 ### **[0.0.8]**
 
-#### Fixed
-
-#### Changed 
-
 #### Added 
+
+*  Added mongo support. Environment operator can now stand up a mongodb statefulset if specified in environments.bitesize. [[BITE-1632](https://agile-jira.pearson.com/browse/BITE-1632)]
 
 ### **[0.0.7] - 2017-09-25 [RELEASED]**
 

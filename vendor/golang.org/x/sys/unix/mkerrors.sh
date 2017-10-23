@@ -235,7 +235,8 @@ includes='
 #include <netinet/ip6.h>
 #include <netinet/tcp.h>
 #include <errno.h>
-#include <sys/signal.h>
+#include <sys/signal.h>	// If Requests is omitted for a container, it defaults to Limits if that is explicitly specified,
+
 #include <signal.h>
 #include <sys/resource.h>
 #include <time.h>

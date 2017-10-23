@@ -64,21 +64,28 @@ func postDeploy(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, fmt.Sprintf("Bad Request: Unable to parse request body: %s", err.Error()), http.StatusBadRequest)
 	}
 
-	deployment, err := GetCurrentDeploymentByName(d.Name)
+	deployment, statefulset, err := GetCurrentDeploymentByName(d.Name)
 	if err != nil {
 		log.Errorf("Error getting deployment %s: %s", d.Name, err.Error())
 		http.Error(w, fmt.Sprintf("Bad Request: %s", err.Error()), http.StatusBadRequest)
 		return
 	}
-	deployment.ObjectMeta.Labels["version"] = d.Version
-	deployment.ObjectMeta.Labels["application"] = d.Application
 
-	deployment.Spec.Template.Spec.Containers[0].Image = util.Image(d.Application, d.Version)
-
-	if err = client.Deployment().Apply(deployment); err != nil {
-		log.Errorf("Error updating deployment %s: %s", d.Name, err.Error())
-		http.Error(w, fmt.Sprintf("Bad Request: %s", err.Error()), http.StatusBadRequest)
-		return
+	if deployment != nil {
+		deployment.ObjectMeta.Labels["version"] = d.Version
+		deployment.ObjectMeta.Labels["application"] = d.Application
+		deployment.Spec.Template.Spec.Containers[0].Image = util.Image(d.Application, d.Version)
+		if err = client.Deployment().Apply(deployment); err != nil {
+			log.Errorf("Error updating deployment %s: %s", d.Name, err.Error())
+			http.Error(w, fmt.Sprintf("Bad Request: %s", err.Error()), http.StatusBadRequest)
+			return
+		}
+	} else if statefulset != nil {
+		if err = client.StatefulSet().Apply(statefulset); err != nil {
+			log.Errorf("Error updating statefulset %s: %s", d.Name, err.Error())
+			http.Error(w, fmt.Sprintf("Bad Request: %s", err.Error()), http.StatusBadRequest)
+			return
+		}
 	}
 
 	status := map[string]string{

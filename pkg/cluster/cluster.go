@@ -75,29 +75,57 @@ func (cluster *Cluster) ApplyEnvironment(currentEnvironment, newEnvironment *bit
 				continue
 			}
 
-			deployment, err := mapper.Deployment()
-			if err != nil {
-				return err
-			}
-			if err = client.Deployment().Apply(deployment); err != nil {
-				log.Error(err)
-			}
+			if service.DatabaseType == "mongo" {
+				log.Debugf("Applying Stateful set for Mongo DB Service: %s ", service.Name)
 
-			svc, _ := mapper.Service()
-			if err = client.Service().Apply(svc); err != nil {
-				log.Error(err)
+				secret, _ := mapper.MongoInternalSecret()
+
+				//Only apply the secret if it doesnt exist. Changing this secret would cause a deployed mongo
+				//cluster from being able to communicate between replicas.  Need a way to update this secret
+				// and redploy the mongo statefulset. For now, just protect against changing the secret
+				// via environment operator
+				if !client.Secret().Exists(secret.Name) {
+					if err = client.Secret().Apply(secret); err != nil {
+						log.Error(err)
+					}
+				}
+
+				statefulset, _ := mapper.MongoStatefulSet()
+				if err = client.StatefulSet().Apply(statefulset); err != nil {
+					log.Error(err)
+				}
+
+				svc, _ := mapper.HeadlessService()
+				if err = client.Service().Apply(svc); err != nil {
+					log.Error(err)
+				}
+
+			} else { //Only apply a Deployment and PVCs if this is not a DB service. The DB Statefulset creates its own PVCs
+				log.Debugf("Applying Deployment for Service %s ", service.Name)
+				deployment, err := mapper.Deployment()
+				if err != nil {
+					return err
+				}
+				if err = client.Deployment().Apply(deployment); err != nil {
+					log.Error(err)
+				}
+
+				pvc, _ := mapper.PersistentVolumeClaims()
+				for _, claim := range pvc {
+					if err = client.PVC().Apply(&claim); err != nil {
+						log.Error(err)
+					}
+				}
+
+				svc, _ := mapper.Service()
+				if err = client.Service().Apply(svc); err != nil {
+					log.Error(err)
+				}
 			}
 
 			hpa, _ := mapper.HPA()
 			if err = client.HorizontalPodAutoscaler().Apply(&hpa); err != nil {
 				log.Error(err)
-			}
-
-			pvc, _ := mapper.PersistentVolumeClaims()
-			for _, claim := range pvc {
-				if err = client.PVC().Apply(&claim); err != nil {
-					log.Error(err)
-				}
 			}
 
 			if service.ExternalURL != "" {
@@ -199,6 +227,15 @@ func (cluster *Cluster) LoadEnvironment(namespace string) (*bitesize.Environment
 		serviceMap.AddIngress(ingress)
 	}
 
+	statefulsets, err := client.StatefulSet().List()
+	if err != nil {
+		log.Errorf("Error loading kubernetes statefulsets : %s", err.Error())
+	}
+
+	for _, statefulset := range statefulsets {
+		serviceMap.AddMongoStatefulSet(statefulset)
+	}
+
 	// we'll need the same for tprs
 	claims, _ := client.PVC().List()
 	for _, claim := range claims {
@@ -228,7 +265,6 @@ func shouldDeploy(currentEnvironment, newEnvironment *bitesize.Environment, serv
 
 	if (currentService != nil && currentService.Status.DeployedAt != "") || (updatedService != nil && updatedService.Version != "") {
 		if diff.ServiceChanged(serviceName) {
-			log.Debugf("Applying changes to the '%s' service", serviceName)
 			return true
 		}
 	}

@@ -2,26 +2,26 @@ package web
 
 import (
 	"fmt"
-
 	log "github.com/Sirupsen/logrus"
 
 	"github.com/pearsontechnology/environment-operator/pkg/bitesize"
 	"github.com/pearsontechnology/environment-operator/pkg/config"
 	"github.com/pearsontechnology/environment-operator/pkg/git"
 	"github.com/pearsontechnology/environment-operator/pkg/translator"
-	"k8s.io/client-go/pkg/apis/extensions/v1beta1"
+	v1beta1_apps "k8s.io/client-go/pkg/apis/apps/v1beta1"
+	v1beta1_ext "k8s.io/client-go/pkg/apis/extensions/v1beta1"
 )
 
 // GetCurrentDeploymentByName retrieves kubernetes deployment object for
 // currently active environment from bitesize file in git.
-func GetCurrentDeploymentByName(name string) (*v1beta1.Deployment, error) {
+func GetCurrentDeploymentByName(name string) (*v1beta1_ext.Deployment, *v1beta1_apps.StatefulSet, error) {
 	gitClient := git.Client()
 	gitClient.Refresh()
 
 	environment, err := bitesize.LoadEnvironmentFromConfig(config.Env)
 	if err != nil {
 		log.Errorf("Could not load env: %s", err.Error())
-		return nil, err
+		return nil, nil, err
 	}
 
 	log.Debugf("ENV: %+v", *environment)
@@ -29,11 +29,27 @@ func GetCurrentDeploymentByName(name string) (*v1beta1.Deployment, error) {
 	service := environment.Services.FindByName(name)
 	if service == nil {
 		log.Infof("Services: %q", environment.Services)
-		return nil, fmt.Errorf("%s not found", name)
+		return nil, nil, fmt.Errorf("%s not found", name)
 	}
 
 	mapper := translator.KubeMapper{
 		BiteService: service,
 	}
-	return mapper.Deployment()
+
+	if service.DatabaseType == "mongo" {
+		statefulset, _ := mapper.MongoStatefulSet()
+		if err != nil {
+			log.Errorf("Could not process statefulset: %s", err.Error())
+			return nil, nil, err
+		}
+		return nil, statefulset, nil
+
+	} else {
+		deployment, err := mapper.Deployment()
+		if err != nil {
+			log.Errorf("Could not process deployment : %s", err.Error())
+			return nil, nil, err
+		}
+		return deployment, nil, nil
+	}
 }

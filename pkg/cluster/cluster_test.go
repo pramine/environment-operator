@@ -16,7 +16,8 @@ import (
 	// "k8s.io/client-go/pkg/api/meta"
 
 	"k8s.io/client-go/pkg/apimachinery/registered"
-	"k8s.io/client-go/pkg/apis/extensions/v1beta1"
+	v1beta1_apps "k8s.io/client-go/pkg/apis/apps/v1beta1"
+	v1beta1_ext "k8s.io/client-go/pkg/apis/extensions/v1beta1"
 	fakerest "k8s.io/client-go/rest/fake"
 
 	faketpr "github.com/pearsontechnology/environment-operator/pkg/util/k8s/fake"
@@ -176,8 +177,8 @@ func TestGetPods(t *testing.T) {
 }
 */
 
-func newDeployment(namespace, name string) *v1beta1.Deployment {
-	d := v1beta1.Deployment{
+func newDeployment(namespace, name string) *v1beta1_ext.Deployment {
+	d := v1beta1_ext.Deployment{
 		ObjectMeta: v1.ObjectMeta{
 			Name:      name,
 			Namespace: namespace,
@@ -185,7 +186,7 @@ func newDeployment(namespace, name string) *v1beta1.Deployment {
 				"deployment.kubernetes.io/revision": "1",
 			},
 		},
-		Spec: v1beta1.DeploymentSpec{
+		Spec: v1beta1_ext.DeploymentSpec{
 			Template: v1.PodTemplateSpec{},
 		},
 	}
@@ -285,7 +286,7 @@ func loadTestEnvironment() *fake.Clientset {
 				Labels: validLabels,
 			},
 		},
-		&v1beta1.Deployment{
+		&v1beta1_ext.Deployment{
 			ObjectMeta: v1.ObjectMeta{
 				Name:      "test",
 				Namespace: "test",
@@ -299,12 +300,12 @@ func loadTestEnvironment() *fake.Clientset {
 					"deployment.kubernetes.io/revision": "1",
 				},
 			},
-			Status: v1beta1.DeploymentStatus{
+			Status: v1beta1_ext.DeploymentStatus{
 				AvailableReplicas: 1,
 				Replicas:          1,
 				UpdatedReplicas:   1,
 			},
-			Spec: v1beta1.DeploymentSpec{
+			Spec: v1beta1_ext.DeploymentSpec{
 				Replicas: &replicaCount,
 				Template: v1.PodTemplateSpec{
 					ObjectMeta: v1.ObjectMeta{
@@ -340,13 +341,16 @@ func loadTestEnvironment() *fake.Clientset {
 										},
 									},
 								},
-
 								VolumeMounts: []v1.VolumeMount{
 									{
 										Name:      "test",
 										MountPath: "/tmp/blah",
 										ReadOnly:  true,
 									},
+								},
+								Command: []string{
+									"test1",
+									"test2",
 								},
 							},
 						},
@@ -364,6 +368,7 @@ func loadTestEnvironment() *fake.Clientset {
 				},
 			},
 		},
+
 		&v1.Service{
 			ObjectMeta: v1.ObjectMeta{
 				Name:      "ts",
@@ -390,13 +395,13 @@ func loadTestEnvironment() *fake.Clientset {
 		&v1.Service{
 			ObjectMeta: validMeta("test", "test2"),
 		},
-		&v1beta1.Ingress{
+		&v1beta1_ext.Ingress{
 			ObjectMeta: v1.ObjectMeta{
 				Name:      "ts",
 				Namespace: "test",
 			},
 		},
-		&v1beta1.Ingress{
+		&v1beta1_ext.Ingress{
 			ObjectMeta: v1.ObjectMeta{
 				Name:      "test",
 				Namespace: "test",
@@ -404,8 +409,8 @@ func loadTestEnvironment() *fake.Clientset {
 					"creator": "pipeline",
 				},
 			},
-			Spec: v1beta1.IngressSpec{
-				Rules: []v1beta1.IngressRule{
+			Spec: v1beta1_ext.IngressSpec{
+				Rules: []v1beta1_ext.IngressRule{
 					{
 						Host: "www.test.com",
 					},
@@ -465,6 +470,10 @@ func testFullBitesizeEnvironment(t *testing.T) {
 
 	if svc.ExternalURL != "www.test.com" {
 		t.Errorf("Unexpected external URL: %s, expected: www.test.com", svc.ExternalURL)
+	}
+
+	if len(environment.Services[0].Commands) != 2 {
+		t.Errorf("Unexpected Commands: %s, expected: test1,test2", environment.Services[0].Commands)
 	}
 
 	if len(svc.EnvVars) != 4 {
@@ -613,4 +622,153 @@ func TestApplyExistingHPA(t *testing.T) {
 }
 func loadEmptyTPRS() *fakerest.RESTClient {
 	return faketpr.TPRClient()
+}
+
+func TestApplyMongoStatefulSet(t *testing.T) {
+	tprclient := loadEmptyTPRS()
+	client := fake.NewSimpleClientset(
+		&v1.Namespace{
+			ObjectMeta: v1.ObjectMeta{
+				Name: "environment-mongo",
+				Labels: map[string]string{
+					"environment": "environment-mongo",
+				},
+			},
+		},
+		&v1beta1_apps.StatefulSet{
+			ObjectMeta: v1.ObjectMeta{
+				Name:      "mongo",
+				Namespace: "environment-mongo",
+				Labels: map[string]string{
+					"creator":     "pipeline",
+					"name":        "hpaservice",
+					"application": "some-app",
+					"version":     "3.4",
+				},
+				Annotations: map[string]string{
+					"deployment.kubernetes.io/revision": "1",
+				},
+			},
+			Status: v1beta1_apps.StatefulSetStatus{
+				Replicas: 1,
+			},
+			Spec: v1beta1_apps.StatefulSetSpec{
+				ServiceName: "mongo",
+				Replicas:    &[]int32{3}[0],
+				Template: v1.PodTemplateSpec{
+					ObjectMeta: v1.ObjectMeta{
+						Name:      "mongo",
+						Namespace: "test",
+						Labels: map[string]string{
+							"creator":     "pipeline",
+							"name":        "mongo",
+							"application": "some-app",
+							"version":     "3.4",
+							"role":        "mongo",
+						},
+						Annotations: map[string]string{
+							"existing_annotation": "exist",
+						},
+					},
+					Spec: v1.PodSpec{
+						TerminationGracePeriodSeconds: &[]int64{10}[0],
+						Containers: []v1.Container{
+							{
+								VolumeMounts: []v1.VolumeMount{
+									{
+										Name:      "mongo-persistent-storage",
+										MountPath: "/data/db",
+										ReadOnly:  true,
+									},
+									{
+										Name:      "secrets-volume",
+										MountPath: "/etc/secrets-volume",
+										ReadOnly:  true,
+									},
+								},
+							},
+						},
+						Volumes: []v1.Volume{
+							{
+								Name: "test",
+								VolumeSource: v1.VolumeSource{
+									PersistentVolumeClaim: &v1.PersistentVolumeClaimVolumeSource{
+										ClaimName: "test",
+									},
+								},
+							},
+							{
+								Name: "secrets-volume",
+								VolumeSource: v1.VolumeSource{
+									Secret: &v1.SecretVolumeSource{
+										SecretName:  "shared-bootstrap-data",
+										DefaultMode: &[]int32{256}[0],
+									},
+								},
+							},
+						},
+					},
+				},
+				VolumeClaimTemplates: []v1.PersistentVolumeClaim{
+					{
+						ObjectMeta: v1.ObjectMeta{
+							Name:      "mongo-persistent-storage",
+							Namespace: "environment-mongo",
+							Annotations: map[string]string{
+								"volume.beta.kubernetes.io/storage-class": "aws-ebs",
+							},
+							Labels: map[string]string{
+								"creator":    "pipeline",
+								"deployment": "mongo",
+								"mount_path": "/data/db",
+								"size":       "10G",
+							},
+						},
+						Spec: v1.PersistentVolumeClaimSpec{
+							AccessModes: []v1.PersistentVolumeAccessMode{v1.ReadWriteOnce},
+							Resources: v1.ResourceRequirements{
+								Requests: v1.ResourceList{
+									v1.ResourceName(v1.ResourceStorage): resource.MustParse("10G"),
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		&v1.Service{
+			ObjectMeta: validMeta("environment-mongo", "mongo"),
+			Spec: v1.ServiceSpec{
+				Ports: []v1.ServicePort{
+					{
+						Name:     "tcp-port-27017",
+						Protocol: "TCP",
+						Port:     27017,
+					},
+				},
+			},
+		},
+	)
+
+	cluster := Cluster{
+		Interface: client,
+		TPRClient: tprclient,
+	}
+
+	e1, err := bitesize.LoadEnvironment("../../test/assets/environments.bitesize", "environment4")
+	if err != nil {
+		t.Fatalf("Unexpected err: %s", err.Error())
+	}
+
+	cluster.ApplyEnvironment(e1, e1)
+
+	e2, err := cluster.LoadEnvironment("environment-mongo")
+
+	if err != nil {
+		t.Fatalf("Unexpected err: %s", err.Error())
+	}
+
+	if diff.Compare(*e1, *e2) {
+		t.Errorf("Expected loaded environments to be equal, yet diff is: %s", diff.Changes())
+	}
 }
