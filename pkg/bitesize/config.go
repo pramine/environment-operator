@@ -32,8 +32,8 @@ type HorizontalPodAutoscaler struct {
 
 // ContainerRequests maps to requests in kubernetes
 type ContainerRequests struct {
-	CPU string `yaml:"cpu"`
-	//	Memory string `yaml:"memory"`
+	CPU    string `yaml:"cpu"`
+	Memory string `yaml:"memory"`
 }
 
 // Test is obsolete and not used by environment-operator,

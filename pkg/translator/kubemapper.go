@@ -186,6 +186,11 @@ func (w *KubeMapper) MongoStatefulSet() (*v1beta1_apps.StatefulSet, error) {
 
 	mounts = append(mounts, vol)
 
+	resources, err := w.resources()
+	if err != nil {
+		return nil, err
+	}
+
 	retval := &v1beta1_apps.StatefulSet{
 		ObjectMeta: v1.ObjectMeta{
 			Name:      w.BiteService.Name,
@@ -252,6 +257,7 @@ func (w *KubeMapper) MongoStatefulSet() (*v1beta1_apps.StatefulSet, error) {
 								},
 							},
 							VolumeMounts: mounts,
+							Resources:    resources,
 						},
 					},
 					ImagePullSecrets: imagePullSecrets,
@@ -610,18 +616,27 @@ func getAccessModesFromString(modes string) []v1.PersistentVolumeAccessMode {
 }
 
 func (w *KubeMapper) resources() (v1.ResourceRequirements, error) {
+	//Environment Operator will implement Guaranteed QoS for managed Pods. This means:
+	//https://kubernetes.io/docs/tasks/configure-pod-container/quality-service-pod/#create-a-pod-that-gets-assigned-a-qos-class-of-guaranteed
+
 	cpuQuantity, err := resource.ParseQuantity(w.BiteService.Requests.CPU)
+
 	if err != nil {
 		return v1.ResourceRequirements{}, err
 	}
-	//	memoryQuantity, err := resource.ParseQuantity(w.BiteService.Requests.Memory)
-	//	if err != nil {
-	//		return v1.ResourceRequirements{}, err
-	//	}
+	memoryQuantity, err := resource.ParseQuantity(w.BiteService.Requests.Memory)
+	if err != nil {
+		return v1.ResourceRequirements{}, err
+	}
+
 	retval := v1.ResourceRequirements{
 		Requests: v1.ResourceList{
-			"cpu": cpuQuantity,
-			//			"memory": memoryQuantity,
+			"cpu":    cpuQuantity,
+			"memory": memoryQuantity,
+		},
+		Limits: v1.ResourceList{
+			"cpu":    cpuQuantity,
+			"memory": memoryQuantity,
 		},
 	}
 	return retval, nil

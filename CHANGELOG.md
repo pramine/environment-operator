@@ -14,6 +14,7 @@ This project adheres to [Semantic Versioning](http://semver.org/). Additionally,
 #### Added 
 
 *  Added mongo support. Environment operator can now stand up a mongodb statefulset if specified in environments.bitesize. [[BITE-1632](https://agile-jira.pearson.com/browse/BITE-1632)]
+*  Enabled Guaranteed Quality of Service. Environment operator will now deploy containers with requests=limits when a request is specified within the manifest (environments.bitesize) for a service. [[BITE-1713](https://agile-jira.pearson.com/browse/BITE-1713))]
 
 ### **[0.0.7] - 2017-09-25 [RELEASED]**
 

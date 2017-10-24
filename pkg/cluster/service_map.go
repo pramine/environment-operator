@@ -63,10 +63,10 @@ func (s ServiceMap) AddDeployment(deployment v1beta1_ext.Deployment) {
 	if len(deployment.Spec.Template.Spec.Containers[0].Resources.Requests) != 0 {
 		cpuQuantity := new(resource.Quantity)
 		*cpuQuantity = deployment.Spec.Template.Spec.Containers[0].Resources.Requests["cpu"]
-		//		memoryQuantity := new(resource.Quantity)
-		//		*memoryQuantity = deployment.Spec.Template.Spec.Containers[0].Resources.Requests["memory"]
+		memoryQuantity := new(resource.Quantity)
+		*memoryQuantity = deployment.Spec.Template.Spec.Containers[0].Resources.Requests["memory"]
 		biteservice.Requests.CPU = cpuQuantity.String()
-		//		biteservice.Requests.Memory = memoryQuantity.String()
+		biteservice.Requests.Memory = memoryQuantity.String()
 	}
 
 	if getLabel(deployment.ObjectMeta, "ssl") != "" {

@@ -27,6 +27,7 @@ environments:
     version: 1
     requests:
       cpu: 500m
+      memory: 100Mi
     hpa:
       min_replicas: 2
       max_replicas: 5
