@@ -122,7 +122,7 @@ The environment section of the manifest may specify multiple environments to man
        
     - **hpa**:   Below is an example of how to specify HPA for your service. In the example below, your deployment would be scaled out to 5 or in to 2 replicas when CPU utilization reaches a 75% threshold.  Memory HPA has not been implemented yet within environment-operator. If you are interested in being able to utilize HPA within your kubernetes ecosystem, please review the [requirements](https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/) for HPA in your cluster. In order to specify HPA for your service, you'll need to have Heapster running within your kubernetes ecosystem to gather metrics required for scaling events.
     ```
-          services
+          services:
           - name: hpaservice
             application: gummybears
             version: 1
@@ -131,8 +131,17 @@ The environment section of the manifest may specify multiple environments to man
                max_replicas: 5
                target_cpu_utilization_percentage: 75
     ```
-    - **requests**:  This is how to specify the CPU/Memory footprint required by your microservice.  Within environment-operator, we've implemented a Guaranteed Quality of service for pods created with a specified request.  In the example below, the pods that are deployed will have CPU/Memory [Requests/Limits](https://kubernetes.io/docs/concepts/configuration/manage-compute-resources-container/#resource-requests-and-limits-of-pod-and-container) set to to ensure [Guaranteed](https://kubernetes.io/docs/tasks/configure-pod-container/quality-service-pod/#create-a-pod-that-gets-assigned-a-qos-class-of-guaranteed) quality of service
-   
+    - **requests**:  This is how to specify the CPU/Memory footprint required by your microservice.  Within environment-operator, we've implemented a Guaranteed Quality of service for pods.  In the example below, the pods that are deployed will have CPU/Memory [requests & limits](https://kubernetes.io/docs/concepts/configuration/manage-compute-resources-container/#resource-requests-and-limits-of-pod-and-container) set to ensure [Guaranteed](https://kubernetes.io/docs/tasks/configure-pod-container/quality-service-pod/#create-a-pod-that-gets-assigned-a-qos-class-of-guaranteed) quality of service. This means that the service below will be guaranteed .5 CPU (or 500m) and a 100MiB Memory footprint on the node it is scheduled to.
+    ```
+         services:
+         - name: hpaservice
+           application: gummybears
+           version: 1
+           requests:
+              cpu: 500m
+              memory: 100Mi
+
+    ```
     - **external_url**: When an external url is specified,  a [kubernetes ingress](https://kubernetes.io/docs/concepts/services-networking/ingress/) will be created to allow inbound connectivity to your microservice. If this option is omitted, an ingress will not be created.
     - **ssl** : Specifying "true" or "false" will result in your Kubernetes Ingress being created with the label "ssl" in its Object Metadata. Pearson utilizes an nginx ingress controller to build out our nginx config for our kubernetes ingresses. When ssl is specified, we ensure that ssl is being utilized when proxing requests to that service. More information on our open sourced nginx controller may be found [here](https://github.com/pearsontechnology/bitesize-controllers).  
     - **env**: This option is not recommended because any change to the environment variables in the manifest file will result in a redeploy of your services.  At pearson, we utilize consul and envconsul for configuring our deployed microservices.  However, this option is available and will allow you to specify environment variables as either variables or k8s secrets, that will be available to your pods running in your kubernetes deployment.  In the example below, the "gummybears" container will have access to the VAULT_TOKEN and VAULT_ADDR variables, where one is coming from a kubernetes-secret and the other is a specified string.
