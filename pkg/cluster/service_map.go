@@ -83,10 +83,6 @@ func (s ServiceMap) AddDeployment(deployment v1beta1_ext.Deployment) {
 		biteservice.Commands = append(biteservice.Commands, string(cmd))
 	}
 
-	if deployment.Spec.Template.Spec.TerminationGracePeriodSeconds != nil {
-		biteservice.GracePeriod = deployment.Spec.Template.Spec.TerminationGracePeriodSeconds
-	}
-
 	if deployment.Spec.Template.ObjectMeta.Annotations != nil {
 		biteservice.Annotations = deployment.Spec.Template.ObjectMeta.Annotations
 	} else {
@@ -170,7 +166,10 @@ func (s ServiceMap) AddMongoStatefulSet(statefulset v1beta1_apps.StatefulSet) {
 	if len(statefulset.Spec.Template.Spec.Containers[0].Resources.Requests) != 0 {
 		cpuQuantity := new(resource.Quantity)
 		*cpuQuantity = statefulset.Spec.Template.Spec.Containers[0].Resources.Requests["cpu"]
+		memoryQuantity := new(resource.Quantity)
+		*memoryQuantity = statefulset.Spec.Template.Spec.Containers[0].Resources.Requests["memory"]
 		biteservice.Requests.CPU = cpuQuantity.String()
+		biteservice.Requests.Memory = memoryQuantity.String()
 	}
 
 	biteservice.DatabaseType = "mongo"
