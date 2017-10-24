@@ -1,4 +1,5 @@
 
+
 # Environment Configuration
 
 Environment Operator utilizes an environment configuration (manifest) file to deploy k8s resources to your namespace.  It defines how to layout environments and which applications (services) to run. This configuration file can either live in your application's repository, or a repository dedicated to just managing this file. At Pearson, we've found our dev teams prefer to manage these files separately from their code repositories. The k8s deployment YAML of Environment operator specifies what repo it is using as well as what the environment file is named. For more information on configuring environment operator and how to specify your environment file, see the [operational guide](./Operatonal_Guide.md). What follows in this document will be information in regards to the configuration of options/features that are available in the manifest file (we will refer to it as environments.bitesize in this document) and how to specify your services for deployment.
@@ -131,7 +132,7 @@ The environment section of the manifest may specify multiple environments to man
                max_replicas: 5
                target_cpu_utilization_percentage: 75
     ```
-    - **requests**:  This is how to specify the CPU/Memory footprint required by your microservice.  Within environment-operator, we've implemented a Guaranteed Quality of service for pods.  In the example below, the pods that are deployed will have CPU/Memory [requests & limits](https://kubernetes.io/docs/concepts/configuration/manage-compute-resources-container/#resource-requests-and-limits-of-pod-and-container) set to ensure [Guaranteed](https://kubernetes.io/docs/tasks/configure-pod-container/quality-service-pod/#create-a-pod-that-gets-assigned-a-qos-class-of-guaranteed) quality of service. This means that the service below will be guaranteed .5 CPU (or 500m) and a 100MiB Memory footprint on the node it is scheduled to.
+    - **requests**:  This is how to specify the [quality of service](https://kubernetes.io/docs/tasks/configure-pod-container/quality-service-pod/) required by your microservice.  In the example below, the pods that are deployed will have CPU/Memory [requests and limits](https://kubernetes.io/docs/concepts/configuration/manage-compute-resources-container/#resource-requests-and-limits-of-pod-and-container) set  to ensure a guaranteed quality of service. This means that the service below will be guaranteed .5 CPU (or 500m) and a 100MiB Memory footprint on the node it is scheduled to. To achieve a Burstable QoS, you would only specify either memory or cpu shares in your request. And if you omit any request for your service, your QoS level for that service when it is scheduled to a node will be BestEffort.
     ```
          services:
          - name: hpaservice
@@ -157,3 +158,4 @@ The environment section of the manifest may specify multiple environments to man
             - name: VAULT_ADDR
               value: "https://vault.kube-system.svc.cluster.local:8243"
     ```
+
