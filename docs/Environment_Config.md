@@ -1,5 +1,3 @@
-
-
 # Environment Configuration
 
 Environment Operator utilizes an environment configuration (manifest) file to deploy k8s resources to your namespace.  It defines how to layout environments and which applications (services) to run. This configuration file can either live in your application's repository, or a repository dedicated to just managing this file. At Pearson, we've found our dev teams prefer to manage these files separately from their code repositories. The k8s deployment YAML of Environment operator specifies what repo it is using as well as what the environment file is named. For more information on configuring environment operator and how to specify your environment file, see the [operational guide](./Operatonal_Guide.md). What follows in this document will be information in regards to the configuration of options/features that are available in the manifest file (we will refer to it as environments.bitesize in this document) and how to specify your services for deployment.
@@ -144,27 +142,24 @@ The environment section of the manifest may specify multiple environments to man
     ```
     - **requests**:  This is how you specify [requests](https://kubernetes.io/docs/concepts/configuration/manage-compute-resources-container/#resource-requests-and-limits-of-pod-and-container).  Note: The acceptable unit for CPU in the manifest is "m" and for Memory, "Mi" is supported.  For information on what these units mean, please review the [kubernetes documentation](https://kubernetes.io/docs/concepts/configuration/manage-compute-resources-container/#meaning-of-cpu).
          - In the example below, the containers that are created for your service will utilize the default limits (1000m CPU/2048MiB Memory) as no limits were specified in the manifest. The service will also have Burstable QoS as the request for 500m (.5 CPU core) CPU / 100MiB Memory is less than the default limit set by environment operator.
-         
-    ```
+	```    
+    services:
+     - name: hpaservice
+       application: gummybears
+       version: 1
+       requests:
+          cpu: 500m
+          memory: 100Mi    services:
+	```
+         - In the next example below, the containers that are created for the hpaservice will utilize the default limits (1000m CPU/2048MiB Memory) as no limits were specified in the manifest. Additionally, since there were also no requests specified, the requests will be set equal to the default limits, giving the pod Guaranteed QoS of 1000m CPU/2048MiB Memory.
+	```
          services:
          - name: hpaservice
            application: gummybears
            version: 1
-           requests:
-              cpu: 500m
-              memory: 100Mi
     ```
-
-		- In the next example below, the containers that are created for the hpaservice will utilize the default limits (1000m CPU/2048MiB Memory) as no limits were specified in the manifest. Additionally, since there were also no requests specified, the requests will be set equal to the default limits, giving the pod Guaranteed QoS of 1000m CPU/2048MiB Memory.
-
-    ```
-         services:
-         - name: hpaservice
-           application: gummybears
-           version: 1
-    ```
-
-		- Note: For more information on QoS Classes within kubernetes, please review the [documentation](https://kubernetes.io/docs/tasks/configure-pod-container/quality-service-pod/). Environment Operator requires limits to be set on every service, so it supports configuration of services to have either Guaranteed or Burstable QoS. 
+         - Note: For more information on QoS Classes within kubernetes, please review the [documentation](https://kubernetes.io/docs/tasks/configure-pod-container/quality-service-pod/). Environment Operator requires limits to be set on every service, so it supports configuration of services to have either Guaranteed or Burstable QoS. 
+	    
     - **external_url**: When an external url is specified,  a [kubernetes ingress](https://kubernetes.io/docs/concepts/services-networking/ingress/) will be created to allow inbound connectivity to your microservice. If this option is omitted, an ingress will not be created.
     - **ssl** : Specifying "true" or "false" will result in your Kubernetes Ingress being created with the label "ssl" in its Object Metadata. Pearson utilizes an nginx ingress controller to build out our nginx config for our kubernetes ingresses. When ssl is specified, we ensure that ssl is being utilized when proxing requests to that service. More information on our open sourced nginx controller may be found [here](https://github.com/pearsontechnology/bitesize-controllers).  
     - **env**: This option is not recommended because any change to the environment variables in the manifest file will result in a redeploy of your services.  At pearson, we utilize consul and envconsul for configuring our deployed microservices.  However, this option is available and will allow you to specify environment variables as either variables or k8s secrets, that will be available to your pods running in your kubernetes deployment.  In the example below, the "gummybears" container will have access to the VAULT_TOKEN and VAULT_ADDR variables, where contents for one variable is coming from a kubernetes-secret and the other is a specific string.
@@ -180,5 +175,6 @@ The environment section of the manifest may specify multiple environments to man
             - name: VAULT_ADDR
               value: "https://vault.kube-system.svc.cluster.local:8243"
     ```
+
 
 
