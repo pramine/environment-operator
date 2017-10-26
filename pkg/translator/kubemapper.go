@@ -414,27 +414,17 @@ func (w *KubeMapper) container() (*v1.Container, error) {
 		return nil, err
 	}
 
-	if w.BiteService.Requests != (bitesize.ContainerRequests{}) {
-		resources, err := w.resources()
-		if err != nil {
-			return nil, err
-		}
-		retval = &v1.Container{
-			Name:         w.BiteService.Name,
-			Image:        "",
-			Env:          evars,
-			VolumeMounts: mounts,
-			Resources:    resources,
-			Command:      w.BiteService.Commands,
-		}
-	} else {
-		retval = &v1.Container{
-			Name:         w.BiteService.Name,
-			Image:        "",
-			Env:          evars,
-			VolumeMounts: mounts,
-			Command:      w.BiteService.Commands,
-		}
+	resources, err := w.resources()
+	if err != nil {
+		return nil, err
+	}
+	retval = &v1.Container{
+		Name:         w.BiteService.Name,
+		Image:        "",
+		Env:          evars,
+		VolumeMounts: mounts,
+		Resources:    resources,
+		Command:      w.BiteService.Commands,
 	}
 
 	return retval, nil
@@ -615,29 +605,54 @@ func getAccessModesFromString(modes string) []v1.PersistentVolumeAccessMode {
 	return accessModes
 }
 
+func (w *KubeMapper) getLimits() v1.ResourceList {
+
+	cpu, err := resource.ParseQuantity(w.BiteService.Limits.CPU)
+	if err != nil {
+		cpu, _ = resource.ParseQuantity(config.Env.LimitDefaultCPU)
+	}
+	mem, err := resource.ParseQuantity(w.BiteService.Limits.Memory)
+	if err != nil {
+		mem, _ = resource.ParseQuantity(config.Env.LimitDefaultMemory)
+	}
+
+	return v1.ResourceList{
+		"cpu":    cpu,
+		"memory": mem,
+	}
+}
+
 func (w *KubeMapper) resources() (v1.ResourceRequirements, error) {
-	//Environment Operator will implement Guaranteed QoS for managed Pods. This means:
-	//https://kubernetes.io/docs/tasks/configure-pod-container/quality-service-pod/#create-a-pod-that-gets-assigned-a-qos-class-of-guaranteed
+	//Environment Operator allows for Guaranteed and Burstable QoS Classes as limits are always assigned to containers
+	cpuRequest, memoryError := resource.ParseQuantity(w.BiteService.Requests.CPU)
+	memoryRequest, cpuError := resource.ParseQuantity(w.BiteService.Requests.Memory)
 
-	cpuQuantity, err := resource.ParseQuantity(w.BiteService.Requests.CPU)
+	if cpuError != nil && memoryError != nil { //If no CPU or Memory Request provided, default to limits for Guaranteed QoS
+		return v1.ResourceRequirements{
+			Limits: w.getLimits(),
+		}, nil
+	} else if cpuError != nil && memoryError == nil {
+		return v1.ResourceRequirements{
+			Requests: v1.ResourceList{
+				"memory": memoryRequest,
+			},
+			Limits: w.getLimits(),
+		}, nil
+	} else if cpuError == nil && memoryError != nil {
+		return v1.ResourceRequirements{
+			Requests: v1.ResourceList{
+				"cpu": cpuRequest,
+			},
+			Limits: w.getLimits(),
+		}, nil
+	} else {
+		return v1.ResourceRequirements{
+			Requests: v1.ResourceList{
+				"cpu":    cpuRequest,
+				"memory": memoryRequest,
+			},
+			Limits: w.getLimits(),
+		}, nil
 
-	if err != nil {
-		return v1.ResourceRequirements{}, err
 	}
-	memoryQuantity, err := resource.ParseQuantity(w.BiteService.Requests.Memory)
-	if err != nil {
-		return v1.ResourceRequirements{}, err
-	}
-
-	retval := v1.ResourceRequirements{
-		Requests: v1.ResourceList{
-			"cpu":    cpuQuantity,
-			"memory": memoryQuantity,
-		},
-		Limits: v1.ResourceList{
-			"cpu":    cpuQuantity,
-			"memory": memoryQuantity,
-		},
-	}
-	return retval, nil
 }

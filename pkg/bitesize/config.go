@@ -36,6 +36,12 @@ type ContainerRequests struct {
 	Memory string `yaml:"memory"`
 }
 
+// ContainerLimits maps to limits in kubernetes
+type ContainerLimits struct {
+	CPU    string `yaml:"cpu"`
+	Memory string `yaml:"memory"`
+}
+
 // Test is obsolete and not used by environment-operator,
 // but it's here for configuration compatability
 type Test struct {

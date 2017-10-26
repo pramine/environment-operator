@@ -21,6 +21,7 @@ type Service struct {
 	Deployment   *DeploymentSettings     `yaml:"deployment,omitempty"`
 	HPA          HorizontalPodAutoscaler `yaml:"hpa" validate:"hpa"`
 	Requests     ContainerRequests       `yaml:"requests" validate:"requests"`
+	Limits       ContainerLimits         `yaml:"limits" validate:"limits"`
 	HealthCheck  *HealthCheck            `yaml:"health_check,omitempty"`
 	EnvVars      []EnvVar                `yaml:"env,omitempty"`
 	Commands     []string                `yaml:"command,omitempty"`
