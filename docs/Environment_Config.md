@@ -157,16 +157,14 @@ The environment section of the manifest may specify multiple environments to man
 
 		- In the next example below, the containers that are created for the hpaservice will utilize the default limits (1000m CPU/2048MiB Memory) as no limits were specified in the manifest. Additionally, since there were also no requests specified, the requests will be set equal to the default limits, giving the pod Guaranteed QoS of 1000m CPU/2048MiB Memory.
 
-        ```
+    ```
          services:
          - name: hpaservice
            application: gummybears
            version: 1
-
-        ```
+    ```
 
 		- Note: For more information on QoS Classes within kubernetes, please review the [documentation](https://kubernetes.io/docs/tasks/configure-pod-container/quality-service-pod/). Environment Operator requires limits to be set on every service, so it supports configuration of services to have either Guaranteed or Burstable QoS. 
-		
     - **external_url**: When an external url is specified,  a [kubernetes ingress](https://kubernetes.io/docs/concepts/services-networking/ingress/) will be created to allow inbound connectivity to your microservice. If this option is omitted, an ingress will not be created.
     - **ssl** : Specifying "true" or "false" will result in your Kubernetes Ingress being created with the label "ssl" in its Object Metadata. Pearson utilizes an nginx ingress controller to build out our nginx config for our kubernetes ingresses. When ssl is specified, we ensure that ssl is being utilized when proxing requests to that service. More information on our open sourced nginx controller may be found [here](https://github.com/pearsontechnology/bitesize-controllers).  
     - **env**: This option is not recommended because any change to the environment variables in the manifest file will result in a redeploy of your services.  At pearson, we utilize consul and envconsul for configuring our deployed microservices.  However, this option is available and will allow you to specify environment variables as either variables or k8s secrets, that will be available to your pods running in your kubernetes deployment.  In the example below, the "gummybears" container will have access to the VAULT_TOKEN and VAULT_ADDR variables, where contents for one variable is coming from a kubernetes-secret and the other is a specific string.
