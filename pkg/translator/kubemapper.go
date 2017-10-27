@@ -186,6 +186,11 @@ func (w *KubeMapper) MongoStatefulSet() (*v1beta1_apps.StatefulSet, error) {
 
 	mounts = append(mounts, vol)
 
+	resources, err := w.resources()
+	if err != nil {
+		return nil, err
+	}
+
 	retval := &v1beta1_apps.StatefulSet{
 		ObjectMeta: v1.ObjectMeta{
 			Name:      w.BiteService.Name,
@@ -252,6 +257,7 @@ func (w *KubeMapper) MongoStatefulSet() (*v1beta1_apps.StatefulSet, error) {
 								},
 							},
 							VolumeMounts: mounts,
+							Resources:    resources,
 						},
 					},
 					ImagePullSecrets: imagePullSecrets,
@@ -408,27 +414,17 @@ func (w *KubeMapper) container() (*v1.Container, error) {
 		return nil, err
 	}
 
-	if w.BiteService.Requests != (bitesize.ContainerRequests{}) {
-		resources, err := w.resources()
-		if err != nil {
-			return nil, err
-		}
-		retval = &v1.Container{
-			Name:         w.BiteService.Name,
-			Image:        "",
-			Env:          evars,
-			VolumeMounts: mounts,
-			Resources:    resources,
-			Command:      w.BiteService.Commands,
-		}
-	} else {
-		retval = &v1.Container{
-			Name:         w.BiteService.Name,
-			Image:        "",
-			Env:          evars,
-			VolumeMounts: mounts,
-			Command:      w.BiteService.Commands,
-		}
+	resources, err := w.resources()
+	if err != nil {
+		return nil, err
+	}
+	retval = &v1.Container{
+		Name:         w.BiteService.Name,
+		Image:        "",
+		Env:          evars,
+		VolumeMounts: mounts,
+		Resources:    resources,
+		Command:      w.BiteService.Commands,
 	}
 
 	return retval, nil
@@ -609,20 +605,54 @@ func getAccessModesFromString(modes string) []v1.PersistentVolumeAccessMode {
 	return accessModes
 }
 
-func (w *KubeMapper) resources() (v1.ResourceRequirements, error) {
-	cpuQuantity, err := resource.ParseQuantity(w.BiteService.Requests.CPU)
+func (w *KubeMapper) getLimits() v1.ResourceList {
+
+	cpu, err := resource.ParseQuantity(w.BiteService.Limits.CPU)
 	if err != nil {
-		return v1.ResourceRequirements{}, err
+		cpu, _ = resource.ParseQuantity(config.Env.LimitDefaultCPU)
 	}
-	//	memoryQuantity, err := resource.ParseQuantity(w.BiteService.Requests.Memory)
-	//	if err != nil {
-	//		return v1.ResourceRequirements{}, err
-	//	}
-	retval := v1.ResourceRequirements{
-		Requests: v1.ResourceList{
-			"cpu": cpuQuantity,
-			//			"memory": memoryQuantity,
-		},
+	mem, err := resource.ParseQuantity(w.BiteService.Limits.Memory)
+	if err != nil {
+		mem, _ = resource.ParseQuantity(config.Env.LimitDefaultMemory)
 	}
-	return retval, nil
+
+	return v1.ResourceList{
+		"cpu":    cpu,
+		"memory": mem,
+	}
+}
+
+func (w *KubeMapper) resources() (v1.ResourceRequirements, error) {
+	//Environment Operator allows for Guaranteed and Burstable QoS Classes as limits are always assigned to containers
+	cpuRequest, memoryError := resource.ParseQuantity(w.BiteService.Requests.CPU)
+	memoryRequest, cpuError := resource.ParseQuantity(w.BiteService.Requests.Memory)
+
+	if cpuError != nil && memoryError != nil { //If no CPU or Memory Request provided, default to limits for Guaranteed QoS
+		return v1.ResourceRequirements{
+			Limits: w.getLimits(),
+		}, nil
+	} else if cpuError != nil && memoryError == nil {
+		return v1.ResourceRequirements{
+			Requests: v1.ResourceList{
+				"memory": memoryRequest,
+			},
+			Limits: w.getLimits(),
+		}, nil
+	} else if cpuError == nil && memoryError != nil {
+		return v1.ResourceRequirements{
+			Requests: v1.ResourceList{
+				"cpu": cpuRequest,
+			},
+			Limits: w.getLimits(),
+		}, nil
+	} else {
+		return v1.ResourceRequirements{
+			Requests: v1.ResourceList{
+				"cpu":    cpuRequest,
+				"memory": memoryRequest,
+			},
+			Limits: w.getLimits(),
+		}, nil
+
+	}
 }

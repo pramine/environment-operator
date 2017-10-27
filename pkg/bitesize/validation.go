@@ -5,8 +5,8 @@ import (
 	"reflect"
 	"strconv"
 
+	log "github.com/Sirupsen/logrus"
 	"github.com/pearsontechnology/environment-operator/pkg/config"
-
 	validator "gopkg.in/validator.v2"
 )
 
@@ -14,6 +14,7 @@ func addCustomValidators() {
 	validator.SetValidationFunc("volume_modes", validVolumeModes)
 	validator.SetValidationFunc("hpa", validHPA)
 	validator.SetValidationFunc("requests", validRequests)
+	validator.SetValidationFunc("limits", validLimits)
 }
 
 func validVolumeModes(v interface{}, param string) error {
@@ -70,10 +71,64 @@ func validRequests(req interface{}, param string) error {
 		case "CPU":
 			if fieldValue != "" {
 				if unit := string(fieldValue[len(fieldValue)-1:]); unit != "m" {
+					log.Infof("requests %+v invalid CPU units; "+`"m"`+" suffix not specified", req)
 					return fmt.Errorf("requests %+v invalid CPU units; "+`"m"`+" suffix not specified", req)
 				}
-				if quantity, _ := strconv.Atoi(fieldValue[0 : len(fieldValue)-1]); quantity > config.Env.ReqMaxCPU {
-					return fmt.Errorf("requests %+v invalid CPU quantity; values greater than %vm not allowed", req, config.Env.ReqMaxCPU)
+				if quantity, _ := strconv.Atoi(fieldValue[0 : len(fieldValue)-1]); quantity > config.Env.LimitMaxCPU {
+					log.Infof("requests %+v invalid CPU quantity; values greater than maximum CPU limit %vm not allowed", req, config.Env.LimitMaxCPU)
+					return fmt.Errorf("requests %+v invalid CPU quantity; values greater than maximum CPU limit %vm not allowed", req, config.Env.LimitMaxCPU)
+				}
+			}
+
+		case "Memory":
+			if fieldValue != "" {
+				if unit := string(fieldValue[len(fieldValue)-2:]); unit != "Mi" {
+					log.Infof("requests %+v invalid memory units; "+`"Mi"`+" suffix not specified", req)
+					return fmt.Errorf("requests %+v invalid memory units; "+`"Mi"`+" suffix not specified", req)
+				}
+				if quantity, _ := strconv.Atoi(fieldValue[0 : len(fieldValue)-2]); quantity > config.Env.LimitMaxMemory {
+					log.Infof("requests %+v invalid memory quantity; values greater than maximum memory limit %vMi not allowed", req, config.Env.LimitMaxMemory)
+					return fmt.Errorf("requests %+v invalid memory quantity; values greater than maximum memory limit %vMi not allowed", req, config.Env.LimitMaxMemory)
+				}
+			}
+
+		}
+
+	}
+
+	return nil
+}
+
+func validLimits(req interface{}, param string) error {
+	val := reflect.ValueOf(req)
+
+	for i := 0; i < val.NumField(); i++ {
+		fieldValue := val.Field(i).String()
+		fieldName := val.Type().Field(i).Name
+
+		switch fieldName {
+
+		case "CPU":
+			if fieldValue != "" {
+				if unit := string(fieldValue[len(fieldValue)-1:]); unit != "m" {
+					log.Debugf("limits %+v invalid CPU units; "+`"m"`+" suffix not specified", req)
+					return fmt.Errorf("limits %+v invalid CPU units; "+`"m"`+" suffix not specified", req)
+				}
+				if quantity, _ := strconv.Atoi(fieldValue[0 : len(fieldValue)-1]); quantity > config.Env.LimitMaxCPU {
+					log.Debugf("limits %+v invalid CPU quantity; values greater than %vm not allowed", req, config.Env.LimitMaxCPU)
+					return fmt.Errorf("limits %+v invalid CPU quantity; values greater than %vm not allowed", req, config.Env.LimitMaxCPU)
+				}
+			}
+
+		case "Memory":
+			if fieldValue != "" {
+				if unit := string(fieldValue[len(fieldValue)-2:]); unit != "Mi" {
+					log.Debugf("limits %+v invalid Memory units; "+`"Mi"`+" suffix not specified", req)
+					return fmt.Errorf("limits %+v invalid Memory units; "+`"Mi"`+" suffix not specified", req)
+				}
+				if quantity, _ := strconv.Atoi(fieldValue[0 : len(fieldValue)-2]); quantity > config.Env.LimitMaxMemory {
+					log.Debugf("limits %+v invalid Memory quantity; values greater than %vMi not allowed", req, config.Env.LimitMaxMemory)
+					return fmt.Errorf("limits %+v invalid Memory quantity; values greater than %vMi not allowed", req, config.Env.LimitMaxMemory)
 				}
 			}
 
