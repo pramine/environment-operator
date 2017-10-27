@@ -253,6 +253,10 @@ func loadTestEnvironment() *fake.Clientset {
 	validLabels := map[string]string{"creator": "pipeline"}
 	nsLabels := map[string]string{"environment": "Development"}
 	replicaCount := int32(1)
+	cpulimit, _ := resource.ParseQuantity("1000m")
+	memlimit, _ := resource.ParseQuantity("500Mi")
+	cpurequest, _ := resource.ParseQuantity("500m")
+	memrequest, _ := resource.ParseQuantity("200Mi")
 
 	return fake.NewSimpleClientset(
 		&v1.Namespace{
@@ -351,6 +355,16 @@ func loadTestEnvironment() *fake.Clientset {
 								Command: []string{
 									"test1",
 									"test2",
+								},
+								Resources: v1.ResourceRequirements{
+									Limits: v1.ResourceList{
+										"cpu":    cpulimit,
+										"memory": memlimit,
+									},
+									Requests: v1.ResourceList{
+										"cpu":    cpurequest,
+										"memory": memrequest,
+									},
 								},
 							},
 						},

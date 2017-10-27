@@ -18,6 +18,12 @@ environments:
       size: 1G
       path: /tmp/asd
       modes: ReadWriteMany
+    limits:
+      cpu: 1000m
+      memory: 500Mi
+    requests:
+      cpu: 1000m
+      memory: 500Mi
   - name: service2_environment2
   - name: testdb
     type: "mysql"

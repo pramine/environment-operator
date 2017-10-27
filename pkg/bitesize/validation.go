@@ -111,11 +111,11 @@ func validLimits(req interface{}, param string) error {
 		case "CPU":
 			if fieldValue != "" {
 				if unit := string(fieldValue[len(fieldValue)-1:]); unit != "m" {
-					log.Infof("limits %+v invalid CPU units; "+`"m"`+" suffix not specified", req)
+					log.Debugf("limits %+v invalid CPU units; "+`"m"`+" suffix not specified", req)
 					return fmt.Errorf("limits %+v invalid CPU units; "+`"m"`+" suffix not specified", req)
 				}
 				if quantity, _ := strconv.Atoi(fieldValue[0 : len(fieldValue)-1]); quantity > config.Env.LimitMaxCPU {
-					log.Infof("limits %+v invalid CPU quantity; values greater than %vm not allowed", req, config.Env.LimitMaxCPU)
+					log.Debugf("limits %+v invalid CPU quantity; values greater than %vm not allowed", req, config.Env.LimitMaxCPU)
 					return fmt.Errorf("limits %+v invalid CPU quantity; values greater than %vm not allowed", req, config.Env.LimitMaxCPU)
 				}
 			}
@@ -123,11 +123,11 @@ func validLimits(req interface{}, param string) error {
 		case "Memory":
 			if fieldValue != "" {
 				if unit := string(fieldValue[len(fieldValue)-2:]); unit != "Mi" {
-					log.Infof("limits %+v invalid Memory units; "+`"Mi"`+" suffix not specified", req)
+					log.Debugf("limits %+v invalid Memory units; "+`"Mi"`+" suffix not specified", req)
 					return fmt.Errorf("limits %+v invalid Memory units; "+`"Mi"`+" suffix not specified", req)
 				}
 				if quantity, _ := strconv.Atoi(fieldValue[0 : len(fieldValue)-2]); quantity > config.Env.LimitMaxMemory {
-					log.Infof("limits %+v invalid Memory quantity; values greater than %vMi not allowed", req, config.Env.LimitMaxMemory)
+					log.Debugf("limits %+v invalid Memory quantity; values greater than %vMi not allowed", req, config.Env.LimitMaxMemory)
 					return fmt.Errorf("limits %+v invalid Memory quantity; values greater than %vMi not allowed", req, config.Env.LimitMaxMemory)
 				}
 			}
