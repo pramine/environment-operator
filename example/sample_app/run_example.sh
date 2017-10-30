@@ -20,6 +20,8 @@ done
 ##Deploy Backend Sample App
 ###################################
 
+sleep 5
+
 echo
 echo "Deploying Back End Application"
 curl -k -s -XPOST -H "Authentication: Bearer $( cat token )" -H 'Content-Type: application/json' -d '{"application":"sample-app-back", "name":"back", "version":"latest"}'  environment-operator.sample-app.svc.cluster.local/deploy
