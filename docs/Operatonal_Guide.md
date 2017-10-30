@@ -68,7 +68,7 @@ and use it as a volume:
          secretName: deploy-auth-token-file
 ```
 
-# Private registry support
+## Private registry support
 
 The environment operator allows Docker images to be deployed into a Kubernetes namespace from private registries like
 DockerHub as well as Google Container Registry. This document details the process for configuring the environment operator
@@ -76,9 +76,9 @@ to use a private registry as well as how to establish Kubernetes secrets to allo
 
 ***************
 
-### Sequence Diagram Showing Configuration and How It is used to Deploy an Application
+## Deploy Sequence
 
-![deploysequence](https://github.com/pearsontechnology/environment-operator/blob/dev/docs/images/deploy-sequence.png)
+![deploy-sequence](https://github.com/pearsontechnology/environment-operator/blob/bite-1788/docs/images/deploy-sequence.png)
 
 ***************
 
