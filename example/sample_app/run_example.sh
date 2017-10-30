@@ -31,7 +31,7 @@ sleep 3
 backstatus=$(curl -k -s -XGET -H "Authentication: Bearer $( cat token )" -H 'Content-Type: application/json' environment-operator.sample-app.svc.cluster.local/status | jq -r '.services[] | select(.name=="back") | .status')
 
 while [ "$backstatus" != "green" ]; do
-    echo "Waiting for backend deployment to enter running state before deploying Front End App"
+    echo "Waiting for backend deployment to enter running state before deploying front end app"
     sleep 5
     backstatus=$(curl -k -s -XGET -H "Authentication: Bearer $( cat token )" -H 'Content-Type: application/json' environment-operator.sample-app.svc.cluster.local/status | jq -r '.services[] | select(.name=="back") | .status')
 done
@@ -49,7 +49,7 @@ sleep 3
 frontstatus=$(curl -k -s -XGET -H "Authentication: Bearer $( cat token )" -H 'Content-Type: application/json' environment-operator.sample-app.svc.cluster.local/status | jq -r '.services[] | select(.name=="front") | .status')
 
 while [ "$frontstatus" != "green" ]; do
-    echo "Waiting for frontend deployment to enter running state before deploying reporting status"
+    echo "Waiting for frontend deployment to enter running state before retrieving deploy status from environment operator"
     sleep 5
     frontstatus=$(curl -k -s -XGET -H "Authentication: Bearer $( cat token )" -H 'Content-Type: application/json' environment-operator.sample-app.svc.cluster.local/status | jq -r '.services[] | select(.name=="front") | .status')
 done
