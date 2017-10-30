@@ -7,6 +7,7 @@ Environment operator runs as a deployment in the namespace it manages. Example d
 ## Environment variable list
 
 * `GIT_REMOTE_REPOSITORY` - specifies remote repository, where `environments.bitesize` file is located.
+* `GIT_BRANCH` - specifies what branch to checkout from the GIT_REMOTE_REPOSITORY. If ommitted this defaults to "master"
 * `GIT_PRIVATE_KEY` - git private key, used to authenticate against `GIT_REMOTE_REPOSITORY`. Must allow read-only access.
 * `BITESIZE_FILE` - usually `environments.bitesize`, but can be anything, to suit project's needs better (for example, you can have file per environment, or per kubernetes cluster).
 * `ENVIRONMENT_NAME` - corresponds to the "name" field in bitesize file. This is the environment that operator manages.
