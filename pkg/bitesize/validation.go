@@ -3,6 +3,7 @@ package bitesize
 import (
 	"fmt"
 	"reflect"
+	"regexp"
 	"strconv"
 
 	log "github.com/Sirupsen/logrus"
@@ -15,6 +16,7 @@ func addCustomValidators() {
 	validator.SetValidationFunc("hpa", validHPA)
 	validator.SetValidationFunc("requests", validRequests)
 	validator.SetValidationFunc("limits", validLimits)
+	validator.SetValidationFunc("external_url", validExternalURL)
 }
 
 func validVolumeModes(v interface{}, param string) error {
@@ -149,5 +151,20 @@ func validLimits(req interface{}, param string) error {
 		}
 	}
 
+	return nil
+}
+
+func validExternalURL(urls interface{}, param string) error {
+	urlSlice := reflect.ValueOf(urls)
+	for i := 0; i < urlSlice.Len(); i++ {
+		url := urlSlice.Index(i).String()
+		ok, err := regexp.MatchString("^([a-zA-Z\\.\\-]+)*$", url)
+		if err != nil {
+			return err
+		}
+		if !ok {
+			return fmt.Errorf("external_url %v is invalid", url)
+		}
+	}
 	return nil
 }

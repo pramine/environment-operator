@@ -13,7 +13,7 @@ import (
 // running in environment
 type Service struct {
 	Name         string                  `yaml:"name" validate:"nonzero"`
-	ExternalURL  string                  `yaml:"external_url,omitempty" validate:"regexp=^([a-zA-Z\\.\\-]+$)*"`
+	ExternalURL  []string                `yaml:"external_url,omitempty" validate:"external_url"`
 	Ports        []int                   `yaml:"-"` // Ports have custom unmarshaler
 	Ssl          string                  `yaml:"ssl,omitempty" validate:"regexp=^(true|false)*$"`
 	Version      string                  `yaml:"version,omitempty"`
