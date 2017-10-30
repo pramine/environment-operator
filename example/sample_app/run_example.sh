@@ -33,7 +33,7 @@ backstatus=$(curl -k -s -XGET -H "Authentication: Bearer $( cat token )" -H 'Con
 while [ "$backstatus" != "green" ]; do
     echo "Waiting for backend deployment to enter running state before deploying Front End App"
     sleep 5
-    backstatus= $(curl -k -s -XGET -H "Authentication: Bearer $( cat token )" -H 'Content-Type: application/json' environment-operator.sample-app.svc.cluster.local/status | jq -r '.services[] | select(.name=="back") | .status')
+    backstatus=$(curl -k -s -XGET -H "Authentication: Bearer $( cat token )" -H 'Content-Type: application/json' environment-operator.sample-app.svc.cluster.local/status | jq -r '.services[] | select(.name=="back") | .status')
 done
 
 ###################################
