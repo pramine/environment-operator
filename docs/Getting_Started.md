@@ -8,7 +8,8 @@ Prerequistes:
 - jq is installed in your cluster as the run-example.sh script below uses it to parse json: ```sudo apt-get install jq``` 
 
 *********
-###Steps
+
+### Steps
 
 1)  Clone the Environment Operator Github Repo into your kubernetes cluster:
 
