@@ -20,7 +20,7 @@ docker image named: pearsontechnology/environment-operator:dev on Dockerhub
 **Master Build:** Once dev branch is successfully built by TravisCI, if a new release tag is present in the changelog, travisCI
 will merge dev into the master branch and then test, compile source, and build a docker image named: pearsontechnology/environment-operator:$releaseVersion on Docker hub.
 
-## Releasing a New Version of Environment Operator
+## Releasing a New Version of Environment Operator to Github
 
 * Git Clone the Dev Branch of environment-operator:
 
@@ -48,7 +48,7 @@ git push
 to master and tagged with the new release version. A new environment-operator image will also be pushed to Dockerhub as
 pearsontechnology/environment-operator:$releaseVersion
 
-* Once the new tag is made, add releaseNotes (manually copy from Changelog) to the Github release that was created bby travis. We will automate this eventually. 
+* Once the new tag is made, add releaseNotes (manually copy from Changelog) to the [Github Release]() that was created by travis and publish the release. We will automate this eventually. 
 
 
 ## Running Tests
