@@ -1,10 +1,19 @@
 # Environment operator operational guide.
 
-Environment operator runs as a deployment in the namespace it manages. Example deployment (with local keycloak setup) can be found in [example](https://github.com/pearsontechnology/environment-operator/tree/master/example) directory in code repository.
+Environment operator runs as a deployment in the namespace it manages. Example deployments (including one with local keycloak setup) 
+can be found in the [example](https://github.com/pearsontechnology/environment-operator/tree/master/example) directory.
+The environment-operator release that is used will be specified in the environment-operator deployment file.  Update the image 
+used in the deployment file to the version you desire to use (ex. image: pearsontechnology/environment-operator:0.0.7). 
+An example of the deployment file may be found in the examples [directory](https://github.com/pearsontechnology/environment-operator/blob/dev/example/sample_app/operator-deployment.yaml).  
+
+
+Other configurable parameters in the environment-operator deployment are discussed below.   On the other hand, if you'd like 
+to start with a working example before jumping into configuration, please use the [Quick Start Guide](https://github.com/pearsontechnology/environment-operator/blob/dev/docs/Getting_Started.md).
 
 *N.B.* This deployment depends on Keycloak. To use the deployment with static keys, you can ignore `OIDC_ISSUER_URL` and `OIDC_ALLOWED_GROUPS` environment variables in deployment, and setup `AUTH_TOKEN_FILE` environment variable. Recommended way to provide `AUTH_TOKEN_FILE` is via secrets, similar to the method for `GIT_PRIVATE_KEY` (see below).
 
-## Environment variable list
+
+## Environment configurable parameters 
 
 * `GIT_REMOTE_REPOSITORY` - specifies remote repository, where your manifest/`environments.bitesize` file is located.
 * `GIT_BRANCH` - specifies what branch to checkout from the GIT_REMOTE_REPOSITORY. If ommitted this defaults to "master"
@@ -76,7 +85,7 @@ to use a private registry as well as how to establish Kubernetes secrets to allo
 
 ***************
 
-## Deploy Sequence
+## Application Deploy Sequence via Environment Operator
 
 ![deploy-sequence](https://github.com/pearsontechnology/environment-operator/blob/bite-1788/docs/images/deploy-sequence.png)
 
