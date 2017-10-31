@@ -60,6 +60,11 @@ func validHPA(hpa interface{}, param string) error {
 }
 
 func validRequests(req interface{}, param string) error {
+	//TODO: Add other supported unit types
+	validUnits := map[string]bool{
+		"Mi": true,
+		"m":  true,
+	}
 	val := reflect.ValueOf(req)
 
 	for i := 0; i < val.NumField(); i++ {
@@ -70,24 +75,26 @@ func validRequests(req interface{}, param string) error {
 
 		case "CPU":
 			if fieldValue != "" {
-				if unit := string(fieldValue[len(fieldValue)-1:]); unit != "m" {
-					log.Infof("requests %+v invalid CPU units; "+`"m"`+" suffix not specified", req)
+				unit := string(fieldValue[len(fieldValue)-1:])
+				if !validUnits[unit] {
+					log.Debugf("requests %+v invalid CPU units; "+`"m"`+" suffix not specified", req)
 					return fmt.Errorf("requests %+v invalid CPU units; "+`"m"`+" suffix not specified", req)
 				}
 				if quantity, _ := strconv.Atoi(fieldValue[0 : len(fieldValue)-1]); quantity > config.Env.LimitMaxCPU {
-					log.Infof("requests %+v invalid CPU quantity; values greater than maximum CPU limit %vm not allowed", req, config.Env.LimitMaxCPU)
+					log.Debugf("requests %+v invalid CPU quantity; values greater than maximum CPU limit %vm not allowed", req, config.Env.LimitMaxCPU)
 					return fmt.Errorf("requests %+v invalid CPU quantity; values greater than maximum CPU limit %vm not allowed", req, config.Env.LimitMaxCPU)
 				}
 			}
 
 		case "Memory":
 			if fieldValue != "" {
-				if unit := string(fieldValue[len(fieldValue)-2:]); unit != "Mi" {
-					log.Infof("requests %+v invalid memory units; "+`"Mi"`+" suffix not specified", req)
+				unit := string(fieldValue[len(fieldValue)-2:])
+				if !validUnits[unit] {
+					log.Debugf("requests %+v invalid memory units; "+`"Mi"`+" suffix not specified", req)
 					return fmt.Errorf("requests %+v invalid memory units; "+`"Mi"`+" suffix not specified", req)
 				}
 				if quantity, _ := strconv.Atoi(fieldValue[0 : len(fieldValue)-2]); quantity > config.Env.LimitMaxMemory {
-					log.Infof("requests %+v invalid memory quantity; values greater than maximum memory limit %vMi not allowed", req, config.Env.LimitMaxMemory)
+					log.Debugf("requests %+v invalid memory quantity; values greater than maximum memory limit %vMi not allowed", req, config.Env.LimitMaxMemory)
 					return fmt.Errorf("requests %+v invalid memory quantity; values greater than maximum memory limit %vMi not allowed", req, config.Env.LimitMaxMemory)
 				}
 			}
@@ -100,6 +107,11 @@ func validRequests(req interface{}, param string) error {
 }
 
 func validLimits(req interface{}, param string) error {
+	//TODO: Add other supported unit types
+	validUnits := map[string]bool{
+		"Mi": true,
+		"m":  true,
+	}
 	val := reflect.ValueOf(req)
 
 	for i := 0; i < val.NumField(); i++ {
@@ -110,7 +122,8 @@ func validLimits(req interface{}, param string) error {
 
 		case "CPU":
 			if fieldValue != "" {
-				if unit := string(fieldValue[len(fieldValue)-1:]); unit != "m" {
+				unit := string(fieldValue[len(fieldValue)-1:])
+				if !validUnits[unit] {
 					log.Debugf("limits %+v invalid CPU units; "+`"m"`+" suffix not specified", req)
 					return fmt.Errorf("limits %+v invalid CPU units; "+`"m"`+" suffix not specified", req)
 				}
@@ -122,7 +135,8 @@ func validLimits(req interface{}, param string) error {
 
 		case "Memory":
 			if fieldValue != "" {
-				if unit := string(fieldValue[len(fieldValue)-2:]); unit != "Mi" {
+				unit := string(fieldValue[len(fieldValue)-2:])
+				if !validUnits[unit] {
 					log.Debugf("limits %+v invalid Memory units; "+`"Mi"`+" suffix not specified", req)
 					return fmt.Errorf("limits %+v invalid Memory units; "+`"Mi"`+" suffix not specified", req)
 				}

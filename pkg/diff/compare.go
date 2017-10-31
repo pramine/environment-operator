@@ -1,8 +1,10 @@
 package diff
 
 import (
+	//	log "github.com/Sirupsen/logrus"
 	"github.com/kylelemons/godebug/pretty"
 	"github.com/pearsontechnology/environment-operator/pkg/bitesize"
+	"k8s.io/client-go/pkg/api/resource"
 )
 
 // Compare creates a changeMap for the diff between environment configs and returns a boolean if changes were detected
@@ -11,8 +13,8 @@ func Compare(config1, config2 bitesize.Environment) bool {
 
 	newChangeMap()
 
-	c1 := config1
-	c2 := config2
+	c1 := config1 //New Config
+	c2 := config2 //Existing Config
 
 	// Following fields are ignored for diff purposes
 	c1.Tests = []bitesize.Test{}
@@ -49,7 +51,8 @@ func Compare(config1, config2 bitesize.Environment) bool {
 
 // Can't think of a better word
 func alignServices(src, dest *bitesize.Service) {
-	//log.Debugf("Aligning Service %s", src.Name)
+	//Note: src=new config    dest=existing config
+
 	// Copy version from dest if source version is empty
 	if src.Version == "" {
 		src.Version = dest.Version
@@ -61,6 +64,40 @@ func alignServices(src, dest *bitesize.Service) {
 
 	// Copy status from dest (status is only stored in the cluster)
 	src.Status = dest.Status
+
+	//In the case that no Requests were specified. Set src=dest to sync up the defaults that were used
+	emptyRequests := bitesize.ContainerRequests{}
+	if src.Requests == emptyRequests {
+		src.Requests = dest.Requests
+	} else { //Otherwise, if the units happened to be different, but the values are equal, align them
+		destmem, _ := resource.ParseQuantity(dest.Requests.Memory)
+		srcmem, _ := resource.ParseQuantity(src.Requests.Memory)
+		destcpu, _ := resource.ParseQuantity(dest.Requests.CPU)
+		srccpu, _ := resource.ParseQuantity(src.Requests.CPU)
+		if destmem.Cmp(srcmem) == 0 {
+			src.Requests.Memory = dest.Requests.Memory
+		}
+		if destcpu.Cmp(srccpu) == 0 {
+			src.Requests.CPU = dest.Requests.CPU
+		}
+	}
+
+	//In the case that no Limits were specified. Set src=dest to sync up the defaults that were used
+	emptyLimits := bitesize.ContainerLimits{}
+	if src.Limits == emptyLimits {
+		src.Limits = dest.Limits
+	} else { //Otherwise, if the units happened to be different, but the values are equal, align them
+		destmem, _ := resource.ParseQuantity(dest.Limits.Memory)
+		srcmem, _ := resource.ParseQuantity(src.Limits.Memory)
+		destcpu, _ := resource.ParseQuantity(dest.Limits.CPU)
+		srccpu, _ := resource.ParseQuantity(src.Limits.CPU)
+		if destmem.Cmp(srcmem) == 0 {
+			src.Limits.Memory = dest.Limits.Memory
+		}
+		if destcpu.Cmp(srccpu) == 0 {
+			src.Limits.CPU = dest.Limits.CPU
+		}
+	}
 
 	// Override source replicas with dest replicas if HPA is active
 	if dest.HPA.MinReplicas != 0 {

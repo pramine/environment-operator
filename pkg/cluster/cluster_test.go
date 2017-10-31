@@ -52,7 +52,6 @@ func TestKubernetesClusterClient(t *testing.T) {
 }
 
 func TestApplyEnvironment(t *testing.T) {
-	var changeMap map[string]string
 
 	log.SetLevel(log.FatalLevel)
 	client := fake.NewSimpleClientset(
@@ -85,10 +84,10 @@ func TestApplyEnvironment(t *testing.T) {
 	}
 
 	//There should be no changes between environments e1 and e2 (they will be synced with the apply below)
-	diff.Compare(*e1, *e2)
+	//	diff.Compare(*e1, *e2)
 	cluster.ApplyEnvironment(e1, e2)
 	if diff.Compare(*e1, *e2) {
-		t.Errorf("Expected loaded environments to be equal, yet diff is: %s", changeMap)
+		t.Errorf("Expected loaded environments to be equal, yet diff is: %s", diff.Changes())
 	}
 
 	//environments2.bitesize removes annotated_service2 and testdb from environment2
@@ -97,7 +96,7 @@ func TestApplyEnvironment(t *testing.T) {
 	diff.Compare(*e2, *e3)
 	_, exists := diff.Changes()["testdb"]
 	if !exists {
-		t.Errorf("Expected testdb to exist in the diff, yet it does not exist: %s", changeMap)
+		t.Errorf("Expected testdb to exist in the diff, yet it does not exist: %s", diff.Changes())
 	}
 }
 
