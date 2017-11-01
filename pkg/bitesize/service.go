@@ -5,6 +5,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/pearsontechnology/environment-operator/pkg/config"
 	validator "gopkg.in/validator.v2"
 )
 
@@ -21,8 +22,10 @@ type Service struct {
 	Deployment   *DeploymentSettings     `yaml:"deployment,omitempty"`
 	HPA          HorizontalPodAutoscaler `yaml:"hpa" validate:"hpa"`
 	Requests     ContainerRequests       `yaml:"requests" validate:"requests"`
+	Limits       ContainerLimits         `yaml:"limits" validate:"limits"`
 	HealthCheck  *HealthCheck            `yaml:"health_check,omitempty"`
 	EnvVars      []EnvVar                `yaml:"env,omitempty"`
+	Commands     []string                `yaml:"command,omitempty"`
 	Annotations  map[string]string       `yaml:"-"` // Annotations have custom unmarshaler
 	Volumes      []Volume                `yaml:"volumes,omitempty"`
 	Options      map[string]string       `yaml:"options,omitempty"`
@@ -30,6 +33,8 @@ type Service struct {
 	HTTPSBackend string                  `yaml:"httpsBackend,omitempty" validate:"regexp=^(true|false)*$"`
 	Type         string                  `yaml:"type,omitempty"`
 	Status       ServiceStatus           `yaml:"status,omitempty"`
+	DatabaseType string                  `yaml:"database_type,omitempty" validate:"regexp=^(mongo)*$"`
+	GracePeriod  *int64                  `yaml:"graceperiod,omitempty"`
 	// XXX          map[string]interface{} `yaml:",inline"`
 }
 
@@ -48,6 +53,10 @@ func ServiceWithDefaults() *Service {
 	return &Service{
 		Ports:    []int{80},
 		Replicas: 1,
+		Limits: ContainerLimits{
+			Memory: config.Env.LimitDefaultMemory,
+			CPU:    config.Env.LimitDefaultCPU,
+		},
 	}
 }
 

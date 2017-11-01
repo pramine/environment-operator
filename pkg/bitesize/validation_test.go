@@ -77,11 +77,23 @@ func TestValidRequests(t *testing.T) {
 			fmt.Errorf("requests %+v invalid CPU units; "+`"m"`+" suffix not specified", ContainerRequests{CPU: "100"}),
 		},
 		{
-			ContainerRequests{CPU: "1000m"},
-			fmt.Errorf("requests %+v invalid CPU quantity; values greater than %vm not allowed", ContainerRequests{CPU: "1000m"}, config.Env.ReqMaxCPU),
+			ContainerRequests{CPU: "5000m"},
+			fmt.Errorf("requests %+v invalid CPU quantity; values greater than maximum CPU limit %vm not allowed", ContainerRequests{CPU: "5000m"}, config.Env.LimitMaxCPU),
 		},
 		{
 			ContainerRequests{CPU: "500m"},
+			nil,
+		},
+		{
+			ContainerRequests{Memory: "100"},
+			fmt.Errorf("requests %+v invalid memory units; "+`"Mi"`+" suffix not specified", ContainerRequests{Memory: "100"}),
+		},
+		{
+			ContainerRequests{Memory: "9000Mi"},
+			fmt.Errorf("requests %+v invalid memory quantity; values greater than maximum memory limit %vMi not allowed", ContainerRequests{Memory: "9000Mi"}, config.Env.LimitMaxMemory),
+		},
+		{
+			ContainerRequests{Memory: "500Mi"},
 			nil,
 		},
 	}
@@ -91,6 +103,48 @@ func TestValidRequests(t *testing.T) {
 		if err != tCase.Error {
 			if err.Error() != tCase.Error.Error() {
 				t.Errorf("Requests validation error: %v", err)
+			}
+		}
+	}
+
+}
+
+func TestValidLimits(t *testing.T) {
+	var testCases = []struct {
+		Value interface{}
+		Error error
+	}{
+		{
+			ContainerLimits{CPU: "100"},
+			fmt.Errorf("limits %+v invalid CPU units; "+`"m"`+" suffix not specified", ContainerLimits{CPU: "100"}),
+		},
+		{
+			ContainerLimits{CPU: "5000m"},
+			fmt.Errorf("limits %+v invalid CPU quantity; values greater than %vm not allowed", ContainerLimits{CPU: "5000m"}, config.Env.LimitMaxCPU),
+		},
+		{
+			ContainerLimits{CPU: "500m"},
+			nil,
+		},
+		{
+			ContainerLimits{Memory: "100"},
+			fmt.Errorf("limits %+v invalid Memory units; "+`"Mi"`+" suffix not specified", ContainerLimits{Memory: "100"}),
+		},
+		{
+			ContainerLimits{Memory: "9000Mi"},
+			fmt.Errorf("limits %+v invalid Memory quantity; values greater than %vMi not allowed", ContainerLimits{Memory: "9000Mi"}, config.Env.LimitMaxMemory),
+		},
+		{
+			ContainerLimits{Memory: "500Mi"},
+			nil,
+		},
+	}
+
+	for _, tCase := range testCases {
+		err := validLimits(tCase.Value, "")
+		if err != tCase.Error {
+			if err.Error() != tCase.Error.Error() {
+				t.Errorf("Limits validation error: %v", err)
 			}
 		}
 	}

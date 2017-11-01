@@ -2,7 +2,7 @@
 
 The purpose of environment operator is to act as an application deployment mechanism to a given environment. This largely equates to a Kubernetes namespace. Each of your environments (development, staging, production) will have it's own definition and a separate endpoint to perform deployments.
 
-Deployment definition is fully compatible with `environments.bitesize` definition, so you can refer to the [guide describing various options for that file](https://github.com/pearsontechnology/deployment-pipeline-jenkins-plugin#environmentsbitesize). As every environment operator maintains a single environment, it takes a predefined section from `environments.bitesize` file to action on. For example, your dev cluster's namespace will have environment-operator configured to watch for changes in  "development" section of your `environments.bitesize`, in your own git repository. It will automatically apply changes such as number of application instances running, load balancer endpoint configuration or environment variables passed to your application.
+Each deployment definition is specified through a manifest file (we refer to as environments.bitesize).  The options/syntax available within an environments bitesize file are detailed in the [Environment Configuration](./Environment_Config.md).    Each environment operator maintains a single environment and takes a predefined section from `environments.bitesize` file to action on. For example, your dev cluster's namespace will have environment-operator configured to watch for changes in  "development" section of your `environments.bitesize`, in your own git repository. It will automatically apply changes such as number of application instances running, load balancer endpoint configuration or environment variables passed to your application.
 
 Other integral part of environment-operator is to provide endpoints to manage your deployments. The most common of them are `/deploy` and `/status/${service}` endpoints.
 
@@ -140,3 +140,4 @@ job('deploy-test-app-to-dev') {
   }
 }
 ```
+

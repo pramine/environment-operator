@@ -4,7 +4,7 @@ metadata:
   labels:
     name: environment-operator
   name: environment-operator
-  namespace: sample-app-dev
+  namespace: sample-app
 spec:
   replicas: 1
   selector:
@@ -25,20 +25,22 @@ spec:
       - name: environment-operator
         env:
         - name: GIT_REMOTE_REPOSITORY
-          value: git@github.com:pearsontechnology/jenkins-sample-app.git
+          value: git@github.com:pearsontechnology/environment-operator.git
+        - name: GIT_BRANCH
+          value: bite-1788
         - name: GIT_PRIVATE_KEY
           valueFrom:
             secretKeyRef:
               name: git-private-key
               key: key
         - name: DOCKER_REGISTRY
-          value: bitesize-registry.default.svc.cluster.local:5000
+          value: "index.docker.io"
         - name: PROJECT
-          value: example
+          value: pearsontechnology
         - name: ENVIRONMENT_NAME
-          value: Development
+          value: sample-app-environment
         - name: BITESIZE_FILE
-          value: environments.bitesize
+          value: environment.sample
         - name: AUTH_TOKEN_FILE
           value: /etc/auth/token
         - name: DEBUG
@@ -47,7 +49,7 @@ spec:
           valueFrom:
             fieldRef:
               fieldPath: metadata.namespace
-        image: geribatai/environment-operator:900212a58cfeb59a8f574e38bc0936da2a814e49
+        image: bsomogyi/environment-operator:dev
         imagePullPolicy: Always
         securityContext:
           runAsUser: 1000

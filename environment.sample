@@ -1,0 +1,28 @@
+project: pearsontechnology
+environments:
+  - name: sample-app-environment
+    namespace: sample-app
+    deployment:
+      method: rolling-upgrade
+    services:
+      - name: front
+        external_url: front.sample-app.domain
+        ssl: false
+        port: 80
+        env:
+          - name: APP_PORT
+            value: 80
+          - name: BACK_END
+            value: back.sample-app.svc.cluster.local
+        limits:
+           cpu: 500m
+           memory: 100Mi
+      - name: back
+        port: 80
+        env:
+          - name: APP_PORT
+            value: 80
+        limits:
+           cpu: 500m
+           memory: 100Mi
+

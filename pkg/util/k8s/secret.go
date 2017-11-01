@@ -36,3 +36,40 @@ func (client *Secret) Exists(secretname string) bool {
 	}
 	return found
 }
+
+// Apply updates or creates secrets in k8s
+func (client *Secret) Apply(resource *v1.Secret) error {
+	if client.Exists(resource.Name) {
+		return client.Update(resource)
+	}
+	return client.Create(resource)
+}
+
+// Create creates new secret in k8s
+func (client *Secret) Create(resource *v1.Secret) error {
+	_, err := client.
+		Core().
+		Secrets(client.Namespace).
+		Create(resource)
+	return err
+}
+
+// Update updates existing secrets in k8s
+func (client *Secret) Update(resource *v1.Secret) error {
+	current, err := client.Get(resource.Name)
+	if err != nil {
+		return err
+	}
+	resource.ResourceVersion = current.GetResourceVersion()
+
+	_, err = client.
+		Core().
+		Secrets(client.Namespace).
+		Update(resource)
+	return err
+}
+
+// Get returns secret object from the k8s by name
+func (client *Secret) Get(name string) (*v1.Secret, error) {
+	return client.Core().Secrets(client.Namespace).Get(name)
+}

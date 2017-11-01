@@ -9,6 +9,7 @@ export previousReleaseVersion=`grep -m 2 '### \*\*\[.*..*..*\].*\[RELEASED\]\*\*
 
 if [ -z "$releaseVersion" ];then
   echo "export release=false" >> ~/environment.sh
+  echo "Release was not Detected in ${TRAVIS_BUILD_DIR}/CHANGELOG.md"
 else
   if ! git tag | grep -q $releaseVersion; then   #IF the version found is not already a git tag, it is a new release
     echo "export release=true" >> ~/environment.sh
@@ -20,6 +21,7 @@ else
     echo "---------------------------------------------------------------------------------------------------------------------------------"
 
   else  #It's not a new release
+    echo "Release was not Detected in ${TRAVIS_BUILD_DIR}/CHANGELOG.md"
     echo "export release=false" >> ~/environment.sh
     echo "export releaseVersion=$releaseVersion" >> ~/environment.sh
 
