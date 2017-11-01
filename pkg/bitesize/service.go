@@ -5,6 +5,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/pearsontechnology/environment-operator/pkg/config"
 	validator "gopkg.in/validator.v2"
 )
 
@@ -52,6 +53,10 @@ func ServiceWithDefaults() *Service {
 	return &Service{
 		Ports:    []int{80},
 		Replicas: 1,
+		Limits: ContainerLimits{
+			Memory: config.Env.LimitDefaultMemory,
+			CPU:    config.Env.LimitDefaultCPU,
+		},
 	}
 }
 

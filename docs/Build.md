@@ -20,7 +20,7 @@ docker image named: pearsontechnology/environment-operator:dev on Dockerhub
 **Master Build:** Once dev branch is successfully built by TravisCI, if a new release tag is present in the changelog, travisCI
 will merge dev into the master branch and then test, compile source, and build a docker image named: pearsontechnology/environment-operator:$releaseVersion on Docker hub.
 
-## Releasing a New Version of Environment Operator
+## Releasing a New Version of Environment Operator to Github
 
 * Git Clone the Dev Branch of environment-operator:
 
@@ -48,25 +48,12 @@ git push
 to master and tagged with the new release version. A new environment-operator image will also be pushed to Dockerhub as
 pearsontechnology/environment-operator:$releaseVersion
 
+* Once the new tag is made, add releaseNotes (manually copy from Changelog) to the [Github Release]() that was created by travis and publish the release. We will automate this eventually. 
+
 
 ## Running Tests
 
 Unit tests are stored next to the source files. Unit tests for each package are executed via the hack/build/build.sh
 script above or as a part of every TravisCI build.
 
-## Deploying sample environment-operator
 
-First, you will need to provide private git key that could read from the repository
-containing `environments.bitesize` file. Create file named `key` with private key
-contents (e.g. `cp ~/.ssh/id_rsa key`) and create secret `git-private-key` from
-it:
-
-```
-$ kubectl create secret generic git-private-key --from-file=./key
-```
-
-Modify repository in `example/operator-deployment.yaml`. Deploy operator:
-
-```
-$ kubectl apply -f example/operator-deployment.yaml
-```

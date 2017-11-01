@@ -69,6 +69,15 @@ func (s ServiceMap) AddDeployment(deployment v1beta1_ext.Deployment) {
 		biteservice.Requests.Memory = memoryQuantity.String()
 	}
 
+	if len(deployment.Spec.Template.Spec.Containers[0].Resources.Limits) != 0 {
+		cpuQuantity := new(resource.Quantity)
+		*cpuQuantity = deployment.Spec.Template.Spec.Containers[0].Resources.Limits["cpu"]
+		memoryQuantity := new(resource.Quantity)
+		*memoryQuantity = deployment.Spec.Template.Spec.Containers[0].Resources.Limits["memory"]
+		biteservice.Limits.CPU = cpuQuantity.String()
+		biteservice.Limits.Memory = memoryQuantity.String()
+	}
+
 	if getLabel(deployment.ObjectMeta, "ssl") != "" {
 		biteservice.Ssl = getLabel(deployment.ObjectMeta, "ssl") // kubeDeployment.Labels["ssl"]
 	}
@@ -170,6 +179,16 @@ func (s ServiceMap) AddMongoStatefulSet(statefulset v1beta1_apps.StatefulSet) {
 		*memoryQuantity = statefulset.Spec.Template.Spec.Containers[0].Resources.Requests["memory"]
 		biteservice.Requests.CPU = cpuQuantity.String()
 		biteservice.Requests.Memory = memoryQuantity.String()
+	}
+
+	if len(statefulset.Spec.Template.Spec.Containers[0].Resources.Limits) != 0 {
+		cpuQuantity := new(resource.Quantity)
+		*cpuQuantity = statefulset.Spec.Template.Spec.Containers[0].Resources.Limits["cpu"]
+		memoryQuantity := new(resource.Quantity)
+		*memoryQuantity = statefulset.Spec.Template.Spec.Containers[0].Resources.Limits["memory"]
+		biteservice.Limits.CPU = cpuQuantity.String()
+		biteservice.Limits.Memory = memoryQuantity.String()
+
 	}
 
 	biteservice.DatabaseType = "mongo"

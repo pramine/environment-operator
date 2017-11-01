@@ -2,10 +2,10 @@ apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:
   name: environment-operator
-  namespace: sample-app-dev
+  namespace: sample-app
 spec:
   rules:
-  - host: deploy.dev.myproject.io
+  - host: environment-operator.sample-app.domain
     http:
       paths:
       - backend:

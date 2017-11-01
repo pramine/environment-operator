@@ -20,6 +20,7 @@ import (
 	v1beta1_ext "k8s.io/client-go/pkg/apis/extensions/v1beta1"
 	fakerest "k8s.io/client-go/rest/fake"
 
+	"github.com/pearsontechnology/environment-operator/pkg/config"
 	faketpr "github.com/pearsontechnology/environment-operator/pkg/util/k8s/fake"
 )
 
@@ -52,7 +53,6 @@ func TestKubernetesClusterClient(t *testing.T) {
 }
 
 func TestApplyEnvironment(t *testing.T) {
-	var changeMap map[string]string
 
 	log.SetLevel(log.FatalLevel)
 	client := fake.NewSimpleClientset(
@@ -85,10 +85,10 @@ func TestApplyEnvironment(t *testing.T) {
 	}
 
 	//There should be no changes between environments e1 and e2 (they will be synced with the apply below)
-	diff.Compare(*e1, *e2)
+	//	diff.Compare(*e1, *e2)
 	cluster.ApplyEnvironment(e1, e2)
 	if diff.Compare(*e1, *e2) {
-		t.Errorf("Expected loaded environments to be equal, yet diff is: %s", changeMap)
+		t.Errorf("Expected loaded environments to be equal, yet diff is: %s", diff.Changes())
 	}
 
 	//environments2.bitesize removes annotated_service2 and testdb from environment2
@@ -97,7 +97,7 @@ func TestApplyEnvironment(t *testing.T) {
 	diff.Compare(*e2, *e3)
 	_, exists := diff.Changes()["testdb"]
 	if !exists {
-		t.Errorf("Expected testdb to exist in the diff, yet it does not exist: %s", changeMap)
+		t.Errorf("Expected testdb to exist in the diff, yet it does not exist: %s", diff.Changes())
 	}
 }
 
@@ -640,6 +640,8 @@ func loadEmptyTPRS() *fakerest.RESTClient {
 
 func TestApplyMongoStatefulSet(t *testing.T) {
 	tprclient := loadEmptyTPRS()
+	cpulimit, _ := resource.ParseQuantity(config.Env.LimitDefaultCPU)
+	memlimit, _ := resource.ParseQuantity(config.Env.LimitDefaultMemory)
 	client := fake.NewSimpleClientset(
 		&v1.Namespace{
 			ObjectMeta: v1.ObjectMeta{
@@ -698,6 +700,12 @@ func TestApplyMongoStatefulSet(t *testing.T) {
 										Name:      "secrets-volume",
 										MountPath: "/etc/secrets-volume",
 										ReadOnly:  true,
+									},
+								},
+								Resources: v1.ResourceRequirements{
+									Limits: v1.ResourceList{
+										"cpu":    cpulimit,
+										"memory": memlimit,
 									},
 								},
 							},

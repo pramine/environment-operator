@@ -45,10 +45,16 @@ environments:
         value: true
       - name: prometheus.io/path
         value: /metrics
+    limits:
+      cpu: 1000m
+      memory: 500Mi
   - name: annotated_service2
     annotations:
       - name: random_annotation
         value: ok_value
+    requests:
+      cpu: 500m
+      memory: 100Mi
 - name: environment3
   namespace: environment-dev
   services:

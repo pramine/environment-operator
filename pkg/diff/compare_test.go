@@ -75,6 +75,44 @@ func TestDiffNames(t *testing.T) {
 	}
 }
 
+func TestQuantitiesWithDiffUnits(t *testing.T) {
+	a := bitesize.Environment{
+		Services: bitesize.Services{
+			{
+				Name: "a",
+				Requests: bitesize.ContainerRequests{
+					CPU:    "1000m",
+					Memory: "2048Mi",
+				},
+				Limits: bitesize.ContainerLimits{
+					CPU:    "1000m",
+					Memory: "2048Mi",
+				},
+			},
+		},
+	}
+
+	b := bitesize.Environment{
+		Services: bitesize.Services{
+			{
+				Name: "a",
+				Requests: bitesize.ContainerRequests{
+					CPU:    "1",
+					Memory: "2Gi",
+				},
+				Limits: bitesize.ContainerLimits{
+					CPU:    "1",
+					Memory: "2Gi",
+				},
+			},
+		},
+	}
+
+	if Compare(a, b) {
+		t.Errorf("Expected to be the same, but got diff %s", Changes())
+	}
+}
+
 func TestDiffVersionsSame(t *testing.T) {
 	var saTests = []struct {
 		versionA string

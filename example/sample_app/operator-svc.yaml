@@ -4,7 +4,7 @@ metadata:
   labels:
     name: environment-operator
   name: environment-operator
-  namespace: sample-app-dev
+  namespace: sample-app
 spec:
   ports:
   - port: 80
