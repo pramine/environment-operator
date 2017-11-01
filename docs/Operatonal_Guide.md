@@ -87,7 +87,7 @@ to use a private registry as well as how to establish Kubernetes secrets to allo
 
 ## Application Deploy Sequence via Environment Operator
 
-![deploy-sequence](https://github.com/pearsontechnology/environment-operator/blob/bite-1788/docs/images/deploy-sequence.png)
+![deploy-sequence](https://github.com/pearsontechnology/environment-operator/blob/dev/docs/images/deploy-sequence.png)
 
 ***************
 
