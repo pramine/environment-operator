@@ -65,38 +65,35 @@ func alignServices(src, dest *bitesize.Service) {
 	// Copy status from dest (status is only stored in the cluster)
 	src.Status = dest.Status
 
-	//In the case that no Requests were specified. Set src=dest to sync up the defaults that were used
-	emptyRequests := bitesize.ContainerRequests{}
-	if src.Requests == emptyRequests {
-		src.Requests = dest.Requests
-	} else { //Otherwise, if the units happened to be different, but the values are equal, align them
-		destmem, _ := resource.ParseQuantity(dest.Requests.Memory)
-		srcmem, _ := resource.ParseQuantity(src.Requests.Memory)
-		destcpu, _ := resource.ParseQuantity(dest.Requests.CPU)
-		srccpu, _ := resource.ParseQuantity(src.Requests.CPU)
-		if destmem.Cmp(srcmem) == 0 {
-			src.Requests.Memory = dest.Requests.Memory
-		}
-		if destcpu.Cmp(srccpu) == 0 {
-			src.Requests.CPU = dest.Requests.CPU
-		}
+	//If its a TPR type service, sync up the Limits since they aren't appied to the k8s resource
+	if src.Type != "" {
+		src.Limits.Memory = dest.Limits.Memory
+		src.Limits.CPU = dest.Limits.CPU
+
 	}
 
-	//In the case that no Limits were specified. Set src=dest to sync up the defaults that were used
-	emptyLimits := bitesize.ContainerLimits{}
-	if src.Limits == emptyLimits {
-		src.Limits = dest.Limits
-	} else { //Otherwise, if the units happened to be different, but the values are equal, align them
-		destmem, _ := resource.ParseQuantity(dest.Limits.Memory)
-		srcmem, _ := resource.ParseQuantity(src.Limits.Memory)
-		destcpu, _ := resource.ParseQuantity(dest.Limits.CPU)
-		srccpu, _ := resource.ParseQuantity(src.Limits.CPU)
-		if destmem.Cmp(srcmem) == 0 {
-			src.Limits.Memory = dest.Limits.Memory
-		}
-		if destcpu.Cmp(srccpu) == 0 {
-			src.Limits.CPU = dest.Limits.CPU
-		}
+	//Sync up Requests in the case where different units are present, but they represent equivalent quantities
+	destmemreq, _ := resource.ParseQuantity(dest.Requests.Memory)
+	srcmemreq, _ := resource.ParseQuantity(src.Requests.Memory)
+	destcpureq, _ := resource.ParseQuantity(dest.Requests.CPU)
+	srccpureq, _ := resource.ParseQuantity(src.Requests.CPU)
+	if destmemreq.Cmp(srcmemreq) == 0 {
+		src.Requests.Memory = dest.Requests.Memory
+	}
+	if destcpureq.Cmp(srccpureq) == 0 {
+		src.Requests.CPU = dest.Requests.CPU
+	}
+
+	//Sync up Limits in the case where different units are present, but they represent equivalent quantities
+	destmemlim, _ := resource.ParseQuantity(dest.Limits.Memory)
+	srcmemlim, _ := resource.ParseQuantity(src.Limits.Memory)
+	destcpulim, _ := resource.ParseQuantity(dest.Limits.CPU)
+	srccpulim, _ := resource.ParseQuantity(src.Limits.CPU)
+	if destmemlim.Cmp(srcmemlim) == 0 {
+		src.Limits.Memory = dest.Limits.Memory
+	}
+	if destcpulim.Cmp(srccpulim) == 0 {
+		src.Limits.CPU = dest.Limits.CPU
 	}
 
 	// Override source replicas with dest replicas if HPA is active

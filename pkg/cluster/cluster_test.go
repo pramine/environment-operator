@@ -20,6 +20,7 @@ import (
 	v1beta1_ext "k8s.io/client-go/pkg/apis/extensions/v1beta1"
 	fakerest "k8s.io/client-go/rest/fake"
 
+	"github.com/pearsontechnology/environment-operator/pkg/config"
 	faketpr "github.com/pearsontechnology/environment-operator/pkg/util/k8s/fake"
 )
 
@@ -639,6 +640,8 @@ func loadEmptyTPRS() *fakerest.RESTClient {
 
 func TestApplyMongoStatefulSet(t *testing.T) {
 	tprclient := loadEmptyTPRS()
+	cpulimit, _ := resource.ParseQuantity(config.Env.LimitDefaultCPU)
+	memlimit, _ := resource.ParseQuantity(config.Env.LimitDefaultMemory)
 	client := fake.NewSimpleClientset(
 		&v1.Namespace{
 			ObjectMeta: v1.ObjectMeta{
@@ -697,6 +700,12 @@ func TestApplyMongoStatefulSet(t *testing.T) {
 										Name:      "secrets-volume",
 										MountPath: "/etc/secrets-volume",
 										ReadOnly:  true,
+									},
+								},
+								Resources: v1.ResourceRequirements{
+									Limits: v1.ResourceList{
+										"cpu":    cpulimit,
+										"memory": memlimit,
 									},
 								},
 							},

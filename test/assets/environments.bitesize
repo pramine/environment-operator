@@ -52,6 +52,9 @@ environments:
     annotations:
       - name: random_annotation
         value: ok_value
+    requests:
+      cpu: 500m
+      memory: 100Mi
 - name: environment3
   namespace: environment-dev
   services:
