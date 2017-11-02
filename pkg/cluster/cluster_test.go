@@ -1,6 +1,8 @@
 package cluster
 
 import (
+	"testing"
+
 	log "github.com/Sirupsen/logrus"
 	"github.com/pearsontechnology/environment-operator/pkg/bitesize"
 	"github.com/pearsontechnology/environment-operator/pkg/diff"
@@ -12,7 +14,6 @@ import (
 	"k8s.io/client-go/pkg/api/v1"
 	"k8s.io/client-go/pkg/apimachinery"
 	autoscale_v1 "k8s.io/client-go/pkg/apis/autoscaling/v1"
-	"testing"
 	// "k8s.io/client-go/pkg/api/meta"
 
 	"k8s.io/client-go/pkg/apimachinery/registered"
@@ -482,8 +483,10 @@ func testFullBitesizeEnvironment(t *testing.T) {
 	}
 	// TODO: test ingresses, env variables, replica count
 
-	if svc.ExternalURL != "www.test.com" {
-		t.Errorf("Unexpected external URL: %s, expected: www.test.com", svc.ExternalURL)
+	if len(svc.ExternalURL) != 0 {
+		if svc.ExternalURL[0] != "www.test.com" {
+			t.Errorf("Unexpected external URL: %s, expected: www.test.com", svc.ExternalURL)
+		}
 	}
 
 	if len(environment.Services[0].Commands) != 2 {
