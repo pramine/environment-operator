@@ -13,7 +13,8 @@ environments:
   services:
   - name: service1_environment2
     external_url:
-      - www.test.com
+      - www.test1.com
+      - www.test2.com
     volumes:
     - name: vol1
       size: 1G
@@ -79,4 +80,3 @@ environments:
         path: /data/db
         modes: ReadWriteOnce
         size: 10G
-
