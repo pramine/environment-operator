@@ -158,7 +158,7 @@ func validExternalURL(urls interface{}, param string) error {
 	urlSlice := reflect.ValueOf(urls)
 	for i := 0; i < urlSlice.Len(); i++ {
 		url := urlSlice.Index(i).String()
-		ok, err := regexp.MatchString("^([a-zA-Z\\.\\-]+)*$", url)
+		ok, err := regexp.MatchString("^([a-zA-Z0-9\\.\\-]+)*$", url)
 		if err != nil {
 			return err
 		}
