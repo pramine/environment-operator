@@ -11,6 +11,14 @@ environments:
 - name: environment2
   namespace: environment-dev
   services:
+  - name: external_service
+    external_url: www.test.com
+    limits:
+      cpu: 1000m
+      memory: 500Mi
+    requests:
+      cpu: 1000m
+      memory: 500Mi
   - name: service1_environment2
     external_url:
       - www.test1.com

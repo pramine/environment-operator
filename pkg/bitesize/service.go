@@ -13,7 +13,7 @@ import (
 // running in environment
 type Service struct {
 	Name         string                  `yaml:"name" validate:"nonzero"`
-	ExternalURL  []string                `yaml:"external_url,omitempty" validate:"external_url"`
+	ExternalURL  []string                `yaml:"-"`
 	Ports        []int                   `yaml:"-"` // Ports have custom unmarshaler
 	Ssl          string                  `yaml:"ssl,omitempty" validate:"regexp=^(true|false)*$"`
 	Version      string                  `yaml:"version,omitempty"`
@@ -75,6 +75,11 @@ func (e *Service) UnmarshalYAML(unmarshal func(interface{}) error) error {
 		return fmt.Errorf("service.annotations.%s", err.Error())
 	}
 
+	externalURL, err := unmarshalExternalURL(unmarshal)
+	if err != nil {
+		return fmt.Errorf("service.external_url.%s", err.Error())
+	}
+
 	type plain Service
 	if err = unmarshal((*plain)(ee)); err != nil {
 		return fmt.Errorf("service.%s", err.Error())
@@ -83,6 +88,7 @@ func (e *Service) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	*e = *ee
 	e.Ports = ports
 	e.Annotations = annotations
+	e.ExternalURL = externalURL
 
 	if e.Type != "" {
 		e.Ports = nil
@@ -177,4 +183,24 @@ func stringToIntArray(str string) []int {
 		}
 	}
 	return retval
+}
+
+func unmarshalExternalURL(unmarshal func(interface{}) error) ([]string, error) {
+
+	var u struct {
+		URL interface{} `yaml:"external_url,omitempty"`
+	}
+	var urls []string
+
+	if err := unmarshal(&u); err != nil {
+		return nil, err
+	}
+
+	if str, ok := u.URL.(string); ok {
+		urls = append(urls, str)
+	} else if slice, ok := u.URL.([]string); ok {
+		urls = slice
+	}
+
+	return urls, nil
 }
