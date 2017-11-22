@@ -119,7 +119,7 @@ Then execute the following commands to verify git clone fails:
 echo $GIT_PRIVATE_KEY > /tmp/key
 chmod 0400 /tmp/key
 export GIT_SSH_COMMAND="ssh -i /tmp/key"
-git clone $GIT_REMOTE_POSITORY
+git clone $GIT_REMOTE_REPOSITORY
 ```
 
 This should give you the error environment-operator encounters.
