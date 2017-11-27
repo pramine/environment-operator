@@ -8,6 +8,7 @@ environments:
     - name: vol1
       size: 1G
       path: /tmp/asd
+      provisioning: manual
 - name: environment2
   namespace: environment-dev
   services:

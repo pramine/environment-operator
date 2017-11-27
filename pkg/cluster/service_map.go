@@ -1,6 +1,9 @@
 package cluster
 
 import (
+	"sort"
+	"strings"
+
 	"github.com/pearsontechnology/environment-operator/pkg/bitesize"
 	"github.com/pearsontechnology/environment-operator/pkg/k8_extensions"
 	"k8s.io/client-go/pkg/api/resource"
@@ -8,8 +11,6 @@ import (
 	v1beta1_apps "k8s.io/client-go/pkg/apis/apps/v1beta1"
 	autoscale_v1 "k8s.io/client-go/pkg/apis/autoscaling/v1"
 	v1beta1_ext "k8s.io/client-go/pkg/apis/extensions/v1beta1"
-	"sort"
-	"strings"
 )
 
 // ServiceMap holds a list of bitesize.Service objects, representing the
@@ -123,7 +124,7 @@ func (s ServiceMap) AddVolumeClaim(claim v1.PersistentVolumeClaim) {
 		biteservice := s.CreateOrGet(name)
 
 		vol := bitesize.Volume{
-			Path:  claim.ObjectMeta.Labels["mount_path"],
+			Path:  strings.Replace(claim.ObjectMeta.Labels["mount_path"], "2F", "/", -1),
 			Modes: getAccessModesAsString(claim.Spec.AccessModes),
 			Size:  claim.ObjectMeta.Labels["size"],
 			Name:  claim.ObjectMeta.Name,

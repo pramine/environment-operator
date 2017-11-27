@@ -37,6 +37,36 @@ func TestValidationVolumeNames(t *testing.T) {
 
 }
 
+func TestValidVolumeProvisioning(t *testing.T) {
+	var testCases = []struct {
+		Value interface{}
+		Error error
+	}{
+		{
+			"redbluegreen",
+			fmt.Errorf("Invalid provisioning type: redbluegreen"),
+		},
+		{
+			1,
+			fmt.Errorf("Invalid provisioning type: 1. Valid types: dynamic,manual"),
+		},
+		{
+			"manual",
+			nil,
+		},
+	}
+
+	for _, tCase := range testCases {
+		err := validVolumeProvisioning(tCase.Value, "")
+		if err != tCase.Error {
+			if err.Error() != tCase.Error.Error() {
+				t.Errorf("Unexpected error: %v", err)
+			}
+		}
+	}
+
+}
+
 func TestValidHPA(t *testing.T) {
 	var testCases = []struct {
 		Value interface{}
