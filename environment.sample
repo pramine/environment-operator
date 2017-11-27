@@ -30,4 +30,3 @@ environments:
           size: 1G
           path: /tmp/asd
           modes: ReadWriteOnce
-          provisioning: dynamic
