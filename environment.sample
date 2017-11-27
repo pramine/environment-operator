@@ -29,3 +29,4 @@ environments:
         - name: vol1
           size: 1G
           path: /tmp/asd
+          modes: ReadWriteOnce
