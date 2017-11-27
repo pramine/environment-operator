@@ -4,7 +4,8 @@ environments:
   namespace: environment-dev
   services:
   - name: service1_environment2
-    external_url: www.test.com
+    external_url:
+      - www.test.com
     volumes:
     - name: vol1
       size: 1G
@@ -27,4 +28,3 @@ environments:
         value: true
       - name: prometheus.io/path
         value: /metrics
-

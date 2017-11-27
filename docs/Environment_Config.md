@@ -30,8 +30,9 @@ environments:
       method: rolling-upgrade
     services:
       - name: docs-app-front
-        external_url: kubecon.dev-bite.io
-        port: 80 
+        external_url:
+          - "kubecon.dev-bite.io"
+        port: 80
         ssl: "true"
         replicas: 2
         hpa:
@@ -39,7 +40,7 @@ environments:
           max_replicas: 5
           target_cpu_utilization_percentage: 75
       - name: docs-app-back
-        port: 80 
+        port: 80
         replicas: 2
         requests:
            cpu: 500m
@@ -68,7 +69,7 @@ Naming convention: `<project_name>-<three_letter_env_name>`<br><br>
 
 <a id="environments"></a>
 **environments**
-The environment section of the manifest may specify multiple environments to manage. 
+The environment section of the manifest may specify multiple environments to manage.
 
 <a id="environmentname"></a>
 
@@ -86,17 +87,17 @@ The environment section of the manifest may specify multiple environments to man
 <a id="services"></a>
 
  - **services** <br>
-   
+
    This section of the manifest defines how to provision your service.  Environment operator will create multiple
    Kubernetes resources for that service into your namespace:
-   
+
     - Kubernetes Service
     - Ingress (Optional)
     - Kubernetes Deployment<br>
-   
+
    Below are the options that may be specified for each service in the manifest
 
-    - **name** (required): The name of the service that will be created.  This will be the name of the kubernetes service, deployment, and ingress (optional) that will get created by environment operator. 
+    - **name** (required): The name of the service that will be created.  This will be the name of the kubernetes service, deployment, and ingress (optional) that will get created by environment operator.
     - **port** (required):  Specifying a port or an array of ports in the manifest provisions a [kubernetes service](https://kubernetes.io/docs/concepts/services-networking/service/)  into your namespace.  This provides the benefit of DNS resolution of your microservices with the kubernetes ecosystem.
     - **application**: When an application is specified, this corresponds to the docker image name that will be pulled and added as a container within your kubernetes deployment.
     - **version**: This is the version of the docker file that will be pulled.  If a version is specified in your manifest file, the service will be deployed by environment operator immediately.  Services that do not specify a version must be deployed by using the /deploy endpoint of environment-operator.  This provides flexibility for users of environment-operator to decide how/when (automatically versus API request) their deployments are made.
@@ -120,7 +121,7 @@ The environment section of the manifest may specify multiple environments to man
              - name: random_annotation
 	           value: ok_value
     ```
-       
+
     - **hpa**:   Below is an example of how to specify HPA for your service. In the example below, your deployment would be scaled out to 5 or in to 2 replicas when CPU utilization goes above or below a 75% threshold.  Memory HPA has not been implemented yet within environment-operator. If you are interested in being able to utilize HPA within your kubernetes ecosystem, please review the [requirements](https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/) for HPA in your cluster. In order to specify HPA for your service, you'll need to have Heapster running within your kubernetes ecosystem to gather metrics required for scaling events.
     ```
           services:
@@ -145,26 +146,26 @@ The environment section of the manifest may specify multiple environments to man
     - **requests**:  This is how you specify [requests](https://kubernetes.io/docs/concepts/configuration/manage-compute-resources-container/#resource-requests-and-limits-of-pod-and-container).  Note: The acceptable unit for CPU in the manifest is "m" and for Memory, "Mi" is supported.  For information on what these units mean, please review the [kubernetes documentation](https://kubernetes.io/docs/concepts/configuration/manage-compute-resources-container/#meaning-of-cpu).
          - In the example1 service below, the containers that are created for your service will utilize the default limits (1000m CPU/2048MiB Memory) as no limits were specified in the manifest. The service will also have Burstable QoS as the request for 500m (.5 CPU core) CPU / 100MiB Memory is less than the default limit set by environment operator.
          - In the example2 service , the containers that are created will utilize the default limits (1000m CPU/2048MiB Memory) as no limits were specified in the manifest. Additionally, since there were also no requests specified, the requests will be set equal to the default limits, giving the pod Guaranteed QoS of 1000m CPU/2048MiB Memory.
-         - Note: For more information on QoS Classes within kubernetes, please review the [documentation](https://kubernetes.io/docs/tasks/configure-pod-container/quality-service-pod/). Environment Operator requires limits to be set on every service, so it supports configuration of services to have either Guaranteed or Burstable QoS. 
+         - Note: For more information on QoS Classes within kubernetes, please review the [documentation](https://kubernetes.io/docs/tasks/configure-pod-container/quality-service-pod/). Environment Operator requires limits to be set on every service, so it supports configuration of services to have either Guaranteed or Burstable QoS.
         ```    
             services:
-             - name: example1 
+             - name: example1
                application: gummybears
                version: 1
                requests:
                   cpu: 500m
-                  memory: 100Mi 
+                  memory: 100Mi
              - name: example2
                application: gummybears
                version: 1
         ```    
-    - **external_url**: When an external url is specified,  a [kubernetes ingress](https://kubernetes.io/docs/concepts/services-networking/ingress/) will be created to allow inbound connectivity to your microservice. If this option is omitted, an ingress will not be created.
+    - **external_url**: When one or more external urls are specified, [kubernetes ingresses](https://kubernetes.io/docs/concepts/services-networking/ingress/) will be created to allow inbound connectivity to your microservice. If this option is omitted, an ingress will not be created.
     - **ssl** : Specifying "true" or "false" will result in your Kubernetes Ingress being created with the label "ssl" in its Object Metadata. Pearson utilizes an nginx ingress controller to build out our nginx config for our kubernetes ingresses. When ssl is specified, we ensure that ssl is being utilized when proxing requests to that service. More information on our open sourced nginx controller may be found [here](https://github.com/pearsontechnology/bitesize-controllers).  
     - **env**: This option is not recommended because any change to the environment variables in the manifest file will result in a redeploy of your services.  At pearson, we utilize consul and envconsul for configuring our deployed microservices.  However, this option is available and will allow you to specify environment variables as either variables or k8s secrets, that will be available to your pods running in your kubernetes deployment.  In the example below, the "gummybears" container will have access to the VAULT_TOKEN and VAULT_ADDR variables, where contents for one variable is coming from a kubernetes-secret and the other is a specific string.
-    
+
     ```
           services
-          - name: envservice 
+          - name: envservice
             application: gummybears
             version: 1
             env:
@@ -173,6 +174,3 @@ The environment section of the manifest may specify multiple environments to man
             - name: VAULT_ADDR
               value: "https://vault.kube-system.svc.cluster.local:8243"
     ```
-
-
-

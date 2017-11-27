@@ -1,10 +1,11 @@
 package translator
 
 import (
-	"github.com/pearsontechnology/environment-operator/pkg/bitesize"
-	"k8s.io/client-go/pkg/api/v1"
 	"os"
 	"testing"
+
+	"github.com/pearsontechnology/environment-operator/pkg/bitesize"
+	"k8s.io/client-go/pkg/api/v1"
 )
 
 func TestThirdPartyResource(t *testing.T) {
@@ -32,8 +33,9 @@ func TestTranslatorIngressLabels(t *testing.T) {
 func testTranslatorIngressSSl(t *testing.T) {
 	w := BuildKubeMapper()
 	w.BiteService.Ssl = "true"
+	w.BiteService.ExternalURL = []string{"www.test.com"}
 
-	ingress, _ := w.Ingress()
+	ingress, _ := w.Ingress(0)
 
 	if ingress.Labels["ssl"] != "true" {
 		t.Errorf("Unexpected ingress ssl value: %+v", ingress.Labels["ssl"])
@@ -59,8 +61,9 @@ func TestDockerPullSecrets(t *testing.T) {
 func testTranslatorIngressHTTPSBackend(t *testing.T) {
 	w := BuildKubeMapper()
 	w.BiteService.HTTPSBackend = "true"
+	w.BiteService.ExternalURL = []string{"www.test.com"}
 
-	ingress, _ := w.Ingress()
+	ingress, _ := w.Ingress(0)
 
 	if ingress.Labels["httpsBackend"] != "true" {
 		t.Errorf("Unexpected ingress httpsBackend value: %+v", ingress.Labels["httpsBackend"])
@@ -70,8 +73,9 @@ func testTranslatorIngressHTTPSBackend(t *testing.T) {
 func testTranslatorIngressHTTPSOnly(t *testing.T) {
 	w := BuildKubeMapper()
 	w.BiteService.HTTPSOnly = "true"
+	w.BiteService.ExternalURL = []string{"www.test.com"}
 
-	ingress, _ := w.Ingress()
+	ingress, _ := w.Ingress(0)
 
 	if ingress.Labels["httpsOnly"] != "true" {
 		t.Errorf("Unexpected ingress httpsOnly value: %+v", ingress.Labels["httpsOnly"])

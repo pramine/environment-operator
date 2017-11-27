@@ -2,9 +2,10 @@ package bitesize
 
 import (
 	"fmt"
+	"io/ioutil"
+
 	validator "gopkg.in/validator.v2"
 	yaml "gopkg.in/yaml.v2"
-	"io/ioutil"
 	"k8s.io/client-go/pkg/api/v1"
 )
 

@@ -157,7 +157,7 @@ func (s ServiceMap) AddIngress(ingress v1beta1_ext.Ingress) {
 		externalURL = ingress.Spec.Rules[0].Host
 	}
 
-	biteservice.ExternalURL = externalURL
+	biteservice.ExternalURL = append(biteservice.ExternalURL, externalURL)
 	biteservice.HTTPSBackend = httpsBackend
 	biteservice.HTTPSOnly = httpsOnly
 	biteservice.Ssl = ssl

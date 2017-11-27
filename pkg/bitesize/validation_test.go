@@ -150,3 +150,29 @@ func TestValidLimits(t *testing.T) {
 	}
 
 }
+
+func TestValidExternalURL(t *testing.T) {
+	var testCases = []struct {
+		Value interface{}
+		Error error
+	}{
+		{
+			[]string{"~www.example.com"},
+			fmt.Errorf("external_url %v is invalid", "~www.example.com"),
+		},
+		{
+			[]string{"www.test.com"},
+			nil,
+		},
+	}
+
+	for _, tCase := range testCases {
+		err := validExternalURL(tCase.Value, "")
+		if err != tCase.Error {
+			if err.Error() != tCase.Error.Error() {
+				t.Errorf("external_url validation error: %v", err)
+			}
+		}
+	}
+
+}
