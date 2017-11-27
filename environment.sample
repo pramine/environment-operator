@@ -25,4 +25,7 @@ environments:
         limits:
            cpu: 500m
            memory: 100Mi
-
+        volumes:
+        - name: vol1
+          size: 1G
+          path: /tmp/asd
