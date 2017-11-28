@@ -13,6 +13,7 @@ import (
 
 func addCustomValidators() {
 	validator.SetValidationFunc("volume_modes", validVolumeModes)
+	validator.SetValidationFunc("volume_provisioning", validVolumeProvisioning)
 	validator.SetValidationFunc("hpa", validHPA)
 	validator.SetValidationFunc("requests", validRequests)
 	validator.SetValidationFunc("limits", validLimits)
@@ -33,6 +34,24 @@ func validVolumeModes(v interface{}, param string) error {
 
 	if validNames[st.String()] == false {
 		return fmt.Errorf("Invalid volume mode: %v", st)
+	}
+	return nil
+}
+
+func validVolumeProvisioning(v interface{}, param string) error {
+	validProvisioningTypes := map[string]bool{"dynamic": true, "manual": true}
+	st := reflect.ValueOf(v)
+
+	if st.Kind() != reflect.String {
+		return fmt.Errorf(
+			"Invalid provisioning type: %v. Valid types: %s",
+			st,
+			"dynamic,manual",
+		)
+	}
+
+	if validProvisioningTypes[st.String()] == false {
+		return fmt.Errorf("Invalid provisioning type: %v", st)
 	}
 	return nil
 }

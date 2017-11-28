@@ -115,19 +115,26 @@ func (w *KubeMapper) PersistentVolumeClaims() ([]v1.PersistentVolumeClaim, error
 				Labels: map[string]string{
 					"creator":    "pipeline",
 					"deployment": w.BiteService.Name,
-					"mount_path": vol.Path,
+					"mount_path": strings.Replace(vol.Path, "/", "2F", -1),
 					"size":       vol.Size,
 				},
 			},
 			Spec: v1.PersistentVolumeClaimSpec{
-				VolumeName:  vol.Name,
 				AccessModes: getAccessModesFromString(vol.Modes),
-				Selector: &unversioned.LabelSelector{
-					MatchLabels: map[string]string{
-						"name": vol.Name,
+				Resources: v1.ResourceRequirements{
+					Requests: v1.ResourceList{
+						v1.ResourceName(v1.ResourceStorage): resource.MustParse(vol.Size),
 					},
 				},
 			},
+		}
+		if vol.Provisioning == "manual" {
+			ret.Spec.VolumeName = vol.Name
+			ret.Spec.Selector = &unversioned.LabelSelector{
+				MatchLabels: map[string]string{
+					"name": vol.Name,
+				},
+			}
 		}
 
 		retval = append(retval, ret)
