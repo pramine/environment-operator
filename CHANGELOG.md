@@ -9,6 +9,11 @@ This project adheres to [Semantic Versioning](http://semver.org/). Additionally,
 - **Fixed** for any bug fixes.
 - **Security** for any security changes or fixes for vulnerabilities.
 
+### **[0.0.10]**
+
+#### Added
+#### Changed 
+#### Fixed 
 
 ### **[0.0.9] 2017-11-28 [RELEASED]**
 
@@ -21,8 +26,6 @@ This project adheres to [Semantic Versioning](http://semver.org/). Additionally,
 
 *  Persistent volume claims now use dynamic provisioning. 
 [[BITE-1828](https://agile-jira.pearson.com/browse/BITE-1828)]
-
-#### Fixed
 
 ### **[0.0.8] - 2017-11-01 [RELEASED]**
 
