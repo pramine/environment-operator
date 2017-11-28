@@ -2,9 +2,10 @@ package bitesize
 
 import (
 	"fmt"
+	"io/ioutil"
+
 	validator "gopkg.in/validator.v2"
 	yaml "gopkg.in/yaml.v2"
-	"io/ioutil"
 	"k8s.io/client-go/pkg/api/v1"
 )
 
@@ -84,10 +85,11 @@ type Annotation struct {
 
 // Volume represents volume & it's mount
 type Volume struct {
-	Name  string `yaml:"name"`
-	Path  string `yaml:"path"`
-	Modes string `yaml:"modes" validate:"volume_modes"`
-	Size  string `yaml:"size"`
+	Name         string `yaml:"name"`
+	Path         string `yaml:"path"`
+	Modes        string `yaml:"modes" validate:"volume_modes"`
+	Size         string `yaml:"size"`
+	Provisioning string `yaml:"provisioning" validate:"volume_provisioning"`
 }
 
 func init() {

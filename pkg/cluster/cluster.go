@@ -3,6 +3,7 @@ package cluster
 import (
 	"errors"
 	"fmt"
+
 	log "github.com/Sirupsen/logrus"
 	"github.com/pearsontechnology/environment-operator/pkg/bitesize"
 	"github.com/pearsontechnology/environment-operator/pkg/diff"
@@ -128,10 +129,12 @@ func (cluster *Cluster) ApplyEnvironment(currentEnvironment, newEnvironment *bit
 				log.Error(err)
 			}
 
-			if service.ExternalURL != "" {
-				ingress, _ := mapper.Ingress()
-				if err = client.Ingress().Apply(ingress); err != nil {
-					log.Error(err)
+			if len(service.ExternalURL) != 0 {
+				for i, _ := range service.ExternalURL {
+					ingress, _ := mapper.Ingress(i)
+					if err = client.Ingress().Apply(ingress); err != nil {
+						log.Error(err)
+					}
 				}
 			}
 

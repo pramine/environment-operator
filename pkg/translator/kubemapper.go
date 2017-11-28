@@ -14,6 +14,9 @@ import (
 	"github.com/pearsontechnology/environment-operator/pkg/util"
 	// metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"encoding/base64"
+	"math/rand"
+	"time"
+
 	"github.com/pearsontechnology/environment-operator/pkg/util/k8s"
 	"k8s.io/client-go/pkg/api/resource"
 	"k8s.io/client-go/pkg/api/unversioned"
@@ -22,8 +25,6 @@ import (
 	autoscale_v1 "k8s.io/client-go/pkg/apis/autoscaling/v1"
 	v1beta1_ext "k8s.io/client-go/pkg/apis/extensions/v1beta1"
 	"k8s.io/client-go/pkg/util/intstr"
-	"math/rand"
-	"time"
 )
 
 // KubeMapper maps BitesizeService object to Kubernetes objects
@@ -114,19 +115,26 @@ func (w *KubeMapper) PersistentVolumeClaims() ([]v1.PersistentVolumeClaim, error
 				Labels: map[string]string{
 					"creator":    "pipeline",
 					"deployment": w.BiteService.Name,
-					"mount_path": vol.Path,
+					"mount_path": strings.Replace(vol.Path, "/", "2F", -1),
 					"size":       vol.Size,
 				},
 			},
 			Spec: v1.PersistentVolumeClaimSpec{
-				VolumeName:  vol.Name,
 				AccessModes: getAccessModesFromString(vol.Modes),
-				Selector: &unversioned.LabelSelector{
-					MatchLabels: map[string]string{
-						"name": vol.Name,
+				Resources: v1.ResourceRequirements{
+					Requests: v1.ResourceList{
+						v1.ResourceName(v1.ResourceStorage): resource.MustParse(vol.Size),
 					},
 				},
 			},
+		}
+		if vol.Provisioning == "manual" {
+			ret.Spec.VolumeName = vol.Name
+			ret.Spec.Selector = &unversioned.LabelSelector{
+				MatchLabels: map[string]string{
+					"name": vol.Name,
+				},
+			}
 		}
 
 		retval = append(retval, ret)
@@ -511,7 +519,7 @@ func (w *KubeMapper) volumes() ([]v1.Volume, error) {
 }
 
 // Ingress extracts Kubernetes object from Bitesize definition
-func (w *KubeMapper) Ingress() (*v1beta1_ext.Ingress, error) {
+func (w *KubeMapper) Ingress(index int) (*v1beta1_ext.Ingress, error) {
 	labels := map[string]string{
 		"creator":     "pipeline",
 		"application": w.BiteService.Application,
@@ -540,7 +548,7 @@ func (w *KubeMapper) Ingress() (*v1beta1_ext.Ingress, error) {
 		Spec: v1beta1_ext.IngressSpec{
 			Rules: []v1beta1_ext.IngressRule{
 				{
-					Host: w.BiteService.ExternalURL,
+					Host: w.BiteService.ExternalURL[index],
 
 					IngressRuleValue: v1beta1_ext.IngressRuleValue{
 						HTTP: &v1beta1_ext.HTTPIngressRuleValue{

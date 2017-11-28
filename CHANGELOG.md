@@ -9,9 +9,24 @@ This project adheres to [Semantic Versioning](http://semver.org/). Additionally,
 - **Fixed** for any bug fixes.
 - **Security** for any security changes or fixes for vulnerabilities.
 
+
+### **[0.0.9] 2017-11-28 [RELEASED]**
+
+#### Added
+
+* Added support for configuring multiple external URLs (ingresses) for the same service.
+[[BITE-1736](https://agile-jira.pearson.com/browse/BITE-1736)]
+
+#### Changed
+
+*  Persistent volume claims now use dynamic provisioning. 
+[[BITE-1828](https://agile-jira.pearson.com/browse/BITE-1828)]
+
+#### Fixed
+
 ### **[0.0.8] - 2017-11-01 [RELEASED]**
 
-#### Added 
+#### Added
 
 *  Added mongo support. Environment operator can now stand up a mongodb statefulset if specified in environments.bitesize. [[BITE-1632](https://agile-jira.pearson.com/browse/BITE-1632)]
 *  Enabled Guaranteed Quality of Service. Environment operator will now deploy containers with requests=limits when a request is specified within the manifest (environments.bitesize) for a service. [[BITE-1713](https://agile-jira.pearson.com/browse/BITE-1713))]

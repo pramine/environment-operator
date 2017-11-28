@@ -3,6 +3,7 @@ package bitesize
 import (
 	"fmt"
 	"reflect"
+	"regexp"
 	"strconv"
 
 	log "github.com/Sirupsen/logrus"
@@ -12,9 +13,11 @@ import (
 
 func addCustomValidators() {
 	validator.SetValidationFunc("volume_modes", validVolumeModes)
+	validator.SetValidationFunc("volume_provisioning", validVolumeProvisioning)
 	validator.SetValidationFunc("hpa", validHPA)
 	validator.SetValidationFunc("requests", validRequests)
 	validator.SetValidationFunc("limits", validLimits)
+	validator.SetValidationFunc("external_url", validExternalURL)
 }
 
 func validVolumeModes(v interface{}, param string) error {
@@ -31,6 +34,24 @@ func validVolumeModes(v interface{}, param string) error {
 
 	if validNames[st.String()] == false {
 		return fmt.Errorf("Invalid volume mode: %v", st)
+	}
+	return nil
+}
+
+func validVolumeProvisioning(v interface{}, param string) error {
+	validProvisioningTypes := map[string]bool{"dynamic": true, "manual": true}
+	st := reflect.ValueOf(v)
+
+	if st.Kind() != reflect.String {
+		return fmt.Errorf(
+			"Invalid provisioning type: %v. Valid types: %s",
+			st,
+			"dynamic,manual",
+		)
+	}
+
+	if validProvisioningTypes[st.String()] == false {
+		return fmt.Errorf("Invalid provisioning type: %v", st)
 	}
 	return nil
 }
@@ -149,5 +170,20 @@ func validLimits(req interface{}, param string) error {
 		}
 	}
 
+	return nil
+}
+
+func validExternalURL(urls interface{}, param string) error {
+	urlSlice := reflect.ValueOf(urls)
+	for i := 0; i < urlSlice.Len(); i++ {
+		url := urlSlice.Index(i).String()
+		ok, err := regexp.MatchString("^([a-zA-Z0-9\\.\\-]+)*$", url)
+		if err != nil {
+			return err
+		}
+		if !ok {
+			return fmt.Errorf("external_url %v is invalid", url)
+		}
+	}
 	return nil
 }

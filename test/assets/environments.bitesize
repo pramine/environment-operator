@@ -8,11 +8,22 @@ environments:
     - name: vol1
       size: 1G
       path: /tmp/asd
+      provisioning: manual
 - name: environment2
   namespace: environment-dev
   services:
-  - name: service1_environment2
+  - name: external_service
     external_url: www.test.com
+    limits:
+      cpu: 1000m
+      memory: 500Mi
+    requests:
+      cpu: 1000m
+      memory: 500Mi
+  - name: service1_environment2
+    external_url:
+      - www.test1.com
+      - www.test2.com
     volumes:
     - name: vol1
       size: 1G
@@ -78,4 +89,3 @@ environments:
         path: /data/db
         modes: ReadWriteOnce
         size: 10G
-

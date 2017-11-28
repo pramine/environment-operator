@@ -37,6 +37,36 @@ func TestValidationVolumeNames(t *testing.T) {
 
 }
 
+func TestValidVolumeProvisioning(t *testing.T) {
+	var testCases = []struct {
+		Value interface{}
+		Error error
+	}{
+		{
+			"redbluegreen",
+			fmt.Errorf("Invalid provisioning type: redbluegreen"),
+		},
+		{
+			1,
+			fmt.Errorf("Invalid provisioning type: 1. Valid types: dynamic,manual"),
+		},
+		{
+			"manual",
+			nil,
+		},
+	}
+
+	for _, tCase := range testCases {
+		err := validVolumeProvisioning(tCase.Value, "")
+		if err != tCase.Error {
+			if err.Error() != tCase.Error.Error() {
+				t.Errorf("Unexpected error: %v", err)
+			}
+		}
+	}
+
+}
+
 func TestValidHPA(t *testing.T) {
 	var testCases = []struct {
 		Value interface{}
@@ -145,6 +175,32 @@ func TestValidLimits(t *testing.T) {
 		if err != tCase.Error {
 			if err.Error() != tCase.Error.Error() {
 				t.Errorf("Limits validation error: %v", err)
+			}
+		}
+	}
+
+}
+
+func TestValidExternalURL(t *testing.T) {
+	var testCases = []struct {
+		Value interface{}
+		Error error
+	}{
+		{
+			[]string{"~www.example.com"},
+			fmt.Errorf("external_url %v is invalid", "~www.example.com"),
+		},
+		{
+			[]string{"www.test.com"},
+			nil,
+		},
+	}
+
+	for _, tCase := range testCases {
+		err := validExternalURL(tCase.Value, "")
+		if err != tCase.Error {
+			if err.Error() != tCase.Error.Error() {
+				t.Errorf("external_url validation error: %v", err)
 			}
 		}
 	}
