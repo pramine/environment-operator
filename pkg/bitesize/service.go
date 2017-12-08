@@ -2,6 +2,7 @@ package bitesize
 
 import (
 	"fmt"
+	"reflect"
 	"strconv"
 	"strings"
 
@@ -108,6 +109,11 @@ func (e *Service) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return nil
 }
 
+// HasExternalURL checks if the service has an external_url defined
+func (e Service) HasExternalURL() bool {
+	return len(e.ExternalURL) != 0
+}
+
 func (slice Services) Len() int {
 	return len(slice)
 }
@@ -196,10 +202,17 @@ func unmarshalExternalURL(unmarshal func(interface{}) error) ([]string, error) {
 		return nil, err
 	}
 
-	if str, ok := u.URL.(string); ok {
-		urls = append(urls, str)
-	} else if slice, ok := u.URL.([]string); ok {
-		urls = slice
+	switch v := u.URL.(type) {
+	case string:
+		urls = append(urls, v)
+	case []interface{}:
+		for _, url := range v {
+			urls = append(urls, reflect.ValueOf(url).String())
+		}
+	case nil:
+		return nil, nil
+	default:
+		return nil, fmt.Errorf("unsupported type %v declared for external_url %v", v, u)
 	}
 
 	return urls, nil
