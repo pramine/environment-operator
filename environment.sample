@@ -23,9 +23,10 @@ environments:
           - name: APP_PORT
             value: 80
           - name: MY_NODE_NAME
-            valueFrom:
-              fieldRef:
-                fieldPath: spec.nodeName
+            value_from:
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
         limits:
            cpu: 500m
            memory: 100Mi
