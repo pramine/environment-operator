@@ -7,6 +7,7 @@ environments:
     services:
       - name: front
         external_url: front.sample-app.domain
+        backend: blah
         ssl: false
         port: 80
         env:
