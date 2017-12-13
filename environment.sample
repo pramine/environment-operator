@@ -8,6 +8,7 @@ environments:
       - name: front
         external_url: front.sample-app.domain
         backend: blah
+        backend_port: 8080
         ssl: false
         port: 80
         env:
