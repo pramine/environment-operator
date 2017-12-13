@@ -95,6 +95,20 @@ func TestTranslatorIngressBackendOverride(t *testing.T) {
 	}
 }
 
+func TestTranslatorIngressBackendPortOverride(t *testing.T) {
+	w := BuildKubeMapper()
+	w.BiteService.ExternalURL = []string{"www.test.com"}
+	w.BiteService.Backend = "www.example.com"
+	w.BiteService.BackendPort = 81
+
+	ingress, _ := w.Ingress()
+	result := int(ingress.Spec.Rules[0].IngressRuleValue.HTTP.Paths[0].Backend.ServicePort.IntVal)
+
+	if result != w.BiteService.BackendPort {
+		t.Errorf("wrong ingress backend_port value: %v, expecting: %v", result, w.BiteService.BackendPort)
+	}
+}
+
 func BuildKubeMapper() *KubeMapper {
 	m := &KubeMapper{
 		BiteService: &bitesize.Service{

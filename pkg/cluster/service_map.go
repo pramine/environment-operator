@@ -162,6 +162,8 @@ func (s ServiceMap) AddIngress(ingress v1beta1_ext.Ingress) {
 	biteservice.Ssl = ssl
 
 	biteservice.Backend = ingress.Spec.Rules[0].IngressRuleValue.HTTP.Paths[0].Backend.ServiceName
+	biteservice.BackendPort = int(ingress.Spec.Rules[0].IngressRuleValue.HTTP.Paths[0].Backend.ServicePort.IntVal)
+
 }
 
 func (s ServiceMap) AddMongoStatefulSet(statefulset v1beta1_apps.StatefulSet) {
