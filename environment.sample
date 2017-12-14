@@ -7,8 +7,6 @@ environments:
     services:
       - name: front
         external_url: front.sample-app.domain
-        backend: blah
-        backend_port: 8080
         ssl: false
         port: 80
         env:
@@ -16,6 +14,8 @@ environments:
             value: 80
           - name: BACK_END
             value: back.sample-app.svc.cluster.local
+          - name: MY_NODE_NAME
+            pod_field: spec.nodeName
         limits:
            cpu: 500m
            memory: 100Mi
