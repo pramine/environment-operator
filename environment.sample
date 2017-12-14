@@ -15,7 +15,7 @@ environments:
           - name: BACK_END
             value: back.sample-app.svc.cluster.local
           - name: MY_NODE_NAME
-            pod_field: spec.nodeName
+            pod_field: garbagio
         limits:
            cpu: 500m
            memory: 100Mi
