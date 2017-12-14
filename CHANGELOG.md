@@ -14,6 +14,7 @@ This project adheres to [Semantic Versioning](http://semver.org/). Additionally,
 #### Added
 
  * Support for overriding the default backend for a service's kubernetes ingress.
+ * Support for setting pod fields as values for container environment variables. 
 
 #### Changed
 #### Fixed
