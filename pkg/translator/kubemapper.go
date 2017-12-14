@@ -446,7 +446,8 @@ func (w *KubeMapper) envVars() ([]v1.EnvVar, error) {
 
 	for _, e := range w.BiteService.EnvVars {
 		var evar v1.EnvVar
-		if e.Secret != "" {
+		switch {
+		case e.Secret != "":
 			kv := strings.Split(e.Value, "/")
 			secretName := ""
 			secretDataKey := ""
@@ -475,10 +476,19 @@ func (w *KubeMapper) envVars() ([]v1.EnvVar, error) {
 					},
 				},
 			}
-		} else {
+		case e.Value != "":
 			evar = v1.EnvVar{
 				Name:  e.Name,
 				Value: e.Value,
+			}
+		case e.PodField != "":
+			evar = v1.EnvVar{
+				Name: e.Name,
+				ValueFrom: &v1.EnvVarSource{
+					FieldRef: &v1.ObjectFieldSelector{
+						FieldPath: e.PodField,
+					},
+				},
 			}
 		}
 		retval = append(retval, evar)

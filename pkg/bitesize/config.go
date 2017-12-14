@@ -63,9 +63,10 @@ type HealthCheck struct {
 
 // EnvVar represents environment variables in pod
 type EnvVar struct {
-	Name   string `yaml:"name"`
-	Value  string `yaml:"value"`
-	Secret string `yaml:"secret"`
+	Name     string `yaml:"name"`
+	Value    string `yaml:"value"`
+	Secret   string `yaml:"secret"`
+	PodField string `yaml:"pod_field"`
 }
 
 // Pod represents Pod in Kubernetes
