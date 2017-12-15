@@ -16,6 +16,7 @@ type Service struct {
 	Name         string                  `yaml:"name" validate:"nonzero"`
 	ExternalURL  []string                `yaml:"-"`
 	Backend      string                  `yaml:"backend"`
+	BackendPort  int                     `yaml:"backend_port"`
 	Ports        []int                   `yaml:"-"` // Ports have custom unmarshaler
 	Ssl          string                  `yaml:"ssl,omitempty" validate:"regexp=^(true|false)*$"`
 	Version      string                  `yaml:"version,omitempty"`
