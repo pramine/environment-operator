@@ -2,6 +2,7 @@ package translator
 
 import (
 	"os"
+	"reflect"
 	"testing"
 
 	"github.com/pearsontechnology/environment-operator/pkg/bitesize"
@@ -122,5 +123,36 @@ func TestTranslatorHPA(t *testing.T) {
 		t.Errorf("Wrong HPA max replicas value: %+v, expected %+v", h.Spec.MaxReplicas, w.BiteService.HPA.MaxReplicas)
 	} else if *h.Spec.TargetCPUUtilizationPercentage != w.BiteService.HPA.TargetCPUUtilizationPercentage {
 		t.Errorf("Wrong HPA target CPU utilization percentage value: %+v, expected %+v", *h.Spec.TargetCPUUtilizationPercentage, w.BiteService.HPA.TargetCPUUtilizationPercentage)
+	}
+}
+
+func TestTranslatorEnvVars(t *testing.T) {
+	w := BuildKubeMapper()
+	w.BiteService.Replicas = 1
+	w.BiteService.Name = "test"
+	w.BiteService.Application = "test"
+	w.BiteService.Version = "test"
+	w.BiteService.EnvVars = []bitesize.EnvVar{
+		{Name: "test1", Value: "test1"},
+		{Name: "testpodfield", PodField: "metadata.namespace"},
+	}
+
+	d, _ := w.Deployment()
+
+	generatedEnvVars := d.Spec.Template.Spec.Containers[0].Env
+	expectedEnvVars := []v1.EnvVar{
+		{Name: "test1", Value: "test1"},
+		{
+			Name: "testpodfield",
+			ValueFrom: &v1.EnvVarSource{
+				FieldRef: &v1.ObjectFieldSelector{
+					FieldPath: "metadata.namespace",
+				},
+			},
+		},
+	}
+
+	if !reflect.DeepEqual(generatedEnvVars, expectedEnvVars) {
+		t.Errorf("incorrect environment variables: %v generated; expecting: %v ", generatedEnvVars, expectedEnvVars)
 	}
 }
