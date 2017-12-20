@@ -44,6 +44,7 @@ func (client *PersistentVolumeClaim) Update(resource *v1.PersistentVolumeClaim) 
 		return err
 	}
 	resource.ResourceVersion = current.GetResourceVersion()
+	resource.Spec.VolumeName = current.Spec.VolumeName
 
 	_, err = client.
 		Core().
