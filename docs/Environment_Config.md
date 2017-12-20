@@ -164,7 +164,7 @@ The environment section of the manifest may specify multiple environments to man
     - **backend**: By default, the ingress created will direct traffic directly to the service. If you need to change this behaviour, for example to add a proxy layer, you may use this option to do so. It must be set to the value of an existing kubernetes service.  
     - **backend_port**: Used in conjunction with the backend option above. Defaults to the service's "port" value. 
     - **ssl** : Specifying "true" or "false" will result in your Kubernetes Ingress being created with the label "ssl" in its Object Metadata. Pearson utilizes an nginx ingress controller to build out our nginx config for our kubernetes ingresses. When ssl is specified, we ensure that ssl is being utilized when proxing requests to that service. More information on our open sourced nginx controller may be found [here](https://github.com/pearsontechnology/bitesize-controllers).  
-    - **env**: This option is not recommended because any change to the environment variables in the manifest file will result in a redeploy of your services.  At pearson, we utilize consul and envconsul for configuring our deployed microservices.  However, this option is available and will allow you to specify environment variables as either variables or k8s secrets, that will be available to your pods running in your kubernetes deployment.  In the example below, the "gummybears" container will have access to the VAULT_TOKEN and VAULT_ADDR variables, where contents for one variable is coming from a kubernetes-secret and the other is a specific string.
+    - **env**: This option is not recommended because any change to the environment variables in the manifest file will result in a redeploy of your services.  At pearson, we utilize consul and envconsul for configuring our deployed microservices.  However, this option is available and will allow you to specify environment variables as either variables, k8s secrets or pod fields, that will be available to your pods running in your kubernetes deployment.  In the example below, the "gummybears" container will have access to the VAULT_TOKEN and VAULT_ADDR variables, where contents for one variable is coming from a kubernetes-secret and the other is a specific string.
 
     ```
           services
@@ -176,4 +176,6 @@ The environment section of the manifest may specify multiple environments to man
               value: vault-glp-dev-read
             - name: VAULT_ADDR
               value: "https://vault.kube-system.svc.cluster.local:8243"
+            - name: MY_NODE_NAME
+              pod_field: spec.nodeName
     ```
