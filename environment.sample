@@ -27,7 +27,7 @@ environments:
            cpu: 500m
            memory: 100Mi
         volumes:
-        - name: vol1
-          size: 30Gi
-          path: /tmp/asd
-          modes: ReadWriteOnce
+          - name: vol1
+            size: 30Gi
+            path: /tmp/asd
+            modes: ReadWriteOnce
