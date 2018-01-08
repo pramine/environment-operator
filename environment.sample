@@ -27,6 +27,6 @@ environments:
            memory: 100Mi
         volumes:
           - name: vol1
-            size: 30Gi
+            size: 35Gi
             path: /tmp/asd
             modes: ReadWriteOnce
