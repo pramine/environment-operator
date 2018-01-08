@@ -18,11 +18,6 @@ environments:
            cpu: 500m
            memory: 100Mi
                 volumes:
-        volumes:
-        - name: vol2
-          size: 30Gi
-          path: /tmp/asd
-          modes: ReadWriteOnce
       - name: back
         port: 80
         env:
