@@ -19,11 +19,8 @@ This project adheres to [Semantic Versioning](http://semver.org/). Additionally,
 #### Changed
 #### Fixed
 
-<<<<<<< HEAD
  * EO intermittent panic issue. [[BITE-1941](https://agile-jira.pearson.com/browse/BITE-1941)]
-=======
  * Fixed issue with EO trying to update immutable PVC values.
->>>>>>> 9acb7d45... update changelog
 
 ### **[0.0.10] 2017-12-11 [RELEASED]**
 
