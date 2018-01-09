@@ -446,7 +446,8 @@ func (w *KubeMapper) envVars() ([]v1.EnvVar, error) {
 
 	for _, e := range w.BiteService.EnvVars {
 		var evar v1.EnvVar
-		if e.Secret != "" {
+		switch {
+		case e.Secret != "":
 			kv := strings.Split(e.Value, "/")
 			secretName := ""
 			secretDataKey := ""
@@ -475,10 +476,19 @@ func (w *KubeMapper) envVars() ([]v1.EnvVar, error) {
 					},
 				},
 			}
-		} else {
+		case e.Value != "":
 			evar = v1.EnvVar{
 				Name:  e.Name,
 				Value: e.Value,
+			}
+		case e.PodField != "":
+			evar = v1.EnvVar{
+				Name: e.Name,
+				ValueFrom: &v1.EnvVarSource{
+					FieldRef: &v1.ObjectFieldSelector{
+						FieldPath: e.PodField,
+					},
+				},
 			}
 		}
 		retval = append(retval, evar)
@@ -568,6 +578,13 @@ func (w *KubeMapper) Ingress() (*v1beta1_ext.Ingress, error) {
 			},
 		}
 
+		// Override backend
+		if w.BiteService.Backend != "" {
+			rule.IngressRuleValue.HTTP.Paths[0].Backend.ServiceName = w.BiteService.Backend
+		}
+		if w.BiteService.BackendPort != 0 {
+			rule.IngressRuleValue.HTTP.Paths[0].Backend.ServicePort = intstr.FromInt(w.BiteService.BackendPort)
+		}
 		retval.Spec.Rules = append(retval.Spec.Rules, rule)
 
 	}

@@ -1,7 +1,10 @@
 package k8s
 
-import "k8s.io/client-go/kubernetes"
-import "k8s.io/client-go/pkg/api/v1"
+import (
+	log "github.com/Sirupsen/logrus"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/pkg/api/v1"
+)
 
 // PersistentVolumeClaim type actions on pvcs in k8s cluster
 type PersistentVolumeClaim struct {
@@ -44,11 +47,19 @@ func (client *PersistentVolumeClaim) Update(resource *v1.PersistentVolumeClaim) 
 		return err
 	}
 	resource.ResourceVersion = current.GetResourceVersion()
+	resource.Spec.VolumeName = current.Spec.VolumeName
+
+	log.Warningf("attemting to update volume \"%s\", service \"%s\", but PVC Spec is immutable so this may fail.", current.ObjectMeta.Name, current.ObjectMeta.Labels["deployment"])
 
 	_, err = client.
 		Core().
 		PersistentVolumeClaims(client.Namespace).
 		Update(resource)
+
+	if err == nil {
+		log.Warningf("succesfully  updated volume \"%s\", service \"%s\".", current.ObjectMeta.Name, current.ObjectMeta.Labels["deployment"])
+	}
+
 	return err
 }
 

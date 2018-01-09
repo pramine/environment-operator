@@ -9,6 +9,19 @@ This project adheres to [Semantic Versioning](http://semver.org/). Additionally,
 - **Fixed** for any bug fixes.
 - **Security** for any security changes or fixes for vulnerabilities.
 
+### **[0.0.11] 2018-01-09 [RELEASED]**
+
+#### Added
+
+ * Support for overriding the default backend for a service's kubernetes ingress.
+ * Support for setting pod fields as values for container environment variables. 
+
+#### Fixed
+
+ * EO intermittent panic issue. [[BITE-1941](https://agile-jira.pearson.com/browse/BITE-1941)]
+ * Fixed issue with EO trying to update immutable PVC values.
+ * Fixed issue with diff being generated when backend_port is not set.
+
 ### **[0.0.10] 2017-12-11 [RELEASED]**
 
 #### Added

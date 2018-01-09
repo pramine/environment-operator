@@ -160,6 +160,17 @@ func (s ServiceMap) AddIngress(ingress v1beta1_ext.Ingress) {
 	biteservice.HTTPSBackend = httpsBackend
 	biteservice.HTTPSOnly = httpsOnly
 	biteservice.Ssl = ssl
+
+	// backend service has been overridden
+	backendService := ingress.Spec.Rules[0].IngressRuleValue.HTTP.Paths[0].Backend.ServiceName
+	if backendService != biteservice.Name {
+		biteservice.Backend = backendService
+	}
+	// backend port has been overriden
+	backendPort := int(ingress.Spec.Rules[0].IngressRuleValue.HTTP.Paths[0].Backend.ServicePort.IntVal)
+	if backendPort != biteservice.Ports[0] {
+		biteservice.BackendPort = backendPort
+	}
 }
 
 func (s ServiceMap) AddMongoStatefulSet(statefulset v1beta1_apps.StatefulSet) {
