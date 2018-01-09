@@ -9,6 +9,12 @@ This project adheres to [Semantic Versioning](http://semver.org/). Additionally,
 - **Fixed** for any bug fixes.
 - **Security** for any security changes or fixes for vulnerabilities.
 
+### **[0.0.12]**
+
+#### Added
+#### Changed 
+#### Fixed 
+
 ### **[0.0.11] 2018-01-09 [RELEASED]**
 
 #### Added
