@@ -10,7 +10,7 @@ environments:
         ssl: false
         port: 80
         env:
-          - name: APP_PORTS
+          - name: APP_PORT
             value: 80
           - name: BACK_END
             value: back.sample-app.svc.cluster.local
