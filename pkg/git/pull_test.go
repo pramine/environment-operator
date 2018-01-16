@@ -1,7 +1,6 @@
 package git
 
 import (
-	"fmt"
 	"os"
 	"testing"
 )
@@ -10,10 +9,7 @@ func TestPull(t *testing.T) {
 
 	remotePath := createTestRepo(t)
 	localPath := createSrcPath(t)
-	//defer cleanupTestPath(localPath)
-	//defer cleanupTestPath(remotePath)
-
-	fmt.Printf("local path: %s\nremote path: %s", localPath, remotePath)
+	defer clf("local path: %s\nremote path: %s", localPath, remotePath)
 
 	g := initAndClone(t, localPath, remotePath)
 
