@@ -2,6 +2,7 @@ package git
 
 import (
 	"fmt"
+	"os"
 
 	"gopkg.in/src-d/go-git.v4/plumbing"
 
@@ -22,10 +23,16 @@ type Git struct {
 }
 
 func Client() *Git {
+	var repository *gogit.Repository
+	var err error
 
-	repository, err := gogit.PlainInit(config.Env.GitLocalPath, false)
-	if err != nil {
-		log.Errorf("could not init local repository %s: %s", config.Env.GitLocalPath, err.Error())
+	if _, err := os.Stat(config.Env.GitLocalPath); os.IsNotExist(err) {
+		repository, err = gogit.PlainInit(config.Env.GitLocalPath, false)
+		if err != nil {
+			log.Errorf("could not init local repository %s: %s", config.Env.GitLocalPath, err.Error())
+		}
+	} else {
+		repository, err = gogit.PlainOpen(config.Env.GitLocalPath)
 	}
 
 	_, err = repository.CreateRemote(&gitconfig.RemoteConfig{
