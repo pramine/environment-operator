@@ -70,7 +70,7 @@ func (g *Git) sshKeys() *gitssh.PublicKeys {
 	if g.SSHKey == "" {
 		return nil
 	}
-	auth, err := gitssh.NewPublicKeys("", []byte(g.SSHKey), "")
+	auth, err := gitssh.NewPublicKeys("git", []byte(g.SSHKey), "")
 	if err != nil {
 		log.Warningf("error on parsing private key: %s", err.Error())
 		return nil
