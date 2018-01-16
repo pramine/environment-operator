@@ -2,12 +2,14 @@ package git
 
 import (
 	"fmt"
+	"net"
 	"os"
 
 	"gopkg.in/src-d/go-git.v4/plumbing"
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/pearsontechnology/environment-operator/pkg/config"
+	"golang.org/x/crypto/ssh"
 	gogit "gopkg.in/src-d/go-git.v4"
 	gitconfig "gopkg.in/src-d/go-git.v4/config"
 	gitssh "gopkg.in/src-d/go-git.v4/plumbing/transport/ssh"
@@ -71,6 +73,7 @@ func (g *Git) sshKeys() *gitssh.PublicKeys {
 		return nil
 	}
 	auth, err := gitssh.NewPublicKeys("git", []byte(g.SSHKey), "")
+	auth.HostKeyCallback = func(hostname string, remote net.Addr, key ssh.PublicKey) error { return nil }
 	if err != nil {
 		log.Warningf("error on parsing private key: %s", err.Error())
 		return nil
