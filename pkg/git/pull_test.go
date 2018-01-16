@@ -9,7 +9,8 @@ func TestPull(t *testing.T) {
 
 	remotePath := createTestRepo(t)
 	localPath := createSrcPath(t)
-	defer clf("local path: %s\nremote path: %s", localPath, remotePath)
+	defer cleanupTestPath(localPath)
+	defer cleanupTestPath(remotePath)
 
 	g := initAndClone(t, localPath, remotePath)
 
