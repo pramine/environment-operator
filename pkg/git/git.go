@@ -1,10 +1,15 @@
 package git
 
 import (
-	"os"
+	"fmt"
 
+	"gopkg.in/src-d/go-git.v4/plumbing"
+
+	log "github.com/Sirupsen/logrus"
 	"github.com/pearsontechnology/environment-operator/pkg/config"
-	git2go "gopkg.in/libgit2/git2go.v24"
+	gogit "gopkg.in/src-d/go-git.v4"
+	gitconfig "gopkg.in/src-d/go-git.v4/config"
+	gitssh "gopkg.in/src-d/go-git.v4/plumbing/transport/ssh"
 )
 
 // Git represents repository object and wraps git2go calls
@@ -13,49 +18,55 @@ type Git struct {
 	LocalPath  string
 	RemotePath string
 	BranchName string
+	Repository *gogit.Repository
 }
 
 func Client() *Git {
+
+	repository, err := gogit.PlainInit(config.Env.GitLocalPath, false)
+	if err != nil {
+		log.Errorf("could not init local repository %s: %s", config.Env.GitLocalPath, err.Error())
+	}
+
+	_, err = repository.CreateRemote(&gitconfig.RemoteConfig{
+		Name: "origin",
+		URLs: []string{config.Env.GitRepo},
+	})
+	if err != nil {
+		log.Errorf("could not attach to origin %s: %s", config.Env.GitRepo, err.Error())
+	}
+
 	return &Git{
 		LocalPath:  config.Env.GitLocalPath,
 		RemotePath: config.Env.GitRepo,
 		BranchName: config.Env.GitBranch,
 		SSHKey:     config.Env.GitKey,
+		Repository: repository,
 	}
 }
 
-// CloneOrPull checks if repo exists in local path. If it does, it
-// pulls changes from remotePath, if it doesn't, performs a full git clone
-func (g *Git) CloneOrPull() error {
-	if _, err := os.Stat(g.LocalPath); os.IsNotExist(err) {
-		return g.Clone()
+func (g *Git) pullOptions() *gogit.PullOptions {
+	branch := fmt.Sprintf("refs/heads/%s", g.BranchName)
+	return &gogit.PullOptions{
+		ReferenceName: plumbing.ReferenceName(branch),
+		Auth:          g.sshKeys(),
 	}
-	return g.Pull()
 }
 
-func (g *Git) credentialsCallback(url string, username string, allowedTypes git2go.CredType) (git2go.ErrorCode, *git2go.Cred) {
-	ret, cred := git2go.NewCredSshKeyFromMemory(username, "", g.SSHKey, "")
-	return git2go.ErrorCode(ret), &cred
-}
-
-// Made this one just return 0 during troubleshooting...
-func certificateCheckCallback(cert *git2go.Certificate, valid bool, hostname string) git2go.ErrorCode {
-	return 0
-}
-
-func (g *Git) cloneOptions() *git2go.CloneOptions {
-	opts := &git2go.CloneOptions{
-		CheckoutBranch: g.BranchName,
+func (g *Git) fetchOptions() *gogit.FetchOptions {
+	return &gogit.FetchOptions{
+		Auth: g.sshKeys(),
 	}
-	opts.FetchOptions = g.fetchOptions()
-	return opts
 }
 
-func (g *Git) fetchOptions() *git2go.FetchOptions {
-	return &git2go.FetchOptions{
-		RemoteCallbacks: git2go.RemoteCallbacks{
-			CredentialsCallback:      g.credentialsCallback,
-			CertificateCheckCallback: certificateCheckCallback,
-		},
+func (g *Git) sshKeys() *gitssh.PublicKeys {
+	if g.SSHKey == "" {
+		return nil
 	}
+	auth, err := gitssh.NewPublicKeys("", []byte(g.SSHKey), "")
+	if err != nil {
+		log.Warningf("error on parsing private key: %s", err.Error())
+		return nil
+	}
+	return auth
 }

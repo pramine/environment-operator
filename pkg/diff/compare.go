@@ -27,6 +27,7 @@ func Compare(config1, config2 bitesize.Environment) bool {
 	compareConfig := &pretty.Config{
 		Diffable:       true,
 		SkipZeroFields: true,
+		IncludeUnexported: false,
 	}
 
 	for _, s := range c1.Services {
