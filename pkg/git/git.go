@@ -37,12 +37,14 @@ func Client() *Git {
 		repository, err = gogit.PlainOpen(config.Env.GitLocalPath)
 	}
 
-	_, err = repository.CreateRemote(&gitconfig.RemoteConfig{
-		Name: "origin",
-		URLs: []string{config.Env.GitRepo},
-	})
-	if err != nil {
-		log.Errorf("could not attach to origin %s: %s", config.Env.GitRepo, err.Error())
+	if _, err = repository.Remote("origin"); err == gogit.ErrRemoteNotFound {
+		_, err = repository.CreateRemote(&gitconfig.RemoteConfig{
+			Name: "origin",
+			URLs: []string{config.Env.GitRepo},
+		})
+		if err != nil {
+			log.Errorf("could not attach to origin %s: %s", config.Env.GitRepo, err.Error())
+		}
 	}
 
 	return &Git{
