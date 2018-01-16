@@ -59,7 +59,7 @@ func main() {
 
 	go webserver()
 
-	err := gitClient.Clone()
+	err := gitClient.Pull()
 	if err != nil {
 		log.Errorf("Git clone error: %s", err.Error())
 		log.Errorf("Git Client Information: \n RemotePath=%s \n LocalPath=%s \n Branch=%s \n SSHkey= \n %s", gitClient.RemotePath, gitClient.LocalPath, gitClient.BranchName, gitClient.SSHKey)
