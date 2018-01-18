@@ -90,7 +90,7 @@ type Volume struct {
 	Path         string `yaml:"path"`
 	Modes        string `yaml:"modes" validate:"volume_modes"`
 	Size         string `yaml:"size"`
-	Provisioning string `yaml:"provisioning" validate:"volume_provisioning"`
+	provisioning string `yaml:"provisioning" validate:"volume_provisioning"`
 }
 
 func init() {

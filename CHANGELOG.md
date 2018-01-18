@@ -13,7 +13,12 @@ This project adheres to [Semantic Versioning](http://semver.org/). Additionally,
 
 #### Added
 #### Changed 
+
+ * Rewrite git pkg using go-git library instead of libgit2 + git2go. 
+
 #### Fixed 
+
+ * EO intermittent panic issue. [[BITE-1941](https://agile-jira.pearson.com/browse/BITE-1941)]  
 
 ### **[0.0.11] 2018-01-09 [RELEASED]**
 
@@ -24,7 +29,6 @@ This project adheres to [Semantic Versioning](http://semver.org/). Additionally,
 
 #### Fixed
 
- * EO intermittent panic issue. [[BITE-1941](https://agile-jira.pearson.com/browse/BITE-1941)]
  * Fixed issue with EO trying to update immutable PVC values.
  * Fixed issue with diff being generated when backend_port is not set.
 
