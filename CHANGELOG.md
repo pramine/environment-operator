@@ -15,9 +15,8 @@ This project adheres to [Semantic Versioning](http://semver.org/). Additionally,
 #### Changed 
 #### Fixed 
 
-### **[0.0.12] [RELEASED]**
+### **[0.0.12] 2018-01-22 [RELEASED]**
 
-#### Added
 #### Changed 
 
  * Rewrite git pkg using go-git library instead of libgit2 + git2go. 
