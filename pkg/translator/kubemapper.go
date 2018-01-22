@@ -128,7 +128,7 @@ func (w *KubeMapper) PersistentVolumeClaims() ([]v1.PersistentVolumeClaim, error
 				},
 			},
 		}
-		if vol.Provisioning == "manual" {
+		if vol.HasManualProvisioning() {
 			ret.Spec.VolumeName = vol.Name
 			ret.Spec.Selector = &unversioned.LabelSelector{
 				MatchLabels: map[string]string{

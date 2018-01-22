@@ -8,70 +8,100 @@ import (
 	"testing"
 	"time"
 
-	git2go "gopkg.in/libgit2/git2go.v24"
+	"gopkg.in/src-d/go-git.v4/plumbing"
+
+	gogit "gopkg.in/src-d/go-git.v4"
+	gitconfig "gopkg.in/src-d/go-git.v4/config"
+	gitobject "gopkg.in/src-d/go-git.v4/plumbing/object"
 )
 
 func initAndClone(t *testing.T, local, remote string) *Git {
+	repository, _ := gogit.PlainInit(local, false)
+	repository.CreateRemote(&gitconfig.RemoteConfig{
+		Name: "origin",
+		URLs: []string{remote},
+	})
 	g := &Git{
 		LocalPath:  local,
 		RemotePath: remote,
 		BranchName: "master",
+		Repository: repository,
 	}
 
-	if err := g.Clone(); err != nil {
-		t.Errorf("Error on clone: %s", err.Error())
+	if err := g.Pull(); err != nil {
+		t.Errorf("Error on initial pull: %s", err.Error())
 	}
 	return g
 }
 
 func createTestRepo(t *testing.T) string {
-	path, err := ioutil.TempDir("", "env-operator-remote")
-	checkFatal(t, err)
+	path, err := ioutil.TempDir("", "env-operator")
+	checkFatal(t, err, "temp dir create")
 
-	repo, err := git2go.InitRepository(path, false)
-	checkFatal(t, err)
+	barepath := path + "/bare"
+	localpath := path + "/local"
+	defer cleanupTestPath(localpath)
+
+	_, err = gogit.PlainInit(barepath, true)
+	checkFatal(t, err, "barepath init")
+
+	localrepo, err := gogit.PlainInit(localpath, false)
+	checkFatal(t, err, "localrepo init")
+
+	w, err := localrepo.Worktree()
+	checkFatal(t, err, "localrepo worktree")
+
+	_, err = localrepo.CreateRemote(&gitconfig.RemoteConfig{
+		Name: "origin",
+		URLs: []string{barepath},
+	})
+	checkFatal(t, err, "localrepo createremote")
 
 	tmpfile := "environments.bitesize"
-	err = ioutil.WriteFile(path+"/"+tmpfile, []byte("foo\n"), 0644)
+	err = ioutil.WriteFile(localpath+"/"+tmpfile, []byte("foo\n"), 0644)
 	checkFatal(t, err)
 
-	sig := &git2go.Signature{
-		Name:  "Author",
-		Email: "author@pearson.com",
-		When:  time.Now(),
-	}
+	w.Add(tmpfile)
 
-	idx, err := repo.Index()
-	checkFatal(t, err)
-	err = idx.AddByPath("environments.bitesize")
-	checkFatal(t, err)
-
-	err = idx.Write()
-	checkFatal(t, err)
-	treeID, err := idx.WriteTree()
+	_, err = w.Commit("initial commit", &gogit.CommitOptions{
+		Author: &gitobject.Signature{
+			Name:  "Author",
+			Email: "author@pearson.com",
+			When:  time.Now(),
+		},
+	})
 	checkFatal(t, err)
 
-	message := "Commit message\n"
-	tree, err := repo.LookupTree(treeID)
+	err = w.Checkout(&gogit.CheckoutOptions{Create: false, Branch: plumbing.ReferenceName("refs/heads/master")})
+	checkFatal(t, err, "localrepo create branch")
+
+	err = localrepo.Push(&gogit.PushOptions{RemoteName: "origin"})
 	checkFatal(t, err)
-	_, err = repo.CreateCommit("HEAD", sig, sig, message, tree)
-	checkFatal(t, err)
-	return path
+
+	return barepath
 }
 
 func commitTestJunk(t *testing.T, dest string, file string) {
 	var path string
 
-	repo, err := git2go.OpenRepository(dest)
+	tempPath, err := ioutil.TempDir("", "env-operator")
+	defer cleanupTestPath(tempPath)
+
+	checkFatal(t, err, "commitTestJunk temp dir create")
+
+	repo, err := gogit.PlainClone(tempPath, false, &gogit.CloneOptions{URL: dest})
+	checkFatal(t, err)
+
+	w, err := repo.Worktree()
 	checkFatal(t, err)
 
 	if file == "" {
-		f, e := ioutil.TempFile(dest, "junk")
+		f, e := ioutil.TempFile(tempPath, "junk")
 		path = f.Name()
 		file = filepath.Base(path)
 		checkFatal(t, e)
 	} else {
-		path = dest + "/" + file
+		path = tempPath + "/" + file
 	}
 
 	contents := randomString(64)
@@ -79,42 +109,30 @@ func commitTestJunk(t *testing.T, dest string, file string) {
 	err = ioutil.WriteFile(path, contents, 0644)
 	checkFatal(t, err)
 
-	loc, err := time.LoadLocation("UTC")
-	checkFatal(t, err)
-
-	sig := &git2go.Signature{
-		Name:  "Author",
-		Email: "author@pearson.com",
-		When:  time.Date(2013, 03, 06, 14, 30, 0, 0, loc),
-	}
-
-	idx, err := repo.Index()
-	checkFatal(t, err)
-
-	err = idx.AddByPath(file)
-	checkFatal(t, err)
-
-	err = idx.Write()
-	checkFatal(t, err)
-	treeID, err := idx.WriteTree()
-	checkFatal(t, err)
-
-	currentBranch, err := repo.Head()
-	checkFatal(t, err)
-	currentTip, err := repo.LookupCommit(currentBranch.Target())
-	checkFatal(t, err)
-
-	message := "Commit message\n"
-	tree, err := repo.LookupTree(treeID)
-	checkFatal(t, err)
-	_, err = repo.CreateCommit("HEAD", sig, sig, message, tree, currentTip)
-	checkFatal(t, err)
-
+	w.Add(file)
+	_, err = w.Commit("test", &gogit.CommitOptions{
+		Author: &gitobject.Signature{
+			Name:  "Author",
+			Email: "author@pearson.com",
+			When:  time.Now(),
+		},
+	})
+	repo.Push(&gogit.PushOptions{})
 }
 
-func checkFatal(t *testing.T, err error) {
+func checkFatal(t *testing.T, args ...interface{}) {
+	var str string
+	var err error
+
+	if len(args) == 0 {
+		return
+	}
+	if len(args) == 2 {
+		str, _ = args[1].(string)
+	}
+	err, _ = args[0].(error)
 	if err != nil {
-		t.Fatal(err)
+		t.Fatalf("%s: %s", str, err.Error())
 	}
 }
 

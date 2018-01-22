@@ -219,3 +219,26 @@ func unmarshalExternalURL(unmarshal func(interface{}) error) ([]string, error) {
 
 	return urls, nil
 }
+
+
+func (v *Volume) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	vv := &Volume{
+		Modes: "ReadWriteOnce",
+		provisioning: "dynamic",
+	}
+
+	type plain Volume
+	if err := unmarshal((*plain)(vv)); err != nil {
+		return fmt.Errorf("volume.%s", err.Error())
+	}
+
+	*v = *vv
+	return nil
+}
+
+func (v *Volume) HasManualProvisioning() bool {
+	if v.provisioning == "manual" {
+		return true
+	}
+	return false
+}
