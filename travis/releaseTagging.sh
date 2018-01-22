@@ -25,7 +25,7 @@ tagmaster(){
 notifyHipchat(){
     echo "A new Environment Operator release is now available." > /tmp/notification
     awk '/RELEASED/{p++}p==1' /tmp/environment-operator/CHANGELOG.md >> /tmp/notification
-    cat /tmp/notification | .${TRAVIS_BUILD_DIR}/hipchat/hipchat_room_message -t ${hipchat_token} -r ${hipchat_room} -f "TravisCI"
+    cat /tmp/notification | ${TRAVIS_BUILD_DIR}/hipchat/hipchat_room_message -t ${hipchat_token} -r ${hipchat_room} -f "TravisCI"
 }
 
 
