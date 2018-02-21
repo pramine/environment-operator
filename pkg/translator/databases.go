@@ -58,7 +58,7 @@ func (w *KubeMapper) CbContainers() ([]v1.Container, error) {
 			ImagePullPolicy: v1.PullAlways,
 			Env: []v1.EnvVar{
 				{Name: "SIDECAR_SERVICE", Value: w.BiteService.Name},
-				{Name: "SIDECAR_MASTERNODE", Value: "cb-0"},
+				{Name: "SIDECAR_MASTERNODE", Value: w.BiteService.Name + "-0"},
 				{Name: "SIDECAR_HOST", ValueFrom: &v1.EnvVarSource{
 					FieldRef: &v1.ObjectFieldSelector{FieldPath: "metadata.name"}},
 				},
@@ -100,6 +100,7 @@ func (w *KubeMapper) CbVolumeClaimTemplates() ([]v1.PersistentVolumeClaim, error
 			AccessModes: []v1.PersistentVolumeAccessMode{"ReadWriteMany"},
 			Resources: v1.ResourceRequirements{
 				Requests: v1.ResourceList{
+					// ideally this should be dynamically generated size based on data and index volumes and number of replicas
 					v1.ResourceName(v1.ResourceStorage): resource.MustParse("100Gi"),
 				},
 			},
