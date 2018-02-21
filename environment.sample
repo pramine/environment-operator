@@ -33,3 +33,18 @@ environments:
       - name: couchbase
         database_type: couchbase
         version: 5.0.1
+        replicas: 2
+        volumes:
+          - name: var
+            size: 5Gi
+            path: /opt/couchbase/var
+            modes: ReadWriteOnce
+          - name: data
+            size: 50Gi
+            path: /opt/couchbase/var/lib/couchbase/data
+            modes: ReadWriteOnce
+          - name: index
+            size: 10Gi
+            path: /opt/couchbase/var/lib/couchbase/index
+            modes: ReadWriteOnce
+        
