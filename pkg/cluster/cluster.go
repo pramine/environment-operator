@@ -76,7 +76,9 @@ func (cluster *Cluster) ApplyEnvironment(currentEnvironment, newEnvironment *bit
 				continue
 			}
 
-			if service.DatabaseType == "mongo" {
+			switch service.DatabaseType {
+
+			case "mogo":
 				log.Debugf("Applying Stateful set for Mongo DB Service: %s ", service.Name)
 
 				secret, _ := mapper.MongoInternalSecret()
@@ -101,7 +103,24 @@ func (cluster *Cluster) ApplyEnvironment(currentEnvironment, newEnvironment *bit
 					log.Error(err)
 				}
 
-			} else { //Only apply a Deployment and PVCs if this is not a DB service. The DB Statefulset creates its own PVCs
+			case "couchbase":
+				log.Debugf("Applying Stateful set for Couchbase DB Service: %s", service.Name)
+
+				c, err := mapper.CbContainers()
+				v, err := mapper.CbVolumeClaimTemplates()
+
+				statefulset, _ := mapper.StatefulSet(c, v, nil)
+
+				if err = client.StatefulSet().Apply(statefulset); err != nil {
+					log.Error(err)
+				}
+
+				svc, _ := mapper.HeadlessService()
+				if err = client.Service().Apply(svc); err != nil {
+					log.Error(err)
+				}
+
+			default:
 				log.Debugf("Applying Deployment for Service %s ", service.Name)
 				deployment, err := mapper.Deployment()
 				if err != nil {
@@ -116,12 +135,14 @@ func (cluster *Cluster) ApplyEnvironment(currentEnvironment, newEnvironment *bit
 					if err = client.PVC().Apply(&claim); err != nil {
 						log.Error(err)
 					}
+
 				}
 
 				svc, _ := mapper.Service()
 				if err = client.Service().Apply(svc); err != nil {
 					log.Error(err)
 				}
+
 			}
 
 			hpa, _ := mapper.HPA()
@@ -234,7 +255,11 @@ func (cluster *Cluster) LoadEnvironment(namespace string) (*bitesize.Environment
 	}
 
 	for _, statefulset := range statefulsets {
-		serviceMap.AddMongoStatefulSet(statefulset)
+		if statefulset.Spec.Template.Labels["role"] == "mongo" {
+			serviceMap.AddMongoStatefulSet(statefulset)
+		} else {
+			serviceMap.AddStatefulSet(statefulset)
+		}
 	}
 
 	// we'll need the same for tprs

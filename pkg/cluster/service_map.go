@@ -243,3 +243,12 @@ func (s ServiceMap) AddMongoStatefulSet(statefulset v1beta1_apps.StatefulSet) {
 		DeployedAt:      statefulset.CreationTimestamp.String(),
 	}
 }
+
+func (s ServiceMap) AddStatefulSet(statefulset v1beta1_apps.StatefulSet) {
+
+	biteservice := s.CreateOrGet(statefulset.Spec.Template.ObjectMeta.Labels["Name"])
+	biteservice.Application = statefulset.Spec.Template.ObjectMeta.Labels["Application"]
+	biteservice.Version = statefulset.Spec.Template.ObjectMeta.Labels["Version"]
+	biteservice.DatabaseType = statefulset.Spec.Template.ObjectMeta.Labels["role"]
+
+}
