@@ -69,7 +69,7 @@ func (w *KubeMapper) CbContainers() ([]v1.Container, error) {
 			VolumeMounts: []v1.VolumeMount{
 				{
 					MountPath: "/opt/couchbase/var/lib/couchbase/backups",
-					Name:      "backups",
+					Name:      w.BiteService.Name + "-backups",
 				},
 			},
 		},
@@ -81,7 +81,7 @@ func (w *KubeMapper) CbContainers() ([]v1.Container, error) {
 func (w *KubeMapper) CbVolumeClaimTemplates() ([]v1.PersistentVolumeClaim, error) {
 	// add pvcs from service definition
 	pvcs, _ := w.PersistentVolumeClaims()
-	// add backups ovc
+	// add backups pvc
 	b := v1.PersistentVolumeClaim{
 		ObjectMeta: v1.ObjectMeta{
 			Name:      w.BiteService.Name + "-backups",

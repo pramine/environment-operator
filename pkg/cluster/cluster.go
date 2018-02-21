@@ -115,6 +115,7 @@ func (cluster *Cluster) ApplyEnvironment(currentEnvironment, newEnvironment *bit
 					log.Error(err)
 				}
 
+				log.Debugf("Applying Headless service for Couchbase DB Service: %s", service.Name)
 				svc, _ := mapper.HeadlessService()
 				if err = client.Service().Apply(svc); err != nil {
 					log.Error(err)
