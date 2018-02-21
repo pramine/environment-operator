@@ -36,7 +36,7 @@ type Service struct {
 	HTTPSBackend string                  `yaml:"httpsBackend,omitempty" validate:"regexp=^(true|false)*$"`
 	Type         string                  `yaml:"type,omitempty"`
 	Status       ServiceStatus           `yaml:"status,omitempty"`
-	DatabaseType string                  `yaml:"database_type,omitempty" validate:"regexp=^(mongo)*$"`
+	DatabaseType string                  `yaml:"database_type,omitempty" validate:"regexp=^(mongo|couchbase)*$"`
 	GracePeriod  *int64                  `yaml:"graceperiod,omitempty"`
 	// XXX          map[string]interface{} `yaml:",inline"`
 }
@@ -220,10 +220,9 @@ func unmarshalExternalURL(unmarshal func(interface{}) error) ([]string, error) {
 	return urls, nil
 }
 
-
 func (v *Volume) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	vv := &Volume{
-		Modes: "ReadWriteOnce",
+		Modes:        "ReadWriteOnce",
 		provisioning: "dynamic",
 	}
 
