@@ -30,3 +30,6 @@ environments:
             size: 35Gi
             path: /tmp/asd
             modes: ReadWriteOnce
+      - name: couchbase
+        database_type: couchbase
+        version: 5.0.1
