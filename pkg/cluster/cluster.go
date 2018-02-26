@@ -107,7 +107,7 @@ func (cluster *Cluster) ApplyEnvironment(currentEnvironment, newEnvironment *bit
 				log.Debugf("Applying Stateful set for Couchbase DB Service: %s", service.Name)
 
 				c, err := mapper.CbContainers()
-				v, err := mapper.CbVolumeClaimTemplates()
+				v, err := mapper.PersistentVolumeClaims()
 
 				statefulset, _ := mapper.StatefulSet(c, v, nil)
 
