@@ -49,4 +49,8 @@ environments:
             size: 10Gi
             path: /opt/couchbase/var/lib/couchbase/index
             modes: ReadWriteOnce
+          - name: backups
+            size: 100Gi
+            path: /opt/couchbase/var/lib/couchbase/backups
+            modes: ReadWriteOnce
         
