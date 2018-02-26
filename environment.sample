@@ -30,7 +30,7 @@ environments:
             size: 35Gi
             path: /tmp/asd
             modes: ReadWriteOnce
-      - name: couchbase_test_cluster
+      - name: couchbase-test-cluster
         database_type: couchbase
         application: couchbase
         version: 5.0.1
