@@ -32,6 +32,7 @@ environments:
             modes: ReadWriteOnce
       - name: couchbase
         database_type: couchbase
+        application: couchbase
         version: 5.0.1
         replicas: 2
         volumes:
