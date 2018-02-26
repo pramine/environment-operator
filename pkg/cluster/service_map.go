@@ -281,7 +281,7 @@ func (s ServiceMap) AddStatefulSet(statefulset v1beta1_apps.StatefulSet) {
 
 	for _, claim := range statefulset.Spec.VolumeClaimTemplates {
 		vol := bitesize.Volume{
-			Path:  claim.ObjectMeta.Labels["mount_path"],
+			Path:  strings.Replace(claim.ObjectMeta.Labels["mount_path"], "2F", "/", -1),
 			Modes: getAccessModesAsString(claim.Spec.AccessModes),
 			Name:  claim.ObjectMeta.Name,
 			Size:  claim.ObjectMeta.Labels["size"],
