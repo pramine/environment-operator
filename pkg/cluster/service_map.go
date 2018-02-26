@@ -246,9 +246,9 @@ func (s ServiceMap) AddMongoStatefulSet(statefulset v1beta1_apps.StatefulSet) {
 
 func (s ServiceMap) AddStatefulSet(statefulset v1beta1_apps.StatefulSet) {
 
-	biteservice := s.CreateOrGet(statefulset.Spec.Template.ObjectMeta.Labels["Name"])
-	biteservice.Application = statefulset.Spec.Template.ObjectMeta.Labels["Application"]
-	biteservice.Version = statefulset.Spec.Template.ObjectMeta.Labels["Version"]
+	biteservice := s.CreateOrGet(statefulset.Spec.Template.ObjectMeta.Labels["name"])
+	biteservice.Application = statefulset.Spec.Template.ObjectMeta.Labels["application"]
+	biteservice.Version = statefulset.Spec.Template.ObjectMeta.Labels["version"]
 	biteservice.DatabaseType = statefulset.Spec.Template.ObjectMeta.Labels["role"]
 	if statefulset.Spec.Replicas != nil {
 		biteservice.Replicas = int(*statefulset.Spec.Replicas)
