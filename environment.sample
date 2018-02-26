@@ -37,7 +37,6 @@ environments:
         replicas: 2
         port: 8091
         external_url: couchbase.sample-app.domain
-        backend_port: 8091
         volumes:
           - name: var
             size: 5Gi
