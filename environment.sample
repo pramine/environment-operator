@@ -35,6 +35,7 @@ environments:
         application: couchbase
         version: 5.0.1
         replicas: 2
+        port: 8091
         volumes:
           - name: var
             size: 5Gi
