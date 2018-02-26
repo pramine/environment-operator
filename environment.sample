@@ -30,12 +30,13 @@ environments:
             size: 35Gi
             path: /tmp/asd
             modes: ReadWriteOnce
-      - name: couchbase
+      - name: couchbase_test_cluster
         database_type: couchbase
         application: couchbase
         version: 5.0.1
         replicas: 2
         port: 8091
+        external_url: couchbase.sample-app.domain
         volumes:
           - name: var
             size: 5Gi
@@ -53,4 +54,3 @@ environments:
             size: 100Gi
             path: /opt/couchbase/var/lib/couchbase/backups
             modes: ReadWriteOnce
-        
