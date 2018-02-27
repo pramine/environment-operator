@@ -1,6 +1,8 @@
 package translator
 
 import (
+	"math/rand"
+
 	"k8s.io/client-go/pkg/api/v1"
 )
 
@@ -76,37 +78,32 @@ func (w *KubeMapper) CbContainers() ([]v1.Container, error) {
 	return cb, err
 }
 
-// CbVolumeClaimTemplates generates a slice of persistent volume claims required in a couchbase statefulset
-// func (w *KubeMapper) CbVolumeClaimTemplates() ([]v1.PersistentVolumeClaim, error) {
-// 	// add pvcs from service definition
-// 	pvcs, _ := w.PersistentVolumeClaims()
-// 	// add backups pvc
-// 	b := v1.PersistentVolumeClaim{
-// 		ObjectMeta: v1.ObjectMeta{
-// 			Name:      w.BiteService.Name + "-backups",
-// 			Namespace: w.Namespace,
-// 			Annotations: map[string]string{
-// 				"volume.beta.kubernetes.io/storage-class": "aws-ebs",
-// 			},
-// 			Labels: map[string]string{
-// 				"creator":    "pipeline",
-// 				"deployment": w.BiteService.Name,
-// 				"mount_path": "/opt/couchbase/var/lib/couchbase/backups",
-// 				"size":       "100Gi",
-// 			},
-// 		},
-// 		Spec: v1.PersistentVolumeClaimSpec{
-// 			AccessModes: []v1.PersistentVolumeAccessMode{"ReadWriteMany"},
-// 			Resources: v1.ResourceRequirements{
-// 				Requests: v1.ResourceList{
-// 					// ideally this should be dynamically generated size based on data and index volumes and number of replicas
-// 					v1.ResourceName(v1.ResourceStorage): resource.MustParse("100Gi"),
-// 				},
-// 			},
-// 		},
-// 	}
-// 	pvcs = append(pvcs, b)
-// 	return pvcs, nil
-// }
+// CbSecret generates a secret containing admin and client credentials for couchbase
+func (w *KubeMapper) CbSecret() v1.Secret {
+	s := map[string]string{
+		"admin":  randomPassword(12),
+		"client": randomPassword(12),
+	}
 
-//
+	return v1.Secret{
+		ObjectMeta: v1.ObjectMeta{
+			Name:      w.BiteService.Name,
+			Namespace: w.Namespace,
+			Labels: map[string]string{
+				"creator":    "pipeline",
+				"deployment": w.BiteService.Name,
+			},
+		},
+		StringData: s,
+	}
+}
+
+func randomPassword(length int) string {
+	var runes = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
+
+	b := make([]rune, length)
+	for i := range b {
+		b[i] = runes[rand.Intn(len(runes))]
+	}
+	return string(b)
+}

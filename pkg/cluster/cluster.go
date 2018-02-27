@@ -104,6 +104,15 @@ func (cluster *Cluster) ApplyEnvironment(currentEnvironment, newEnvironment *bit
 				}
 
 			case "couchbase":
+				log.Debugf("Generating credentials for Couchbase DB Service: %s", service.Name)
+
+				s := mapper.CbSecret()
+				if !client.Secret().Exists(s.Name) {
+					if err = client.Secret().Apply(s); err != nil {
+						log.Error(err)
+					}
+				}
+
 				log.Debugf("Applying Stateful set for Couchbase DB Service: %s", service.Name)
 
 				c, err := mapper.CbContainers()
