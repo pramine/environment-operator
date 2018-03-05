@@ -108,7 +108,7 @@ func (cluster *Cluster) ApplyEnvironment(currentEnvironment, newEnvironment *bit
 
 				s := mapper.CbSecret()
 				if !client.Secret().Exists(s.Name) {
-					if err = client.Secret().Apply(s); err != nil {
+					if err = client.Secret().Apply(&s); err != nil {
 						log.Error(err)
 					}
 				}
