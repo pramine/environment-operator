@@ -66,6 +66,24 @@ func (w *KubeMapper) CbContainers() ([]v1.Container, error) {
 				{Name: "SIDECAR_NAMESPACE", ValueFrom: &v1.EnvVarSource{
 					FieldRef: &v1.ObjectFieldSelector{FieldPath: "metadata.namespace"}},
 				},
+				{Name: "SIDECAR_ADMINPASSWORD", ValueFrom: &v1.EnvVarSource{
+					SecretKeyRef: &v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: w.BiteService.Name,
+						},
+						Key: "admin_password",
+					},
+				},
+				},
+				{Name: "SIDECAR_CLIENTPASSWORD", ValueFrom: &v1.EnvVarSource{
+					SecretKeyRef: &v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: w.BiteService.Name,
+						},
+						Key: "client_password",
+					},
+				},
+				},
 			},
 			VolumeMounts: []v1.VolumeMount{
 				{
@@ -81,8 +99,8 @@ func (w *KubeMapper) CbContainers() ([]v1.Container, error) {
 // CbSecret generates a secret containing admin and client credentials for couchbase
 func (w *KubeMapper) CbSecret() v1.Secret {
 	s := map[string]string{
-		"admin":  randomPassword(12),
-		"client": randomPassword(12),
+		"admin_password":  randomPassword(12),
+		"client_password": randomPassword(12),
 	}
 
 	return v1.Secret{
