@@ -117,11 +117,11 @@ func (w *KubeMapper) CbSecret() v1.Secret {
 }
 
 func randomPassword(length int) string {
-	var runes = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
+	var chars = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
 
 	b := make([]rune, length)
 	for i := range b {
-		b[i] = runes[rand.Intn(len(runes))]
+		b[i] = chars[rand.Intn(len(chars))]
 	}
 	return string(b)
 }
