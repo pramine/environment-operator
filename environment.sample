@@ -30,27 +30,27 @@ environments:
             size: 35Gi
             path: /tmp/asd
             modes: ReadWriteOnce
-      - name: couchbase-test-cluster
-        database_type: couchbase
-        application: couchbase
-        version: 5.0.1
-        replicas: 2
-        port: 8091
-        external_url: couchbase.sample-app.domain
-        volumes:
-          - name: var
-            size: 5Gi
-            path: /opt/couchbase/var
-            modes: ReadWriteOnce
-          - name: data
-            size: 50Gi
-            path: /opt/couchbase/var/lib/couchbase/data
-            modes: ReadWriteOnce
-          - name: index
-            size: 10Gi
-            path: /opt/couchbase/var/lib/couchbase/index
-            modes: ReadWriteOnce
-          - name: backups
-            size: 100Gi
-            path: /opt/couchbase/var/lib/couchbase/backups
-            modes: ReadWriteOnce
+#      - name: couchbase-test-cluster
+#        database_type: couchbase
+#        application: couchbase
+#        version: 5.0.1
+#        replicas: 2
+#        port: 8091
+#        external_url: couchbase.sample-app.domain
+#        volumes:
+#          - name: var
+#            size: 5Gi
+#            path: /opt/couchbase/var
+#            modes: ReadWriteOnce
+#          - name: data
+#            size: 50Gi
+#            path: /opt/couchbase/var/lib/couchbase/data
+#            modes: ReadWriteOnce
+#          - name: index
+#            size: 10Gi
+#            path: /opt/couchbase/var/lib/couchbase/index
+#            modes: ReadWriteOnce
+#          - name: backups
+#            size: 100Gi
+#            path: /opt/couchbase/var/lib/couchbase/backups
+#            modes: ReadWriteOnce
