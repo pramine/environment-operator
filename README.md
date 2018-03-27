@@ -22,7 +22,7 @@ For those that would rather get an example running and then go back to read the 
 
 *******************
 
-**Other documentation on Environment Operator:**
+**Other documentation on Environment Operator:**  
 
 * [Using Docker Registries (Dockerhub, Google Container Registry)](https://github.com/pearsontechnology/environment-operator/blob/dev/docs/Private_Registry.md)
 * [Deploying a Mongo Statefulset](https://github.com/pearsontechnology/environment-operator/blob/dev/docs/Mongo.md)
