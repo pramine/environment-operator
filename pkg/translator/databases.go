@@ -57,6 +57,13 @@ func (w *KubeMapper) CbContainers() ([]v1.Container, error) {
 			Name:            "couchbase-sidecar",
 			Image:           "pearsontechnology/couchbase-sidecar:latest",
 			ImagePullPolicy: v1.PullAlways,
+			Lifecycle: &v1.Lifecycle{
+				PreStop: &v1.Handler{
+					Exec: &v1.ExecAction{
+						Command: []string{"couchbase-sidecar", "-remove-node", "true"},
+					},
+				},
+			},
 			Env: []v1.EnvVar{
 				{Name: "SIDECAR_SERVICE", Value: w.BiteService.Name},
 				{Name: "SIDECAR_MASTERNODE", Value: w.BiteService.Name + "-0"},
