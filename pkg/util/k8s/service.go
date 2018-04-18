@@ -2,6 +2,7 @@ package k8s
 
 import (
 	"fmt"
+	"log"
 
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/pkg/api/v1"
@@ -62,8 +63,10 @@ func (client *Service) Destroy(name string) error {
 	options := &v1.DeleteOptions{}
 	svc, _ := client.Get(name)
 	if svc.Labels["delete-protected"] != "yes" {
+		log.Println("wtf")
 		return client.Core().Services(client.Namespace).Delete(name, options)
 	}
+	log.Printf("Cannot destroy protected service %s", name)
 	return fmt.Errorf("Cannot destroy protected service %s", name)
 }
 
