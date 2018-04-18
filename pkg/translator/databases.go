@@ -136,8 +136,8 @@ func (w *KubeMapper) CbUIService() *v1.Service {
 				"creator":     "pipeline",
 				"name":        w.BiteService.Name + "-ui",
 				"application": w.BiteService.Application,
-				// otherwise reaper will delete it :( 
-				"delete-protected": "yes"
+				// otherwise reaper will delete it :(
+				"delete-protected": "yes",
 			},
 		},
 		Spec: v1.ServiceSpec{
