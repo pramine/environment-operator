@@ -62,11 +62,11 @@ func (client *Service) Destroy(name string) error {
 	options := &v1.DeleteOptions{}
 	svc, _ := client.Get(name)
 	if val, ok := svc.Labels["delete-protected"]; ok {
-		if val != "yes" {
-			return client.Core().Services(client.Namespace).Delete(name, options)
+		if val == "yes" {
+			return fmt.Errorf("Cannot destroy protected service %s", name)
 		}
 	}
-	return fmt.Errorf("Cannot destroy protected service %s", name)
+	return client.Core().Services(client.Namespace).Delete(name, options)
 }
 
 // List returns the list of k8s services maintained by pipeline
