@@ -145,12 +145,8 @@ func (w *KubeMapper) CbUIService() *v1.Service {
 					Port: 8091,
 				},
 			},
-			ClusterIP: "",
-			Type:      v1.ServiceType("ExternalName"),
-			Selector: map[string]string{
-				"creator":      "pipeline",
-				"externalName": "cb-0" + "." + w.BiteService.Name + "." + w.Namespace + ".svc.cluster.local",
-			},
+			Type:         v1.ServiceType("ExternalName"),
+			ExternalName: "cb-0" + "." + w.BiteService.Name + "." + w.Namespace + ".svc.cluster.local",
 		},
 	}
 }
