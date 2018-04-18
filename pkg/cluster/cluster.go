@@ -78,7 +78,7 @@ func (cluster *Cluster) ApplyEnvironment(currentEnvironment, newEnvironment *bit
 
 			switch service.DatabaseType {
 
-			case "mogo":
+			case "mongo":
 				log.Debugf("Applying Stateful set for Mongo DB Service: %s ", service.Name)
 
 				secret, _ := mapper.MongoInternalSecret()
