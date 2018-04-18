@@ -134,7 +134,7 @@ func (w *KubeMapper) CbUIService() *v1.Service {
 			Namespace: w.Namespace,
 			Labels: map[string]string{
 				"creator":     "pipeline",
-				"name":        w.BiteService.Name,
+				"name":        w.BiteService.Name + "-ui",
 				"application": w.BiteService.Application,
 			},
 		},
