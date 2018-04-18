@@ -130,6 +130,12 @@ func (cluster *Cluster) ApplyEnvironment(currentEnvironment, newEnvironment *bit
 					log.Error(err)
 				}
 
+				log.Debugf("Applying UI service for Couchbase DB Service: %s", service.Name)
+				svc = mapper.CbUIService()
+				if err = client.Service().Apply(svc); err != nil {
+					log.Error(err)
+				}
+
 			default:
 				log.Debugf("Applying Deployment for Service %s ", service.Name)
 				deployment, err := mapper.Deployment()

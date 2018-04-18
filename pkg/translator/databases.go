@@ -123,6 +123,37 @@ func (w *KubeMapper) CbSecret() v1.Secret {
 	}
 }
 
+// CbUIService generates a service object for couchbase UI access
+func (w *KubeMapper) CbUIService() *v1.Service {
+	// This is used as a workaround since the UI requires persistent sessions
+	// and our ingress controller does not support this
+	// so we just point to the first pod in the statefulset for UI access
+	return &v1.Service{
+		ObjectMeta: v1.ObjectMeta{
+			Name:      w.BiteService.Name,
+			Namespace: w.Namespace,
+			Labels: map[string]string{
+				"creator":     "pipeline",
+				"name":        w.BiteService.Name,
+				"application": w.BiteService.Application,
+			},
+		},
+		Spec: v1.ServiceSpec{
+			Ports: []v1.ServicePort{
+				{
+					Name: "cb-ui",
+					Port: 8091,
+				},
+			},
+			Type: v1.ServiceType("ExternalName"),
+			Selector: map[string]string{
+				"creator":      "pipeline",
+				"externalName": w.BiteService.Name + "-0" + "." + w.BiteService.Name + "." + w.Namespace + ".svc.cluster.local",
+			},
+		},
+	}
+}
+
 func randomPassword(length int) string {
 	var chars = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
 
