@@ -130,7 +130,7 @@ func (w *KubeMapper) CbUIService() *v1.Service {
 	// so we just point to the first pod in the statefulset for UI access
 	return &v1.Service{
 		ObjectMeta: v1.ObjectMeta{
-			Name:      w.BiteService.Name,
+			Name:      w.BiteService.Name + "-ui",
 			Namespace: w.Namespace,
 			Labels: map[string]string{
 				"creator":     "pipeline",
@@ -139,12 +139,6 @@ func (w *KubeMapper) CbUIService() *v1.Service {
 			},
 		},
 		Spec: v1.ServiceSpec{
-			Ports: []v1.ServicePort{
-				{
-					Name: "cb-ui",
-					Port: 8091,
-				},
-			},
 			Type:         v1.ServiceType("ExternalName"),
 			ExternalName: "cb-0" + "." + w.BiteService.Name + "." + w.Namespace + ".svc.cluster.local",
 		},
