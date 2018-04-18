@@ -1,6 +1,8 @@
 package k8s
 
 import (
+	"fmt"
+
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/pkg/api/v1"
 )
@@ -58,7 +60,11 @@ func (client *Service) Update(resource *v1.Service) error {
 // Destroy deletes service from the k8 cluster
 func (client *Service) Destroy(name string) error {
 	options := &v1.DeleteOptions{}
-	return client.Core().Services(client.Namespace).Delete(name, options)
+	svc, _ := client.Get(name)
+	if svc.Labels["delete-protected"] != "yes" {
+		return client.Core().Services(client.Namespace).Delete(name, options)
+	}
+	return fmt.Errorf("Cannot destroy protected service %s", name)
 }
 
 // List returns the list of k8s services maintained by pipeline
