@@ -37,6 +37,7 @@ environments:
         replicas: 2
         port: 8091
         external_url: couchbase.sample-app.domain
+        backend: couchbase-test-cluster-ui
         volumes:
           - name: var
             size: 5Gi
