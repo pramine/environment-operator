@@ -61,14 +61,13 @@ func (client *Service) Update(resource *v1.Service) error {
 func (client *Service) Destroy(name string) error {
 	options := &v1.DeleteOptions{}
 	svc, _ := client.Get(name)
-	fmt.Println(svc)
-	// if len(svc.Labels) > 0 {
-	// 	if val, ok := svc.Labels["delete-protected"]; ok {
-	// 		if val == "yes" {
-	// 			return fmt.Errorf("Cannot destroy protected service %s", name)
-	// 		}
-	// 	}
-	// }
+	if len(svc.ObjectMeta.Labels) > 0 {
+		if val, ok := svc.ObjectMeta.Labels["delete-protected"]; ok {
+			if val == "yes" {
+				return fmt.Errorf("Cannot destroy protected service %s", name)
+			}
+		}
+	}
 	return client.Core().Services(client.Namespace).Delete(name, options)
 }
 
