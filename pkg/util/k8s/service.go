@@ -60,17 +60,8 @@ func (client *Service) Update(resource *v1.Service) error {
 // Destroy deletes service from the k8 cluster
 func (client *Service) Destroy(name string) error {
 	options := &v1.DeleteOptions{}
-	svc, err := client.Get(name)
-	if err != nil {
-		meta := svc.GetObjectMeta()
-		labels := meta.GetLabels()
-		if len(labels) > 0 {
-			if val, ok := labels["delete-protected"]; ok {
-				if val == "yes" {
-					return fmt.Errorf("Cannot destroy protected service %s", name)
-				}
-			}
-		}
+	if client.deleteProtected(name) {
+		return fmt.Errorf("Cannot destroy protected service %s", name)
 	}
 	return client.Core().Services(client.Namespace).Delete(name, options)
 }
@@ -82,4 +73,20 @@ func (client *Service) List() ([]v1.Service, error) {
 		return nil, err
 	}
 	return list.Items, nil
+}
+
+func (client *Service) deleteProtected(name string) bool {
+	svc, err := client.Get(name)
+	if err == nil {
+		meta := svc.GetObjectMeta()
+		labels := meta.GetLabels()
+		if len(labels) > 0 {
+			if val, ok := labels["delete-protected"]; ok {
+				if val == "yes" {
+					return true
+				}
+			}
+		}
+	}
+	return false
 }
