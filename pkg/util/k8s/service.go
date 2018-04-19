@@ -2,6 +2,7 @@ package k8s
 
 import (
 	"fmt"
+	"log"
 
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/pkg/api/v1"
@@ -61,6 +62,7 @@ func (client *Service) Update(resource *v1.Service) error {
 func (client *Service) Destroy(name string) error {
 	options := &v1.DeleteOptions{}
 	svc, _ := client.Get(name)
+	log.Println(svc.ObjectMeta)
 	if len(svc.ObjectMeta.Labels) > 0 {
 		if val, ok := svc.ObjectMeta.Labels["delete-protected"]; ok {
 			if val == "yes" {
