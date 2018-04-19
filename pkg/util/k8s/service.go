@@ -3,7 +3,7 @@ package k8s
 import (
 	"fmt"
 
-	"google.golang.org/appengine/log"
+	log "github.com/Sirupsen/logrus"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/pkg/api/v1"
 )
