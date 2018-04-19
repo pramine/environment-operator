@@ -2,7 +2,6 @@ package k8s
 
 import (
 	"fmt"
-	"log"
 
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/pkg/api/v1"
@@ -61,12 +60,15 @@ func (client *Service) Update(resource *v1.Service) error {
 // Destroy deletes service from the k8 cluster
 func (client *Service) Destroy(name string) error {
 	options := &v1.DeleteOptions{}
-	svc, _ := client.Get(name)
-	log.Println(svc.ObjectMeta)
-	if len(svc.ObjectMeta.Labels) > 0 {
-		if val, ok := svc.ObjectMeta.Labels["delete-protected"]; ok {
-			if val == "yes" {
-				return fmt.Errorf("Cannot destroy protected service %s", name)
+	svc, err := client.Get(name)
+	if err != nil {
+		meta := svc.GetObjectMeta()
+		labels := meta.GetLabels()
+		if len(labels) > 0 {
+			if val, ok := labels["delete-protected"]; ok {
+				if val == "yes" {
+					return fmt.Errorf("Cannot destroy protected service %s", name)
+				}
 			}
 		}
 	}
