@@ -9,9 +9,13 @@ This project adheres to [Semantic Versioning](http://semver.org/). Additionally,
 - **Fixed** for any bug fixes.
 - **Security** for any security changes or fixes for vulnerabilities.
 
-### **[0.0.14] **
+### **[0.0.14] 2018-05-03 [RELEASED]**
 
 #### Added
+
+ * Support different types of dynamic volumes (EBS/EFS) [[BITE-2640](https://agile-jira.pearson.com/browse/BITE-2640)]
+ * Added Prometheus metrics endpoint [[BITE-1491](https://agile-jira.pearson.com/browse/BITE-1491)]
+
 #### Changed 
 #### Fixed 
 
