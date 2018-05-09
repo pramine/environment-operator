@@ -19,31 +19,28 @@ package cache
 import (
 	"time"
 
-	"golang.org/x/net/context"
-
-	"k8s.io/apimachinery/pkg/api/meta"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/fields"
-	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/watch"
-	restclient "k8s.io/client-go/rest"
-	"k8s.io/client-go/tools/pager"
+	"k8s.io/client-go/pkg/api"
+	"k8s.io/client-go/pkg/api/meta"
+	"k8s.io/client-go/pkg/fields"
+	"k8s.io/client-go/pkg/runtime"
+	"k8s.io/client-go/pkg/watch"
+	"k8s.io/client-go/rest"
 )
 
 // ListerWatcher is any object that knows how to perform an initial list and start a watch on a resource.
 type ListerWatcher interface {
 	// List should return a list type object; the Items field will be extracted, and the
 	// ResourceVersion field will be used to start the watch in the right place.
-	List(options metav1.ListOptions) (runtime.Object, error)
+	List(options api.ListOptions) (runtime.Object, error)
 	// Watch should begin a watch at the specified version.
-	Watch(options metav1.ListOptions) (watch.Interface, error)
+	Watch(options api.ListOptions) (watch.Interface, error)
 }
 
 // ListFunc knows how to list resources
-type ListFunc func(options metav1.ListOptions) (runtime.Object, error)
+type ListFunc func(options api.ListOptions) (runtime.Object, error)
 
 // WatchFunc knows how to watch resources
-type WatchFunc func(options metav1.ListOptions) (watch.Interface, error)
+type WatchFunc func(options api.ListOptions) (watch.Interface, error)
 
 // ListWatch knows how to list and watch a set of apiserver resources.  It satisfies the ListerWatcher interface.
 // It is a convenience function for users of NewReflector, etc.
@@ -51,40 +48,37 @@ type WatchFunc func(options metav1.ListOptions) (watch.Interface, error)
 type ListWatch struct {
 	ListFunc  ListFunc
 	WatchFunc WatchFunc
-	// DisableChunking requests no chunking for this list watcher. It has no effect in Kubernetes 1.8, but in
-	// 1.9 will allow a controller to opt out of chunking.
-	DisableChunking bool
 }
 
 // Getter interface knows how to access Get method from RESTClient.
 type Getter interface {
-	Get() *restclient.Request
+	Get() *rest.Request
 }
 
 // NewListWatchFromClient creates a new ListWatch from the specified client, resource, namespace and field selector.
 func NewListWatchFromClient(c Getter, resource string, namespace string, fieldSelector fields.Selector) *ListWatch {
-	listFunc := func(options metav1.ListOptions) (runtime.Object, error) {
-		options.FieldSelector = fieldSelector.String()
+	listFunc := func(options api.ListOptions) (runtime.Object, error) {
 		return c.Get().
 			Namespace(namespace).
 			Resource(resource).
-			VersionedParams(&options, metav1.ParameterCodec).
+			VersionedParams(&options, api.ParameterCodec).
+			FieldsSelectorParam(fieldSelector).
 			Do().
 			Get()
 	}
-	watchFunc := func(options metav1.ListOptions) (watch.Interface, error) {
-		options.Watch = true
-		options.FieldSelector = fieldSelector.String()
+	watchFunc := func(options api.ListOptions) (watch.Interface, error) {
 		return c.Get().
+			Prefix("watch").
 			Namespace(namespace).
 			Resource(resource).
-			VersionedParams(&options, metav1.ParameterCodec).
+			VersionedParams(&options, api.ParameterCodec).
+			FieldsSelectorParam(fieldSelector).
 			Watch()
 	}
 	return &ListWatch{ListFunc: listFunc, WatchFunc: watchFunc}
 }
 
-func timeoutFromListOptions(options metav1.ListOptions) time.Duration {
+func timeoutFromListOptions(options api.ListOptions) time.Duration {
 	if options.TimeoutSeconds != nil {
 		return time.Duration(*options.TimeoutSeconds) * time.Second
 	}
@@ -92,17 +86,12 @@ func timeoutFromListOptions(options metav1.ListOptions) time.Duration {
 }
 
 // List a set of apiserver resources
-func (lw *ListWatch) List(options metav1.ListOptions) (runtime.Object, error) {
-	// chunking will become the default for list watchers starting in Kubernetes 1.9, unless
-	// otherwise disabled.
-	if false && !lw.DisableChunking {
-		return pager.New(pager.SimplePageFunc(lw.ListFunc)).List(context.TODO(), options)
-	}
+func (lw *ListWatch) List(options api.ListOptions) (runtime.Object, error) {
 	return lw.ListFunc(options)
 }
 
 // Watch a set of apiserver resources
-func (lw *ListWatch) Watch(options metav1.ListOptions) (watch.Interface, error) {
+func (lw *ListWatch) Watch(options api.ListOptions) (watch.Interface, error) {
 	return lw.WatchFunc(options)
 }
 
@@ -112,7 +101,7 @@ func ListWatchUntil(timeout time.Duration, lw ListerWatcher, conditions ...watch
 		return nil, nil
 	}
 
-	list, err := lw.List(metav1.ListOptions{})
+	list, err := lw.List(api.ListOptions{})
 	if err != nil {
 		return nil, err
 	}
@@ -164,7 +153,7 @@ func ListWatchUntil(timeout time.Duration, lw ListerWatcher, conditions ...watch
 	}
 	currResourceVersion := metaObj.GetResourceVersion()
 
-	watchInterface, err := lw.Watch(metav1.ListOptions{ResourceVersion: currResourceVersion})
+	watchInterface, err := lw.Watch(api.ListOptions{ResourceVersion: currResourceVersion})
 	if err != nil {
 		return nil, err
 	}

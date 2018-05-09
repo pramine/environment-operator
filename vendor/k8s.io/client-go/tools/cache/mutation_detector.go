@@ -24,9 +24,9 @@ import (
 	"sync"
 	"time"
 
-	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/util/diff"
-	"k8s.io/client-go/kubernetes/scheme"
+	"k8s.io/client-go/pkg/api"
+	"k8s.io/client-go/pkg/runtime"
+	"k8s.io/client-go/pkg/util/diff"
 )
 
 var mutationDetectionEnabled = false
@@ -79,15 +79,17 @@ type cacheObj struct {
 
 func (d *defaultCacheMutationDetector) Run(stopCh <-chan struct{}) {
 	// we DON'T want protection from panics.  If we're running this code, we want to die
-	for {
-		d.CompareObjects()
+	go func() {
+		for {
+			d.CompareObjects()
 
-		select {
-		case <-stopCh:
-			return
-		case <-time.After(d.period):
+			select {
+			case <-stopCh:
+				return
+			case <-time.After(d.period):
+			}
 		}
-	}
+	}()
 }
 
 // AddObject makes a deep copy of the object for later comparison.  It only works on runtime.Object
@@ -100,7 +102,7 @@ func (d *defaultCacheMutationDetector) AddObject(obj interface{}) {
 		return
 	}
 
-	copiedObj, err := scheme.Scheme.Copy(obj.(runtime.Object))
+	copiedObj, err := api.Scheme.Copy(obj.(runtime.Object))
 	if err != nil {
 		return
 	}

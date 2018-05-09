@@ -22,10 +22,10 @@ import (
 	"testing"
 	"time"
 
-	"k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/util/clock"
-	"k8s.io/apimachinery/pkg/util/diff"
+	"k8s.io/client-go/pkg/api/unversioned"
+	"k8s.io/client-go/pkg/api/v1"
+	"k8s.io/client-go/pkg/util/clock"
+	"k8s.io/client-go/pkg/util/diff"
 )
 
 func makeObjectReference(kind, name, namespace string) v1.ObjectReference {
@@ -35,12 +35,11 @@ func makeObjectReference(kind, name, namespace string) v1.ObjectReference {
 		Namespace:  namespace,
 		UID:        "C934D34AFB20242",
 		APIVersion: "version",
-		FieldPath:  "spec.containers{mycontainer}",
 	}
 }
 
 func makeEvent(reason, message string, involvedObject v1.ObjectReference) v1.Event {
-	eventTime := metav1.Now()
+	eventTime := unversioned.Now()
 	event := v1.Event{
 		Reason:         reason,
 		Message:        message,
@@ -102,7 +101,7 @@ func validateEvent(messagePrefix string, actualEvent *v1.Event, expectedEvent *v
 	}
 	actualFirstTimestamp := recvEvent.FirstTimestamp
 	actualLastTimestamp := recvEvent.LastTimestamp
-	if actualFirstTimestamp.Equal(&actualLastTimestamp) {
+	if actualFirstTimestamp.Equal(actualLastTimestamp) {
 		if expectCompression {
 			t.Errorf("%v - FirstTimestamp (%q) and LastTimestamp (%q) must be different to indicate event compression happened, but were the same. Actual Event: %#v", messagePrefix, actualFirstTimestamp, actualLastTimestamp, recvEvent)
 		}
@@ -158,11 +157,10 @@ func TestEventAggregatorByReasonFunc(t *testing.T) {
 
 // TestEventAggregatorByReasonMessageFunc validates the proper output for an aggregate message
 func TestEventAggregatorByReasonMessageFunc(t *testing.T) {
-	expectedPrefix := "(combined from similar events): "
+	expected := "(events with common reason combined)"
 	event1 := makeEvent("end-of-world", "it was fun", makeObjectReference("Pod", "pod1", "other"))
-	actual := EventAggregatorByReasonMessageFunc(&event1)
-	if !strings.HasPrefix(actual, expectedPrefix) {
-		t.Errorf("Expected %v to begin with prefix %v", actual, expectedPrefix)
+	if actual := EventAggregatorByReasonMessageFunc(&event1); expected != actual {
+		t.Errorf("Expected %v got %v", expected, actual)
 	}
 }
 
@@ -172,16 +170,12 @@ func TestEventCorrelator(t *testing.T) {
 	duplicateEvent := makeEvent("duplicate", "me again", makeObjectReference("Pod", "my-pod", "my-ns"))
 	uniqueEvent := makeEvent("unique", "snowflake", makeObjectReference("Pod", "my-pod", "my-ns"))
 	similarEvent := makeEvent("similar", "similar message", makeObjectReference("Pod", "my-pod", "my-ns"))
-	similarEvent.InvolvedObject.FieldPath = "spec.containers{container1}"
 	aggregateEvent := makeEvent(similarEvent.Reason, EventAggregatorByReasonMessageFunc(&similarEvent), similarEvent.InvolvedObject)
-	similarButDifferentContainerEvent := similarEvent
-	similarButDifferentContainerEvent.InvolvedObject.FieldPath = "spec.containers{container2}"
 	scenario := map[string]struct {
 		previousEvents  []v1.Event
 		newEvent        v1.Event
 		expectedEvent   v1.Event
 		intervalSeconds int
-		expectedSkip    bool
 	}{
 		"create-a-single-event": {
 			previousEvents:  []v1.Event{},
@@ -199,13 +193,7 @@ func TestEventCorrelator(t *testing.T) {
 			previousEvents:  makeEvents(defaultAggregateMaxEvents, duplicateEvent),
 			newEvent:        duplicateEvent,
 			expectedEvent:   setCount(duplicateEvent, defaultAggregateMaxEvents+1),
-			intervalSeconds: 30, // larger interval induces aggregation but not spam.
-		},
-		"the-same-event-is-spam-if-happens-too-frequently": {
-			previousEvents:  makeEvents(defaultSpamBurst+1, duplicateEvent),
-			newEvent:        duplicateEvent,
-			expectedSkip:    true,
-			intervalSeconds: 1,
+			intervalSeconds: 5,
 		},
 		"create-many-unique-events": {
 			previousEvents:  makeUniqueEvents(30),
@@ -225,12 +213,6 @@ func TestEventCorrelator(t *testing.T) {
 			expectedEvent:   setCount(aggregateEvent, 2),
 			intervalSeconds: 5,
 		},
-		"events-from-different-containers-do-not-aggregate": {
-			previousEvents:  makeEvents(1, similarButDifferentContainerEvent),
-			newEvent:        similarEvent,
-			expectedEvent:   setCount(similarEvent, 1),
-			intervalSeconds: 5,
-		},
 		"similar-events-whose-interval-is-greater-than-aggregate-interval-do-not-aggregate": {
 			previousEvents:  makeSimilarEvents(defaultAggregateMaxEvents-1, similarEvent, similarEvent.Message),
 			newEvent:        similarEvent,
@@ -245,21 +227,18 @@ func TestEventCorrelator(t *testing.T) {
 		correlator := NewEventCorrelator(&clock)
 		for i := range testInput.previousEvents {
 			event := testInput.previousEvents[i]
-			now := metav1.NewTime(clock.Now())
+			now := unversioned.NewTime(clock.Now())
 			event.FirstTimestamp = now
 			event.LastTimestamp = now
 			result, err := correlator.EventCorrelate(&event)
 			if err != nil {
 				t.Errorf("scenario %v: unexpected error playing back prevEvents %v", testScenario, err)
 			}
-			// if we are skipping the event, we can avoid updating state
-			if !result.Skip {
-				correlator.UpdateState(result.Event)
-			}
+			correlator.UpdateState(result.Event)
 		}
 
 		// update the input to current clock value
-		now := metav1.NewTime(clock.Now())
+		now := unversioned.NewTime(clock.Now())
 		testInput.newEvent.FirstTimestamp = now
 		testInput.newEvent.LastTimestamp = now
 		result, err := correlator.EventCorrelate(&testInput.newEvent)
@@ -267,18 +246,6 @@ func TestEventCorrelator(t *testing.T) {
 			t.Errorf("scenario %v: unexpected error correlating input event %v", testScenario, err)
 		}
 
-		// verify we did not get skip from filter function unexpectedly...
-		if result.Skip != testInput.expectedSkip {
-			t.Errorf("scenario %v: expected skip %v, but got %v", testScenario, testInput.expectedSkip, result.Skip)
-			continue
-		}
-
-		// we wanted to actually skip, so no event is needed to validate
-		if testInput.expectedSkip {
-			continue
-		}
-
-		// validate event
 		_, err = validateEvent(testScenario, result.Event, &testInput.expectedEvent, t)
 		if err != nil {
 			t.Errorf("scenario %v: unexpected error validating result %v", testScenario, err)
