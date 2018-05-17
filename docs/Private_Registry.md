@@ -342,3 +342,8 @@ spec:
 ```
 
 
+## ECR Amazon Elastic Container Registry
+
+For images hosted on ECR, imagePullSecrets are not required. Kubernetes has native support for ECR and kubelet will authenticate with the registry automatically. You must be running in AWS (obviously), have the aws cloud provider enabled and the correct IAM permissions assigned to all you nodes as documented [here](https://kubernetes.io/docs/concepts/containers/images/) (Using AWS EC2 Container Registry section)
+
+You must set EO's DOCKER_REGISTRY environment variable to ACCOUNT.dkr.ecr.REGION.amazonaws.com and ensure that images pushed to this registry follow the naming convention that EO uses to find them. (ACCOUNT.dkr.ecr.REGION.amazonaws.com/project/application/version)
