@@ -5,8 +5,8 @@ import (
 	"strings"
 
 	"github.com/pearsontechnology/environment-operator/pkg/bitesize"
-	"github.com/pearsontechnology/environment-operator/pkg/k8_extensions"
-	"k8s.io/client-go/pkg/api/resource"
+	"github.com/pearsontechnology/environment-operator/pkg/k8_extensions"	
+	"k8s.io/apimachinery/pkg/api/resource"
 	"k8s.io/client-go/pkg/api/v1"
 	v1beta1_apps "k8s.io/client-go/pkg/apis/apps/v1beta1"
 	autoscale_v1 "k8s.io/client-go/pkg/apis/autoscaling/v1"

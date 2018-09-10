@@ -5,6 +5,7 @@ import (
 
 	"github.com/pearsontechnology/environment-operator/pkg/bitesize"
 
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/pkg/api/v1"
 	v1beta1_apps "k8s.io/client-go/pkg/apis/apps/v1beta1"
 	v1beta1_ext "k8s.io/client-go/pkg/apis/extensions/v1beta1"
@@ -78,7 +79,7 @@ func healthCheckStatefulset(statefulset v1beta1_apps.StatefulSet) *bitesize.Heal
 	}
 	return retval
 }
-func getLabel(metadata v1.ObjectMeta, label string) string {
+func getLabel(metadata metav1.ObjectMeta, label string) string {
 	//if (len(resource.ObjectMeta.Labels) > 0) &&
 	//		(resource.ObjectMeta.Labels[label] != "") {
 	//		return resource.ObjectMeta.Labels[label]

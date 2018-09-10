@@ -4,7 +4,7 @@ import (
 	//	log "github.com/Sirupsen/logrus"
 	"github.com/kylelemons/godebug/pretty"
 	"github.com/pearsontechnology/environment-operator/pkg/bitesize"
-	"k8s.io/client-go/pkg/api/resource"
+	"k8s.io/apimachinery/pkg/api/resource"
 )
 
 // Compare creates a changeMap for the diff between environment configs and returns a boolean if changes were detected
@@ -25,8 +25,8 @@ func Compare(config1, config2 bitesize.Environment) bool {
 	c2.Name = ""
 
 	compareConfig := &pretty.Config{
-		Diffable:       true,
-		SkipZeroFields: true,
+		Diffable:          true,
+		SkipZeroFields:    true,
 		IncludeUnexported: false,
 	}
 

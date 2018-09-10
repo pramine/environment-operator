@@ -3,8 +3,8 @@ package k8s
 import (
 	"testing"
 
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes/fake"
-	"k8s.io/client-go/pkg/api/v1"
 	autoscale_v1 "k8s.io/client-go/pkg/apis/autoscaling/v1"
 )
 
@@ -15,7 +15,7 @@ func TestHPACreate(t *testing.T) {
 	*target = 50
 	fakeHPAClient := createFakeHPAClient()
 	newHPA := &autoscale_v1.HorizontalPodAutoscaler{
-		ObjectMeta: v1.ObjectMeta{
+		ObjectMeta: metav1.ObjectMeta{
 			Name:      "newhpa",
 			Namespace: "sample",
 			Labels: map[string]string{
@@ -51,7 +51,7 @@ func TestHPAUpdate(t *testing.T) {
 	var min, target int32 = 1, 50
 	fakeHPAClient := createFakeHPAClient()
 	updatedHPA := &autoscale_v1.HorizontalPodAutoscaler{
-		ObjectMeta: v1.ObjectMeta{
+		ObjectMeta: metav1.ObjectMeta{
 			Name:      "fakehpa",
 			Namespace: "sample",
 			Labels: map[string]string{
@@ -90,7 +90,7 @@ func TestHPAApplyNew(t *testing.T) {
 	var min, target int32 = 2, 75
 	fakeHPAClient := createFakeHPAClient()
 	newHPA := &autoscale_v1.HorizontalPodAutoscaler{
-		ObjectMeta: v1.ObjectMeta{
+		ObjectMeta: metav1.ObjectMeta{
 			Name:      "newhpa",
 			Namespace: "sample",
 			Labels: map[string]string{
@@ -125,7 +125,7 @@ func TestHPAApplyExisting(t *testing.T) {
 	var min, target int32 = 1, 50
 	fakeHPAClient := createFakeHPAClient()
 	newHPA := &autoscale_v1.HorizontalPodAutoscaler{
-		ObjectMeta: v1.ObjectMeta{
+		ObjectMeta: metav1.ObjectMeta{
 			Name:      "fakehpa",
 			Namespace: "sample",
 			Labels: map[string]string{
@@ -212,7 +212,7 @@ func createFakeHPAClientset() *fake.Clientset {
 	var min, target int32 = 1, 50
 	return fake.NewSimpleClientset(
 		&autoscale_v1.HorizontalPodAutoscaler{
-			ObjectMeta: v1.ObjectMeta{
+			ObjectMeta: metav1.ObjectMeta{
 				Name:      "fakehpa",
 				Namespace: "sample",
 				Labels: map[string]string{

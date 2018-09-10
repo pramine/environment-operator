@@ -3,8 +3,8 @@ package k8s
 import (
 	"fmt"
 
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/pkg/api/v1"
 	"k8s.io/client-go/pkg/apis/extensions/v1beta1"
 )
 
@@ -19,7 +19,7 @@ func (client *Deployment) Get(name string) (*v1beta1.Deployment, error) {
 	return client.
 		Extensions().
 		Deployments(client.Namespace).
-		Get(name)
+		Get(name, metav1.GetOptions{})
 }
 
 // Exist returns boolean value if deployment exists in k8s
@@ -75,7 +75,7 @@ func (client *Deployment) Create(deployment *v1beta1.Deployment) error {
 
 // Destroy deletes deployment from the k8 cluster
 func (client *Deployment) Destroy(name string) error {
-	options := &v1.DeleteOptions{}
+	options := &metav1.DeleteOptions{}
 	return client.Extensions().Deployments(client.Namespace).Delete(name, options)
 }
 

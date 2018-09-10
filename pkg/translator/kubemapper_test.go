@@ -6,7 +6,8 @@ import (
 	"testing"
 
 	"github.com/pearsontechnology/environment-operator/pkg/bitesize"
-	"k8s.io/client-go/pkg/api/resource"
+	"k8s.io/apimachinery/pkg/api/resource"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/pkg/api/v1"
 )
 
@@ -197,7 +198,7 @@ func TestTranslatorPVCs(t *testing.T) {
 	generatedPVCs, _ := w.PersistentVolumeClaims()
 	expectedPVCs := []v1.PersistentVolumeClaim{
 		{
-			ObjectMeta: v1.ObjectMeta{
+			ObjectMeta: metav1.ObjectMeta{
 				Name:      "vol1",
 				Namespace: "test",
 				Labels: map[string]string{
@@ -221,7 +222,7 @@ func TestTranslatorPVCs(t *testing.T) {
 			},
 		},
 		{
-			ObjectMeta: v1.ObjectMeta{
+			ObjectMeta: metav1.ObjectMeta{
 				Name:      "vol2",
 				Namespace: "test",
 				Labels: map[string]string{

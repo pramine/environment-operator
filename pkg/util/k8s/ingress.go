@@ -1,8 +1,8 @@
 package k8s
 
 import (
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/pkg/api/v1"
 	"k8s.io/client-go/pkg/apis/extensions/v1beta1"
 )
 
@@ -17,7 +17,7 @@ func (client *Ingress) Get(name string) (*v1beta1.Ingress, error) {
 	return client.
 		Extensions().
 		Ingresses(client.Namespace).
-		Get(name)
+		Get(name, getOptions())
 }
 
 // Exist returns boolean value if ingress exists in k8s
@@ -61,8 +61,7 @@ func (client *Ingress) Create(resource *v1beta1.Ingress) error {
 
 // Destroy deletes ingress from the k8 cluster
 func (client *Ingress) Destroy(name string) error {
-	options := &v1.DeleteOptions{}
-	return client.Extensions().Ingresses(client.Namespace).Delete(name, options)
+	return client.Extensions().Ingresses(client.Namespace).Delete(name, &metav1.DeleteOptions{})
 }
 
 // List returns the list of k8s services maintained by pipeline

@@ -5,8 +5,8 @@ import (
 
 	"github.com/pearsontechnology/environment-operator/pkg/bitesize"
 	"github.com/pearsontechnology/environment-operator/pkg/cluster"
-
 	faketpr "github.com/pearsontechnology/environment-operator/pkg/util/k8s/fake"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes/fake"
 	"k8s.io/client-go/pkg/api/v1"
 	"k8s.io/client-go/pkg/apis/extensions/v1beta1"
@@ -15,12 +15,12 @@ import (
 func TestDeleteService(t *testing.T) {
 	c := fake.NewSimpleClientset(
 		&v1.Namespace{
-			ObjectMeta: v1.ObjectMeta{
+			ObjectMeta: metav1.ObjectMeta{
 				Name: "sample",
 			},
 		},
 		&v1beta1.Deployment{
-			ObjectMeta: v1.ObjectMeta{
+			ObjectMeta: metav1.ObjectMeta{
 				Name:      "abr",
 				Namespace: "sample",
 				Labels: map[string]string{
@@ -29,7 +29,7 @@ func TestDeleteService(t *testing.T) {
 			},
 			Spec: v1beta1.DeploymentSpec{
 				Template: v1.PodTemplateSpec{
-					ObjectMeta: v1.ObjectMeta{
+					ObjectMeta: metav1.ObjectMeta{
 						Name:      "test",
 						Namespace: "test",
 						Labels: map[string]string{
@@ -65,7 +65,7 @@ func TestDeleteService(t *testing.T) {
 
 	reaper.Cleanup(cfg)
 
-	if d, err := wrapper.Extensions().Deployments("sample").Get("abr"); err == nil {
+	if d, err := wrapper.Extensions().Deployments("sample").Get("abr", metav1.GetOptions{}); err == nil {
 		t.Errorf("Expected deployment nil, got: %+v", d)
 	}
 

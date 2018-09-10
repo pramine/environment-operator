@@ -1,8 +1,8 @@
 package k8s
 
 import (
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/pkg/api/v1"
 	autoscale_v1 "k8s.io/client-go/pkg/apis/autoscaling/v1"
 )
 
@@ -14,12 +14,12 @@ type HorizontalPodAutoscaler struct {
 
 // Get returns hpa object from k8s by name
 func (client *HorizontalPodAutoscaler) Get(name string) (*autoscale_v1.HorizontalPodAutoscaler, error) {
-	return client.AutoscalingV1().HorizontalPodAutoscalers(client.Namespace).Get(name)
+	return client.AutoscalingV1().HorizontalPodAutoscalers(client.Namespace).Get(name, metav1.GetOptions{})
 }
 
 // Exist returns boolean value if hpa exists in k8s
 func (client *HorizontalPodAutoscaler) Exist(name string) bool {
-	_, err := client.AutoscalingV1().HorizontalPodAutoscalers(client.Namespace).Get(name)
+	_, err := client.AutoscalingV1().HorizontalPodAutoscalers(client.Namespace).Get(name, metav1.GetOptions{})
 	return err == nil
 }
 
@@ -49,8 +49,7 @@ func (client *HorizontalPodAutoscaler) Update(resource *autoscale_v1.HorizontalP
 
 // Destroy deletes service from the k8 cluster
 func (client *HorizontalPodAutoscaler) Destroy(name string) error {
-	options := &v1.DeleteOptions{}
-	return client.AutoscalingV1().HorizontalPodAutoscalers(client.Namespace).Delete(name, options)
+	return client.AutoscalingV1().HorizontalPodAutoscalers(client.Namespace).Delete(name, &metav1.DeleteOptions{})
 }
 
 // List returns the list of k8s hpa

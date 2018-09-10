@@ -18,7 +18,7 @@ fi
 IMAGE_TAG=${IMAGE_TAG:-$(git rev-parse HEAD)}
 FULL_IMAGE="${IMAGE}:${IMAGE_TAG}"
 
-BUILD_IMAGE="golang:1.8-alpine"
+BUILD_IMAGE="golang:1.10-alpine"
 
 bin_dir="_output/bin"
 mkdir -p ${bin_dir} || true

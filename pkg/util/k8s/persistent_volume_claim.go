@@ -2,6 +2,7 @@ package k8s
 
 import (
 	log "github.com/Sirupsen/logrus"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/pkg/api/v1"
 )
@@ -14,7 +15,7 @@ type PersistentVolumeClaim struct {
 
 // Get returns pvc object from the k8s by name
 func (client *PersistentVolumeClaim) Get(name string) (*v1.PersistentVolumeClaim, error) {
-	return client.Core().PersistentVolumeClaims(client.Namespace).Get(name)
+	return client.Core().PersistentVolumeClaims(client.Namespace).Get(name, metav1.GetOptions{})
 }
 
 // Exist returns boolean value if pvc exists in k8s
@@ -65,8 +66,7 @@ func (client *PersistentVolumeClaim) Update(resource *v1.PersistentVolumeClaim) 
 
 // Destroy deletes pvc from the k8 cluster
 func (client *PersistentVolumeClaim) Destroy(name string) error {
-	options := &v1.DeleteOptions{}
-	return client.Core().PersistentVolumeClaims(client.Namespace).Delete(name, options)
+	return client.Core().PersistentVolumeClaims(client.Namespace).Delete(name, &metav1.DeleteOptions{})
 }
 
 // List returns the list of k8s services maintained by pipeline
