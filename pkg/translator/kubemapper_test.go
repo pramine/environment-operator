@@ -74,6 +74,33 @@ func TestDockerPullSecrets(t *testing.T) {
 	}
 }
 
+func TestVolumeFromSecret(t *testing.T) {
+	w := BuildKubeMapper()
+	w.BiteService.Name = "test"
+	w.Namespace = "test"
+	w.BiteService.Volumes = []bitesize.Volume{
+		{Name: "internal-ca", Path: "/tmp/vol1", Type: "secret"},
+	}
+	generatedVolumes, _ := w.volumes()
+
+	v := w.BiteService.Volumes
+
+	expectedVolumes := [] v1.Volume{
+		{
+			Name: v[0].Name,
+			VolumeSource: v1.VolumeSource{
+				Secret: &v1.SecretVolumeSource{
+					SecretName: v[0].Name,
+				},
+			},
+		},
+	}
+
+	if !reflect.DeepEqual(generatedVolumes, expectedVolumes) {
+		t.Errorf("incorrect volumes: %v generated; expecting: %v ", generatedVolumes, expectedVolumes)
+	}
+}
+
 func testTranslatorIngressHTTPSBackend(t *testing.T) {
 	w := BuildKubeMapper()
 	w.BiteService.HTTPSBackend = "true"
