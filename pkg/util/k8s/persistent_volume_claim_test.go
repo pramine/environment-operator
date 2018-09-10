@@ -3,6 +3,7 @@ package k8s
 import (
 	"testing"
 
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes/fake"
 	"k8s.io/client-go/pkg/api/v1"
 )
@@ -39,7 +40,7 @@ func TestPVCExist(t *testing.T) {
 func TestPVCApplyNew(t *testing.T) {
 	client := createPVC()
 	newResource := &v1.PersistentVolumeClaim{
-		ObjectMeta: v1.ObjectMeta{
+		ObjectMeta: metav1.ObjectMeta{
 			Name:      "new",
 			Namespace: "sample",
 			Labels: map[string]string{
@@ -59,7 +60,7 @@ func TestPVCApplyNew(t *testing.T) {
 func TestPVCApplyExisting(t *testing.T) {
 	client := createPVC()
 	existing := &v1.PersistentVolumeClaim{
-		ObjectMeta: v1.ObjectMeta{
+		ObjectMeta: metav1.ObjectMeta{
 			Name:      "test",
 			Namespace: "sample",
 			Labels: map[string]string{
@@ -75,7 +76,7 @@ func TestPVCApplyExisting(t *testing.T) {
 func TestPVCUpdateNonexisting(t *testing.T) {
 	client := createPVC()
 	resource := &v1.PersistentVolumeClaim{
-		ObjectMeta: v1.ObjectMeta{
+		ObjectMeta: metav1.ObjectMeta{
 			Name:      "nonexisting",
 			Namespace: "sample",
 			Labels: map[string]string{
@@ -98,7 +99,7 @@ func createPVC() PersistentVolumeClaim {
 func createPVCClient() *fake.Clientset {
 	return fake.NewSimpleClientset(
 		&v1.PersistentVolumeClaim{
-			ObjectMeta: v1.ObjectMeta{
+			ObjectMeta: metav1.ObjectMeta{
 				Name:      "test",
 				Namespace: "sample",
 				Labels: map[string]string{

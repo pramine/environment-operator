@@ -2,6 +2,7 @@ package k8s
 
 import (
 	log "github.com/Sirupsen/logrus"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/pkg/api/v1"
 )
@@ -14,14 +15,14 @@ type Secret struct {
 
 // List returns the list of k8s secrets maintained by pipeline for provided client
 func (client *Secret) List() ([]v1.Secret, error) {
-	list, err := client.Core().Secrets(client.Namespace).List(v1.ListOptions{})
+	list, err := client.Core().Secrets(client.Namespace).List(metav1.ListOptions{})
 	if err != nil {
 		return nil, err
 	}
 	return list.Items, nil
 }
 
-// Check if the secret exists in the namespace
+// Exists checks if the secret exists in the namespace
 func (client *Secret) Exists(secretname string) bool {
 
 	secrets, err := client.List()
@@ -71,5 +72,5 @@ func (client *Secret) Update(resource *v1.Secret) error {
 
 // Get returns secret object from the k8s by name
 func (client *Secret) Get(name string) (*v1.Secret, error) {
-	return client.Core().Secrets(client.Namespace).Get(name)
+	return client.Core().Secrets(client.Namespace).Get(name, metav1.GetOptions{})
 }

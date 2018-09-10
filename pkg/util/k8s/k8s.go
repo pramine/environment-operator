@@ -1,12 +1,13 @@
 package k8s
 
 import (
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/apimachinery/pkg/runtime/serializer"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/pkg/api"
-	"k8s.io/client-go/pkg/api/unversioned"
 	"k8s.io/client-go/pkg/api/v1"
-	"k8s.io/client-go/pkg/runtime"
-	"k8s.io/client-go/pkg/runtime/serializer"
 	"k8s.io/client-go/rest"
 )
 
@@ -42,7 +43,7 @@ func TPRClient() (*rest.RESTClient, error) {
 	if err != nil {
 		return nil, err
 	}
-	config.GroupVersion = &unversioned.GroupVersion{
+	config.GroupVersion = &schema.GroupVersion{
 		Group:   "prsn.io",
 		Version: "v1",
 	}
@@ -128,11 +129,16 @@ func (c *Client) ThirdPartyResource(kind string) *ThirdPartyResource {
 	}
 }
 
-func listOptions() v1.ListOptions {
-	return v1.ListOptions{
+func listOptions() metav1.ListOptions {
+	return metav1.ListOptions{
 		LabelSelector: "creator=pipeline",
 	}
 }
+
+func getOptions() metav1.GetOptions {
+	return metav1.GetOptions{}
+}
+
 func logOptions() *v1.PodLogOptions {
 	return &v1.PodLogOptions{
 		//SinceSeconds: &[]int64{300}[0], //Gets last 5 minutes of logs

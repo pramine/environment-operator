@@ -1,6 +1,7 @@
 package k8s
 
 import (
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/pkg/api/v1"
 )
@@ -13,7 +14,7 @@ type Service struct {
 
 // Get returns service object from the k8s by name
 func (client *Service) Get(name string) (*v1.Service, error) {
-	return client.Core().Services(client.Namespace).Get(name)
+	return client.Core().Services(client.Namespace).Get(name, getOptions())
 }
 
 // Exist returns boolean value if pvc exists in k8s
@@ -57,8 +58,7 @@ func (client *Service) Update(resource *v1.Service) error {
 
 // Destroy deletes service from the k8 cluster
 func (client *Service) Destroy(name string) error {
-	options := &v1.DeleteOptions{}
-	return client.Core().Services(client.Namespace).Delete(name, options)
+	return client.Core().Services(client.Namespace).Delete(name, &metav1.DeleteOptions{})
 }
 
 // List returns the list of k8s services maintained by pipeline

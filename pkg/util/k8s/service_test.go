@@ -3,6 +3,7 @@ package k8s
 import (
 	"testing"
 
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes/fake"
 	"k8s.io/client-go/pkg/api/v1"
 )
@@ -39,7 +40,7 @@ func TestServiceExist(t *testing.T) {
 func TestServiceApplyNew(t *testing.T) {
 	client := createService()
 	newResource := &v1.Service{
-		ObjectMeta: v1.ObjectMeta{
+		ObjectMeta: metav1.ObjectMeta{
 			Name:      "new",
 			Namespace: "sample",
 			Labels: map[string]string{
@@ -59,7 +60,7 @@ func TestServiceApplyNew(t *testing.T) {
 func TestServiceApplyExisting(t *testing.T) {
 	client := createService()
 	existing := &v1.Service{
-		ObjectMeta: v1.ObjectMeta{
+		ObjectMeta: metav1.ObjectMeta{
 			Name:      "test",
 			Namespace: "sample",
 			Labels: map[string]string{
@@ -75,7 +76,7 @@ func TestServiceApplyExisting(t *testing.T) {
 func TestServiceUpdateNonexisting(t *testing.T) {
 	client := createService()
 	resource := &v1.Service{
-		ObjectMeta: v1.ObjectMeta{
+		ObjectMeta: metav1.ObjectMeta{
 			Name:      "nonexisting",
 			Namespace: "sample",
 			Labels: map[string]string{
@@ -127,7 +128,7 @@ func TestServiceListWrongNs(t *testing.T) {
 func createService() Service {
 	f := fake.NewSimpleClientset(
 		&v1.Service{
-			ObjectMeta: v1.ObjectMeta{
+			ObjectMeta: metav1.ObjectMeta{
 				Name:      "test",
 				Namespace: "sample",
 				Labels: map[string]string{

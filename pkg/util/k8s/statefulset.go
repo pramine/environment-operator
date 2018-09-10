@@ -1,8 +1,8 @@
 package k8s
 
 import (
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/pkg/api/v1"
 	"k8s.io/client-go/pkg/apis/apps/v1beta1"
 )
 
@@ -16,7 +16,7 @@ type StatefulSet struct {
 func (client *StatefulSet) Get(name string) (*v1beta1.StatefulSet, error) {
 	return client.Apps().
 		StatefulSets(client.Namespace).
-		Get(name)
+		Get(name, getOptions())
 }
 
 // Exist returns boolean value if statefulset exists in k8s
@@ -34,12 +34,7 @@ func (client *StatefulSet) Apply(resource *v1beta1.StatefulSet) error {
 
 }
 
-//Only allow updates to the replica field of a statefulset
-// K8s 1.5.7 does not support upgrades to Statefulsets. Forbidden: updates to statefulset spec for fields other than 'replicas' are forbidden.
-//Other updates will be ignored until the following are implemented and we upgrade our k8s
-//https://github.com/kubernetes/kubernetes/issues/41015
-//https://github.com/kubernetes/kubernetes/pull/46669
-
+// Update stateful set
 func (client *StatefulSet) Update(resource *v1beta1.StatefulSet) error {
 	current, err := client.Get(resource.Name)
 	if err != nil {
@@ -74,8 +69,7 @@ func (client *StatefulSet) Create(resource *v1beta1.StatefulSet) error {
 
 // Destroy deletes statefulset from the k8 cluster
 func (client *StatefulSet) Destroy(name string) error {
-	options := &v1.DeleteOptions{}
-	return client.Apps().StatefulSets(client.Namespace).Delete(name, options)
+	return client.Apps().StatefulSets(client.Namespace).Delete(name, &metav1.DeleteOptions{})
 }
 
 // List returns the list of k8s services maintained by pipeline

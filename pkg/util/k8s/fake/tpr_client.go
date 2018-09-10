@@ -4,19 +4,20 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	ext "github.com/pearsontechnology/environment-operator/pkg/k8_extensions"
 	"io"
 	"io/ioutil"
-	"k8s.io/client-go/pkg/api"
-	"k8s.io/client-go/pkg/api/unversioned"
-	"k8s.io/client-go/pkg/apimachinery"
-	"k8s.io/client-go/pkg/apimachinery/registered"
-	"k8s.io/client-go/pkg/runtime"
-	"k8s.io/client-go/pkg/runtime/serializer"
-	"k8s.io/client-go/rest/fake"
-	"k8s.io/client-go/tools/cache"
 	"net/http"
 	"strings"
+
+	ext "github.com/pearsontechnology/environment-operator/pkg/k8_extensions"
+	"k8s.io/apimachinery/pkg/apimachinery"
+	"k8s.io/apimachinery/pkg/apimachinery/registered"
+	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/apimachinery/pkg/runtime/serializer"
+	"k8s.io/client-go/pkg/api"
+	"k8s.io/client-go/rest/fake"
+	"k8s.io/client-go/tools/cache"
 )
 
 type fakeTPR struct {
@@ -91,18 +92,24 @@ var manager *registered.APIRegistrationManager
 
 // TPRClient returns fake REST client to be used in TPR unit tests.
 func TPRClient(objects ...runtime.Object) *fake.RESTClient {
-
-	groupversion := unversioned.GroupVersion{
-		Group:   "prsn.io",
-		Version: "v1",
+	var schemeGroupVersion = schema.GroupVersion{Group: "prsn.io", Version: "v1"}
+	var groupmeta = apimachinery.GroupMeta{
+		GroupVersion: schemeGroupVersion,
 	}
 
-	groupmeta := apimachinery.GroupMeta{
-		GroupVersion: groupversion,
+	var legacyGroupVersion = schema.GroupVersion{Group: "", Version: "v1"}
+	var legacyGroupMeta = apimachinery.GroupMeta{
+		GroupVersion: legacyGroupVersion,
 	}
 
-	registered.DefaultAPIRegistrationManager.AddThirdPartyAPIGroupVersions(groupversion)
-	registered.DefaultAPIRegistrationManager.RegisterGroup(groupmeta)
+	m, _ := registered.NewAPIRegistrationManager("")
+
+	m.AddThirdPartyAPIGroupVersions(schemeGroupVersion)
+	m.RegisterGroup(groupmeta)
+
+	// very ugly but works
+	m.RegisterGroup(legacyGroupMeta)
+	m.RegisterVersions([]schema.GroupVersion{legacyGroupVersion})
 
 	f := &fakeTPR{
 		Store: objectStore(objects),
@@ -112,6 +119,7 @@ func TPRClient(objects ...runtime.Object) *fake.RESTClient {
 		GroupName:            "prsn.io",
 		NegotiatedSerializer: serializer.DirectCodecFactory{CodecFactory: api.Codecs},
 		Client:               fake.CreateHTTPClient(f.HandleRequest),
+		APIRegistry:          m,
 	}
 }
 
