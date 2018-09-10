@@ -324,6 +324,8 @@ func (w *KubeMapper) Deployment() (*v1beta1_ext.Deployment, error) {
 		return nil, err
 	}
 
+	//Add Bitesize internal-ca to all deployments made by EO
+
 	retval := &v1beta1_ext.Deployment{
 		ObjectMeta: v1.ObjectMeta{
 			Name:      w.BiteService.Name,
