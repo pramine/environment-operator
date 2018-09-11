@@ -70,7 +70,7 @@ func (w *KubeMapper) Service() (*v1.Service, error) {
 	return retval, nil
 }
 
-// Service extracts Kubernetes Headless Service object (No ClusterIP) from Bitesize definition
+// HeadlessService extracts Kubernetes Headless Service object (No ClusterIP) from Bitesize definition
 func (w *KubeMapper) HeadlessService() (*v1.Service, error) {
 	var ports []v1.ServicePort
 	//Need to update this to have an option to create the headless service (no loadbalancing with Cluster IP not getting set)
@@ -186,7 +186,7 @@ func (w *KubeMapper) MongoInternalSecret() (*v1.Secret, error) {
 	return ret, nil
 }
 
-// Stateful set extracts Kubernetes object from Bitesize definition
+// MongoStatefulSet extracts Mongo as Kubernetes object from Bitesize definition
 func (w *KubeMapper) MongoStatefulSet() (*v1beta1_apps.StatefulSet, error) {
 	replicas := int32(w.BiteService.Replicas)
 	imagePullSecrets, err := w.imagePullSecrets()
@@ -546,6 +546,7 @@ func (w *KubeMapper) volumeSource(vol bitesize.Volume) v1.VolumeSource {
 	return v1.VolumeSource{
 		PersistentVolumeClaim: &v1.PersistentVolumeClaimVolumeSource{ClaimName: vol.Name},
 	}
+
 }
 
 // Ingress extracts Kubernetes object from Bitesize definition
@@ -693,17 +694,15 @@ func (w *KubeMapper) resources() (v1.ResourceRequirements, error) {
 				"memory": memoryLimit,
 			},
 		}, nil
-	} else {
-		return v1.ResourceRequirements{
-			Requests: v1.ResourceList{
-				"cpu":    cpuRequest,
-				"memory": memoryRequest,
-			},
-			Limits: v1.ResourceList{
-				"cpu":    cpuLimit,
-				"memory": memoryLimit,
-			},
-		}, nil
-
 	}
+	return v1.ResourceRequirements{
+		Requests: v1.ResourceList{
+			"cpu":    cpuRequest,
+			"memory": memoryRequest,
+		},
+		Limits: v1.ResourceList{
+			"cpu":    cpuLimit,
+			"memory": memoryLimit,
+		},
+	}, nil
 }
