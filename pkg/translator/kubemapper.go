@@ -109,6 +109,7 @@ func (w *KubeMapper) PersistentVolumeClaims() ([]v1.PersistentVolumeClaim, error
 	var retval []v1.PersistentVolumeClaim
 
 	for _, vol := range w.BiteService.Volumes {
+
 		//Create a PVC only if the volume is not coming from a secret
 		if(strings.ToLower(vol.Type) != "secret") {
 			ret := v1.PersistentVolumeClaim{
