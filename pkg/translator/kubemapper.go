@@ -109,45 +109,46 @@ func (w *KubeMapper) PersistentVolumeClaims() ([]v1.PersistentVolumeClaim, error
 	var retval []v1.PersistentVolumeClaim
 
 	for _, vol := range w.BiteService.Volumes {
-
 		//Create a PVC only if the volume is not coming from a secret
-		if(strings.ToLower(vol.Type) != "secret") {
-			ret := v1.PersistentVolumeClaim{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      vol.Name,
-					Namespace: w.Namespace,
-					Labels: map[string]string{
-						"creator":    "pipeline",
-						"deployment": w.BiteService.Name,
-						"mount_path": strings.Replace(vol.Path, "/", "2F", -1),
-						"size":       vol.Size,
-						"type":       strings.ToLower(vol.Type),
-					},
-				},
-				Spec: v1.PersistentVolumeClaimSpec{
-					AccessModes: getAccessModesFromString(vol.Modes),
-					Resources: v1.ResourceRequirements{
-						Requests: v1.ResourceList{
-							v1.ResourceName(v1.ResourceStorage): resource.MustParse(vol.Size),
-						},
-					},
-				},
-			}
-			if vol.HasManualProvisioning() {
-				ret.Spec.VolumeName = vol.Name
-				ret.Spec.Selector = &metav1.LabelSelector{
-					MatchLabels: map[string]string{
-						"name": vol.Name,
-					},
-				}
-			} else {
-				ret.ObjectMeta.Annotations = map[string]string{
-					"volume.beta.kubernetes.io/storage-class": "aws-" + strings.ToLower(vol.Type),
-				}
-			}
-
-			retval = append(retval, ret)
+		if vol.IsSecretVolume() {
+			continue
 		}
+		
+		ret := v1.PersistentVolumeClaim{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      vol.Name,
+				Namespace: w.Namespace,
+				Labels: map[string]string{
+					"creator":    "pipeline",
+					"deployment": w.BiteService.Name,
+					"mount_path": strings.Replace(vol.Path, "/", "2F", -1),
+					"size":       vol.Size,
+					"type":       strings.ToLower(vol.Type),
+				},
+			},
+			Spec: v1.PersistentVolumeClaimSpec{
+				AccessModes: getAccessModesFromString(vol.Modes),
+				Resources: v1.ResourceRequirements{
+					Requests: v1.ResourceList{
+						v1.ResourceName(v1.ResourceStorage): resource.MustParse(vol.Size),
+					},
+				},
+			},
+		}
+		if vol.HasManualProvisioning() {
+			ret.Spec.VolumeName = vol.Name
+			ret.Spec.Selector = &metav1.LabelSelector{
+				MatchLabels: map[string]string{
+					"name": vol.Name,
+				},
+			}
+		} else {
+			ret.ObjectMeta.Annotations = map[string]string{
+				"volume.beta.kubernetes.io/storage-class": "aws-" + strings.ToLower(vol.Type),
+			}
+		}
+
+		retval = append(retval, ret)
 	}
 	return retval, nil
 }
@@ -526,30 +527,30 @@ func (w *KubeMapper) volumeMounts() ([]v1.VolumeMount, error) {
 func (w *KubeMapper) volumes() ([]v1.Volume, error) {
 	var retval []v1.Volume
 	for _, v := range w.BiteService.Volumes {
-		if strings.ToLower(v.Type) == "secret" {
-			vol := v1.Volume{
-				Name: v.Name,
-				VolumeSource: v1.VolumeSource{
-					Secret: &v1.SecretVolumeSource{
-						SecretName: v.Name,
-
-					},
-				},
-			}
-			retval = append(retval, vol)
-		} else {
-			vol := v1.Volume{
-				Name: v.Name,
-				VolumeSource: v1.VolumeSource{
-					PersistentVolumeClaim: &v1.PersistentVolumeClaimVolumeSource{
-						ClaimName: v.Name,
-					},
-				},
-			}
-			retval = append(retval, vol)
+		vol := v1.Volume{
+			Name: v.Name,
+			VolumeSource: volumeSource(vol),
 		}
+		retval = append(retval, vol)
 	}
 	return retval, nil
+}
+
+func (w *KubeMapper) volumeSource(vol bitesize.Volume) v1.VolumeSource {
+	ret := v1.Volume{Name: vol.Name}
+
+	if vol.IsSecretVolume() {
+		ret.VolumeSource = v1.VolumeSource{
+			Secret: &v1.SecretVolumeSource{ SecretName: v.Name }
+		}
+	} else {
+		ret.VolumeSource = v1.VolumeSource{
+			PersistentVolumeClaim: &v1.PersistentVolumeClaimVolumeSource{ ClaimName: v.Name }
+		}
+	}
+
+	return ret
+
 }
 
 // Ingress extracts Kubernetes object from Bitesize definition
