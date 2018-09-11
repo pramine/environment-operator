@@ -259,7 +259,6 @@ func (m *APIRegistrationManager) InterfacesFor(version schema.GroupVersion) (*me
 // supported throughout the code base. We will abandon this function and
 // checking the error returned by the Group() function.
 func (m *APIRegistrationManager) GroupOrDie(group string) *apimachinery.GroupMeta {
-	fmt.Printf("FUCK WE GOT GROUP: %s\n", group)
 	groupMeta, found := m.groupMetaMap[group]
 	if !found {
 		if group == "" {

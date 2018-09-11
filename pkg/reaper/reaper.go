@@ -40,7 +40,7 @@ func (r *Reaper) Cleanup(cfg *bitesize.Environment) error {
 	return nil
 }
 
-// deleteService removes deployments, ingresses, services and tprs related to
+// deleteService removes deployments, ingresses, services and crds related to
 // the bitesize service from the cluster
 func (r *Reaper) deleteService(svc bitesize.Service) error {
 
@@ -50,7 +50,7 @@ func (r *Reaper) deleteService(svc bitesize.Service) error {
 	for _, volume := range svc.Volumes {
 		r.destroyPersistentVolume(volume.Name)
 	}
-	r.destroyThirdPartyResource(svc.Name)
+	r.destroyCustomResourceDefinition(svc.Name)
 	return nil
 }
 
@@ -89,7 +89,7 @@ func (r *Reaper) destroyPersistentVolume(name string) error {
 	return client.Destroy(name)
 }
 
-func (r *Reaper) destroyThirdPartyResource(name string) error {
+func (r *Reaper) destroyCustomResourceDefinition(name string) error {
 	return nil
 }
 

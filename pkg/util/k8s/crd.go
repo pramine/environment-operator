@@ -6,8 +6,8 @@ import (
 	"k8s.io/client-go/rest"
 )
 
-// ThirdPartyResource represents TPR API on the cluster
-type ThirdPartyResource struct {
+// CustomResourceDefinition represents TPR API on the cluster
+type CustomResourceDefinition struct {
 	rest.Interface
 
 	Namespace string
@@ -15,7 +15,7 @@ type ThirdPartyResource struct {
 }
 
 // Get retrieves PrsnExternalResource from the k8s using name
-func (client *ThirdPartyResource) Get(name string) (*extensions.PrsnExternalResource, error) {
+func (client *CustomResourceDefinition) Get(name string) (*extensions.PrsnExternalResource, error) {
 	var rsc extensions.PrsnExternalResource
 
 	err := client.Interface.Get().
@@ -32,19 +32,19 @@ func (client *ThirdPartyResource) Get(name string) (*extensions.PrsnExternalReso
 }
 
 // Exist checks if named resource exist in k8s cluster
-func (client *ThirdPartyResource) Exist(name string) bool {
+func (client *CustomResourceDefinition) Exist(name string) bool {
 	rsc, _ := client.Get(name)
-	log.Debugf("Got existing tpr: %+v", rsc)
+	log.Debugf("Got existing crd: %+v", rsc)
 	return rsc != nil
 }
 
 // Apply creates or updates PrsnExternalResource in k8s
-func (client *ThirdPartyResource) Apply(resource *extensions.PrsnExternalResource) error {
+func (client *CustomResourceDefinition) Apply(resource *extensions.PrsnExternalResource) error {
 	if client.Exist(resource.ObjectMeta.Name) {
 		log.Debugf("Updating tpr resource: %s", resource.ObjectMeta.Name)
 		ret := client.Update(resource)
 		if ret != nil {
-			log.Debugf("TPR: Got error on update: %s", ret.Error())
+			log.Debugf("CRD: Got error on update: %s", ret.Error())
 		}
 		return ret
 	}
@@ -57,7 +57,7 @@ func (client *ThirdPartyResource) Apply(resource *extensions.PrsnExternalResourc
 }
 
 // Create creates given tpr in
-func (client *ThirdPartyResource) Create(resource *extensions.PrsnExternalResource) error {
+func (client *CustomResourceDefinition) Create(resource *extensions.PrsnExternalResource) error {
 	var result extensions.PrsnExternalResource
 	return client.Interface.Post().
 		Resource(plural(client.Type)).
@@ -67,7 +67,7 @@ func (client *ThirdPartyResource) Create(resource *extensions.PrsnExternalResour
 }
 
 // Update updates existing resource in k8s
-func (client *ThirdPartyResource) Update(resource *extensions.PrsnExternalResource) error {
+func (client *CustomResourceDefinition) Update(resource *extensions.PrsnExternalResource) error {
 	var result extensions.PrsnExternalResource
 	return client.Put().
 		Resource(plural(client.Type)).
@@ -78,7 +78,7 @@ func (client *ThirdPartyResource) Update(resource *extensions.PrsnExternalResour
 }
 
 // Destroy deletes named resource
-func (client *ThirdPartyResource) Destroy(name string) error {
+func (client *CustomResourceDefinition) Destroy(name string) error {
 	var result extensions.PrsnExternalResource
 	return client.Interface.Delete().
 		Resource(plural(client.Type)).
@@ -87,7 +87,7 @@ func (client *ThirdPartyResource) Destroy(name string) error {
 }
 
 // List returns a list of tprs. Depends on kind.
-func (client *ThirdPartyResource) List() ([]extensions.PrsnExternalResource, error) {
+func (client *CustomResourceDefinition) List() ([]extensions.PrsnExternalResource, error) {
 	var result extensions.PrsnExternalResourceList
 	err := client.Interface.Get().
 		Resource(plural(client.Type)).

@@ -11,19 +11,19 @@ import (
 	"k8s.io/client-go/pkg/api/v1"
 )
 
-func TestThirdPartyResource(t *testing.T) {
+func TestCRD(t *testing.T) {
 	w := BuildKubeMapper()
 	w.BiteService.Type = "mysql"
 	w.BiteService.Version = "5.6"
 
-	tpr, _ := w.ThirdPartyResource()
+	tpr, _ := w.CustomResourceDefinition()
 
 	if tpr.Kind != "Mysql" {
-		t.Errorf("tpr kind error. Expected: Mysql, got: %s", tpr.Kind)
+		t.Errorf("CRD kind error. Expected: Mysql, got: %s", tpr.Kind)
 	}
 
 	if tpr.Spec.Version != w.BiteService.Version {
-		t.Errorf("tpr version error: Expected: %s, got: %s", w.BiteService.Version, tpr.Spec.Version)
+		t.Errorf("CRD version error: Expected: %s, got: %s", w.BiteService.Version, tpr.Spec.Version)
 	}
 }
 
@@ -85,7 +85,7 @@ func TestVolumeFromSecret(t *testing.T) {
 
 	v := w.BiteService.Volumes
 
-	expectedVolumes := [] v1.Volume{
+	expectedVolumes := []v1.Volume{
 		{
 			Name: v[0].Name,
 			VolumeSource: v1.VolumeSource{

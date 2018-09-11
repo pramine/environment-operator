@@ -617,8 +617,8 @@ func (w *KubeMapper) Ingress() (*v1beta1_ext.Ingress, error) {
 	return retval, nil
 }
 
-// ThirdPartyResource extracts Kubernetes object from Bitesize definition
-func (w *KubeMapper) ThirdPartyResource() (*ext.PrsnExternalResource, error) {
+// CustomResourceDefinition extracts Kubernetes object from Bitesize definition
+func (w *KubeMapper) CustomResourceDefinition() (*ext.PrsnExternalResource, error) {
 	retval := &ext.PrsnExternalResource{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       strings.Title(w.BiteService.Type),

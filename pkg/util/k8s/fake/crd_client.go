@@ -20,11 +20,11 @@ import (
 	"k8s.io/client-go/tools/cache"
 )
 
-type fakeTPR struct {
+type fakeCRD struct {
 	Store cache.Store
 }
 
-func (f *fakeTPR) HandlePost(req *http.Request) (*http.Response, error) {
+func (f *fakeCRD) HandlePost(req *http.Request) (*http.Response, error) {
 	var tpr *ext.PrsnExternalResource
 
 	data, _ := ioutil.ReadAll(req.Body)
@@ -41,7 +41,7 @@ func objBody(object interface{}) io.ReadCloser {
 	return ioutil.NopCloser(bytes.NewReader([]byte(output)))
 }
 
-func (f *fakeTPR) HandleGet(req *http.Request) (*http.Response, error) {
+func (f *fakeCRD) HandleGet(req *http.Request) (*http.Response, error) {
 	header := http.Header{}
 	header.Set("Content-Type", runtime.ContentTypeJSON)
 
@@ -62,7 +62,7 @@ func (f *fakeTPR) HandleGet(req *http.Request) (*http.Response, error) {
 	}, nil
 }
 
-func (f *fakeTPR) resources(rsc string) []ext.PrsnExternalResource {
+func (f *fakeCRD) resources(rsc string) []ext.PrsnExternalResource {
 	r := f.Store.List()
 
 	kind := kindFromElem(rsc)
@@ -77,7 +77,7 @@ func (f *fakeTPR) resources(rsc string) []ext.PrsnExternalResource {
 }
 
 // HandleRequest is HTTP API handler for our fake client
-func (f *fakeTPR) HandleRequest(req *http.Request) (*http.Response, error) {
+func (f *fakeCRD) HandleRequest(req *http.Request) (*http.Response, error) {
 	switch m := req.Method; {
 	case m == http.MethodPost:
 		return f.HandlePost(req)
@@ -90,8 +90,8 @@ func (f *fakeTPR) HandleRequest(req *http.Request) (*http.Response, error) {
 
 var manager *registered.APIRegistrationManager
 
-// TPRClient returns fake REST client to be used in TPR unit tests.
-func TPRClient(objects ...runtime.Object) *fake.RESTClient {
+// CRDClient returns fake REST client to be used in TPR unit tests.
+func CRDClient(objects ...runtime.Object) *fake.RESTClient {
 	var schemeGroupVersion = schema.GroupVersion{Group: "prsn.io", Version: "v1"}
 	var groupmeta = apimachinery.GroupMeta{
 		GroupVersion: schemeGroupVersion,
@@ -111,7 +111,7 @@ func TPRClient(objects ...runtime.Object) *fake.RESTClient {
 	m.RegisterGroup(legacyGroupMeta)
 	m.RegisterVersions([]schema.GroupVersion{legacyGroupVersion})
 
-	f := &fakeTPR{
+	f := &fakeCRD{
 		Store: objectStore(objects),
 	}
 
