@@ -113,7 +113,7 @@ func (w *KubeMapper) PersistentVolumeClaims() ([]v1.PersistentVolumeClaim, error
 		if vol.IsSecretVolume() {
 			continue
 		}
-		
+
 		ret := v1.PersistentVolumeClaim{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      vol.Name,
@@ -528,8 +528,8 @@ func (w *KubeMapper) volumes() ([]v1.Volume, error) {
 	var retval []v1.Volume
 	for _, v := range w.BiteService.Volumes {
 		vol := v1.Volume{
-			Name: v.Name,
-			VolumeSource: volumeSource(vol),
+			Name:         v.Name,
+			VolumeSource: w.volumeSource(v),
 		}
 		retval = append(retval, vol)
 	}
@@ -541,11 +541,11 @@ func (w *KubeMapper) volumeSource(vol bitesize.Volume) v1.VolumeSource {
 
 	if vol.IsSecretVolume() {
 		ret.VolumeSource = v1.VolumeSource{
-			Secret: &v1.SecretVolumeSource{ SecretName: v.Name }
+			Secret: &v1.SecretVolumeSource{SecretName: vol.Name},
 		}
 	} else {
 		ret.VolumeSource = v1.VolumeSource{
-			PersistentVolumeClaim: &v1.PersistentVolumeClaimVolumeSource{ ClaimName: v.Name }
+			PersistentVolumeClaim: &v1.PersistentVolumeClaimVolumeSource{ClaimName: vol.Name},
 		}
 	}
 
