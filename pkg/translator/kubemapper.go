@@ -537,20 +537,15 @@ func (w *KubeMapper) volumes() ([]v1.Volume, error) {
 }
 
 func (w *KubeMapper) volumeSource(vol bitesize.Volume) v1.VolumeSource {
-	ret := v1.Volume{Name: vol.Name}
-
 	if vol.IsSecretVolume() {
-		ret.VolumeSource = v1.VolumeSource{
+		return v1.VolumeSource{
 			Secret: &v1.SecretVolumeSource{SecretName: vol.Name},
-		}
-	} else {
-		ret.VolumeSource = v1.VolumeSource{
-			PersistentVolumeClaim: &v1.PersistentVolumeClaimVolumeSource{ClaimName: vol.Name},
 		}
 	}
 
-	return ret
-
+	return v1.VolumeSource{
+		PersistentVolumeClaim: &v1.PersistentVolumeClaimVolumeSource{ClaimName: vol.Name},
+	}
 }
 
 // Ingress extracts Kubernetes object from Bitesize definition
