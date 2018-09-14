@@ -26,5 +26,7 @@ environments:
            cpu: 500m
            memory: 100Mi
       - name: mytpr
+        namespace: sample-app
+        version: "5.6"
         type: mysql
 
