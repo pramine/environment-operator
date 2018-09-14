@@ -25,4 +25,6 @@ environments:
         limits:
            cpu: 500m
            memory: 100Mi
+      - name: mytpr
+        type: mysql
 
