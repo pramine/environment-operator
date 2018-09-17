@@ -243,3 +243,10 @@ func (v *Volume) HasManualProvisioning() bool {
 	}
 	return false
 }
+
+func (v *Volume) IsSecretVolume() bool {
+	if strings.ToLower(v.Type) == "secret" {
+		return true
+	}
+	return false
+}

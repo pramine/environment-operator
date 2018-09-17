@@ -4,8 +4,8 @@ import (
 	"testing"
 )
 
-func TestTPRGet(t *testing.T) {
-	// tprc := fake.TPRClient(
+func TestCRDGet(t *testing.T) {
+	// crdcli := fake.CRDClient(
 	// 	&ext.PrsnExternalResource{
 	// 		TypeMeta: runtime.TypeMeta{
 	// 			Kind: "Mysql",
@@ -17,8 +17,8 @@ func TestTPRGet(t *testing.T) {
 	// 	},
 	// )
 	//
-	// client := ThirdPartyResource{
-	// 	Interface: tprc,
+	// client := CustomResourceDefinition{
+	// 	Interface: crdcli,
 	// 	Namespace: "test",
 	// }
 	//
@@ -29,11 +29,11 @@ func TestTPRGet(t *testing.T) {
 
 }
 
-func TestTPRExist(t *testing.T) {
+func TestCRDExist(t *testing.T) {
 }
 
-func TestTPRApply(t *testing.T) {
+func TestCRDApply(t *testing.T) {
 }
 
-func TestTPRDestroy(t *testing.T) {
+func TestCRDDestroy(t *testing.T) {
 }

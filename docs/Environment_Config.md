@@ -103,7 +103,7 @@ The environment section of the manifest may specify multiple environments to man
     - **application**: When an application is specified, this corresponds to the docker image name that will be pulled and added as a container within your kubernetes deployment.
     - **version**: This is the version of the docker file that will be pulled.  If a version is specified in your manifest file, the service will be deployed by environment operator immediately.  Services that do not specify a version must be deployed by using the /deploy endpoint of environment-operator.  This provides flexibility for users of environment-operator to decide how/when (automatically versus API request) their deployments are made.
     - **replicas**: This specifies the number of replica pods that will deploy in your kubernetes-deployment. If not specified, this will default to "1"
-    - **volumes**: Specifying a volume(s) will create PersistentVolumeClaims within kubernetes that will be mounted into your pod(s) at the path specified. Examples below.
+    - **volumes**: Specifying a volume(s) will create PersistentVolumeClaims within kubernetes that will be mounted into your pod(s) at the path specified or will mount a secret on a desired path. Examples below.
     ```
           services:
           - name: default (volume type is EBS; PVC mapped to "aws-ebs" storageclass which must exist)
@@ -144,6 +144,14 @@ The environment section of the manifest may specify multiple environments to man
                  modes: ReadOnlyMany
                  size: 100G
                  provisioning: manual
+          - name: SECRET (Mounts a secret (my-secret) to the path /data within the container)
+            application: my-app
+            version: 1
+            volumes:
+               - name: my-secret (Secret named "my-secret" must exist in the namespace)
+                 path: /data
+                 type: secret 
+    ```
     ```
     - **database_type**: When a database_type is specified (only option supported currently is "mongo") environment-operator will deploy a statefulset into kubernetes for the database. More information on deploying a mongo cluster may be found [here](./Mongo.md)
 

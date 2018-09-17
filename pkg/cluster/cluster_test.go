@@ -11,17 +11,16 @@ import (
 	"k8s.io/apimachinery/pkg/api/resource"
 	"k8s.io/client-go/kubernetes/fake"
 
+	fakecrd "github.com/pearsontechnology/environment-operator/pkg/util/k8s/fake"
 	"k8s.io/client-go/pkg/api/v1"
-	autoscale_v1 "k8s.io/client-go/pkg/apis/autoscaling/v1"
-
 	v1beta1_apps "k8s.io/client-go/pkg/apis/apps/v1beta1"
+	autoscale_v1 "k8s.io/client-go/pkg/apis/autoscaling/v1"
 	v1beta1_ext "k8s.io/client-go/pkg/apis/extensions/v1beta1"
 	fakerest "k8s.io/client-go/rest/fake"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/pearsontechnology/environment-operator/pkg/config"
-	faketpr "github.com/pearsontechnology/environment-operator/pkg/util/k8s/fake"
 )
 
 // func init() {
@@ -65,10 +64,10 @@ func TestApplyEnvironment(t *testing.T) {
 			},
 		},
 	)
-	tprclient := loadTestTPRS()
+	crdcli := loadTestCRDs()
 	cluster := Cluster{
 		Interface: client,
-		TPRClient: tprclient,
+		CRDClient: crdcli,
 	}
 
 	e1, err := bitesize.LoadEnvironment("../../test/assets/environments.bitesize", "environment2")
@@ -112,7 +111,7 @@ func TestShouldDeploy(t *testing.T) {
 	}
 
 	//Mark all services in the initial environment as deployed
-	for i, _ := range e1.Services {
+	for i := range e1.Services {
 		e1.Services[i].Status.DeployedAt = "Current Time"
 	}
 
@@ -159,10 +158,10 @@ func TestGetPods(t *testing.T) {
 			},
 		},
 	)
-	tprclient := loadTestTPRS()
+	crdclient := loadTestCRDs()
 	cluster := Cluster{
 		Interface: client,
-		TPRClient: tprclient,
+		CRDClient: crdcli,
 	}
 	pods, err := cluster.LoadPods("dev")
 
@@ -228,8 +227,8 @@ func validMeta(namespace, name string) metav1.ObjectMeta {
 	}
 }
 
-func loadTestTPRS() *fakerest.RESTClient {
-	return faketpr.TPRClient(
+func loadTestCRDs() *fakerest.RESTClient {
+	return fakecrd.CRDClient(
 		&ext.PrsnExternalResource{
 			TypeMeta: metav1.TypeMeta{
 				Kind:       "Mysql",
@@ -448,10 +447,10 @@ func loadTestEnvironment() *fake.Clientset {
 
 func testServicePorts(t *testing.T) {
 	client := loadTestEnvironment()
-	tprclient := loadTestTPRS()
+	crdcli := loadTestCRDs()
 	cluster := Cluster{
 		Interface: client,
-		TPRClient: tprclient,
+		CRDClient: crdcli,
 	}
 	environment, err := cluster.LoadEnvironment("test")
 	if err != nil {
@@ -467,10 +466,10 @@ func testServicePorts(t *testing.T) {
 func testFullBitesizeEnvironment(t *testing.T) {
 
 	client := loadTestEnvironment()
-	tprclient := loadTestTPRS()
+	crdcli := loadTestCRDs()
 	cluster := Cluster{
 		Interface: client,
-		TPRClient: tprclient,
+		CRDClient: crdcli,
 	}
 	environment, err := cluster.LoadEnvironment("test")
 	if err != nil {
@@ -517,10 +516,10 @@ func testFullBitesizeEnvironment(t *testing.T) {
 
 func TestEnvironmentAnnotations(t *testing.T) {
 	client := loadTestEnvironment()
-	tprclient := loadTestTPRS()
+	crdcli := loadTestCRDs()
 	cluster := Cluster{
 		Interface: client,
-		TPRClient: tprclient,
+		CRDClient: crdcli,
 	}
 	environment, _ := cluster.LoadEnvironment("test")
 	testService := environment.Services.FindByName("test")
@@ -543,7 +542,7 @@ func TestEnvironmentAnnotations(t *testing.T) {
 
 func TestApplyNewHPA(t *testing.T) {
 
-	tprclient := loadEmptyTPRS()
+	crdcli := loadEmptyCRDs()
 	client := fake.NewSimpleClientset(
 		&v1.Namespace{
 			ObjectMeta: metav1.ObjectMeta{
@@ -557,7 +556,7 @@ func TestApplyNewHPA(t *testing.T) {
 
 	cluster := Cluster{
 		Interface: client,
-		TPRClient: tprclient,
+		CRDClient: crdcli,
 	}
 
 	e1, err := bitesize.LoadEnvironment("../../test/assets/environments.bitesize", "environment3")
@@ -580,7 +579,7 @@ func TestApplyNewHPA(t *testing.T) {
 
 func TestApplyExistingHPA(t *testing.T) {
 	var min, target int32 = 2, 75
-	tprclient := loadEmptyTPRS()
+	crdcli := loadEmptyCRDs()
 	client := fake.NewSimpleClientset(
 		&v1.Namespace{
 			ObjectMeta: metav1.ObjectMeta{
@@ -628,7 +627,7 @@ func TestApplyExistingHPA(t *testing.T) {
 
 	cluster := Cluster{
 		Interface: client,
-		TPRClient: tprclient,
+		CRDClient: crdcli,
 	}
 
 	e1, err := bitesize.LoadEnvironment("../../test/assets/environments.bitesize", "environment3")
@@ -648,12 +647,12 @@ func TestApplyExistingHPA(t *testing.T) {
 		t.Errorf("Expected loaded environments to be equal, yet diff is: %s", diff.Changes())
 	}
 }
-func loadEmptyTPRS() *fakerest.RESTClient {
-	return faketpr.TPRClient()
+func loadEmptyCRDs() *fakerest.RESTClient {
+	return fakecrd.CRDClient()
 }
 
 func TestApplyMongoStatefulSet(t *testing.T) {
-	tprclient := loadEmptyTPRS()
+	crdcli := loadEmptyCRDs()
 	cpulimit, _ := resource.ParseQuantity(config.Env.LimitDefaultCPU)
 	memlimit, _ := resource.ParseQuantity(config.Env.LimitDefaultMemory)
 	client := fake.NewSimpleClientset(
@@ -789,7 +788,7 @@ func TestApplyMongoStatefulSet(t *testing.T) {
 
 	cluster := Cluster{
 		Interface: client,
-		TPRClient: tprclient,
+		CRDClient: crdcli,
 	}
 
 	e1, err := bitesize.LoadEnvironment("../../test/assets/environments.bitesize", "environment4")

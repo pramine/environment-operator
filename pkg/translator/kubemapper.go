@@ -70,7 +70,7 @@ func (w *KubeMapper) Service() (*v1.Service, error) {
 	return retval, nil
 }
 
-// Service extracts Kubernetes Headless Service object (No ClusterIP) from Bitesize definition
+// HeadlessService extracts Kubernetes Headless Service object (No ClusterIP) from Bitesize definition
 func (w *KubeMapper) HeadlessService() (*v1.Service, error) {
 	var ports []v1.ServicePort
 	//Need to update this to have an option to create the headless service (no loadbalancing with Cluster IP not getting set)
@@ -109,6 +109,11 @@ func (w *KubeMapper) PersistentVolumeClaims() ([]v1.PersistentVolumeClaim, error
 	var retval []v1.PersistentVolumeClaim
 
 	for _, vol := range w.BiteService.Volumes {
+		//Create a PVC only if the volume is not coming from a secret
+		if vol.IsSecretVolume() {
+			continue
+		}
+
 		ret := v1.PersistentVolumeClaim{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      vol.Name,
@@ -181,7 +186,7 @@ func (w *KubeMapper) MongoInternalSecret() (*v1.Secret, error) {
 	return ret, nil
 }
 
-// Stateful set extracts Kubernetes object from Bitesize definition
+// MongoStatefulSet extracts Mongo as Kubernetes object from Bitesize definition
 func (w *KubeMapper) MongoStatefulSet() (*v1beta1_apps.StatefulSet, error) {
 	replicas := int32(w.BiteService.Replicas)
 	imagePullSecrets, err := w.imagePullSecrets()
@@ -523,16 +528,25 @@ func (w *KubeMapper) volumes() ([]v1.Volume, error) {
 	var retval []v1.Volume
 	for _, v := range w.BiteService.Volumes {
 		vol := v1.Volume{
-			Name: v.Name,
-			VolumeSource: v1.VolumeSource{
-				PersistentVolumeClaim: &v1.PersistentVolumeClaimVolumeSource{
-					ClaimName: v.Name,
-				},
-			},
+			Name:         v.Name,
+			VolumeSource: w.volumeSource(v),
 		}
 		retval = append(retval, vol)
 	}
 	return retval, nil
+}
+
+func (w *KubeMapper) volumeSource(vol bitesize.Volume) v1.VolumeSource {
+	if vol.IsSecretVolume() {
+		return v1.VolumeSource{
+			Secret: &v1.SecretVolumeSource{SecretName: vol.Name},
+		}
+	}
+
+	return v1.VolumeSource{
+		PersistentVolumeClaim: &v1.PersistentVolumeClaimVolumeSource{ClaimName: vol.Name},
+	}
+
 }
 
 // Ingress extracts Kubernetes object from Bitesize definition
@@ -603,8 +617,8 @@ func (w *KubeMapper) Ingress() (*v1beta1_ext.Ingress, error) {
 	return retval, nil
 }
 
-// ThirdPartyResource extracts Kubernetes object from Bitesize definition
-func (w *KubeMapper) ThirdPartyResource() (*ext.PrsnExternalResource, error) {
+// CustomResourceDefinition extracts Kubernetes object from Bitesize definition
+func (w *KubeMapper) CustomResourceDefinition() (*ext.PrsnExternalResource, error) {
 	retval := &ext.PrsnExternalResource{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       strings.Title(w.BiteService.Type),
@@ -680,17 +694,15 @@ func (w *KubeMapper) resources() (v1.ResourceRequirements, error) {
 				"memory": memoryLimit,
 			},
 		}, nil
-	} else {
-		return v1.ResourceRequirements{
-			Requests: v1.ResourceList{
-				"cpu":    cpuRequest,
-				"memory": memoryRequest,
-			},
-			Limits: v1.ResourceList{
-				"cpu":    cpuLimit,
-				"memory": memoryLimit,
-			},
-		}, nil
-
 	}
+	return v1.ResourceRequirements{
+		Requests: v1.ResourceList{
+			"cpu":    cpuRequest,
+			"memory": memoryRequest,
+		},
+		Limits: v1.ResourceList{
+			"cpu":    cpuLimit,
+			"memory": memoryLimit,
+		},
+	}, nil
 }

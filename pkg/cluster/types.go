@@ -9,5 +9,5 @@ import (
 // to interact with
 type Cluster struct {
 	kubernetes.Interface
-	TPRClient rest.Interface
+	CRDClient rest.Interface
 }

@@ -16,7 +16,7 @@ import (
 // or Kubernetes cluster
 type Environment struct {
 	Name       string              `yaml:"name" validate:"nonzero"`
-	Namespace  string              `yaml:"namespace,omitempty" validate:"regexp=^[a-zA-Z\\-]*$"` // This field should be optional now
+	Namespace  string              `yaml:"namespace,omitempty" validate:"regexp=^[a-zA-Z0-9\\-]*$"` // This field should be optional now
 	Deployment *DeploymentSettings `yaml:"deployment,omitempty"`
 	Services   Services            `yaml:"services"`
 	Tests      []Test              `yaml:"tests,omitempty"`

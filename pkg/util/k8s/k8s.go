@@ -15,7 +15,7 @@ import (
 type Client struct {
 	Interface kubernetes.Interface
 	Namespace string
-	TPRClient rest.Interface
+	CRDClient rest.Interface
 }
 
 // ClientForNamespace configures REST client to operate in a given namespace
@@ -29,16 +29,16 @@ func ClientForNamespace(ns string) (*Client, error) {
 		return nil, err
 	}
 
-	restcli, err := TPRClient()
+	restcli, err := CRDClient()
 	if err != nil {
 		return nil, err
 	}
 
-	return &Client{Interface: clientset, Namespace: ns, TPRClient: restcli}, nil
+	return &Client{Interface: clientset, Namespace: ns, CRDClient: restcli}, nil
 }
 
-// TPRClient returns rest.RESTClient for ThirdPartyResources
-func TPRClient() (*rest.RESTClient, error) {
+// CRDClient returns rest.RESTClient for CustomResourceDefinitions
+func CRDClient() (*rest.RESTClient, error) {
 	config, err := rest.InClusterConfig()
 	if err != nil {
 		return nil, err
@@ -120,10 +120,10 @@ func (c *Client) Ns() *Namespace {
 	return &Namespace{Interface: c.Interface, Namespace: c.Namespace}
 }
 
-// ThirdPartyResource builds TPR client
-func (c *Client) ThirdPartyResource(kind string) *ThirdPartyResource {
-	return &ThirdPartyResource{
-		Interface: c.TPRClient,
+// CustomResourceDefinition builds CRD client
+func (c *Client) CustomResourceDefinition(kind string) *CustomResourceDefinition {
+	return &CustomResourceDefinition{
+		Interface: c.CRDClient,
 		Namespace: c.Namespace,
 		Type:      kind,
 	}
