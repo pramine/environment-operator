@@ -1,12 +1,13 @@
 package k8s
 
 import (
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/apimachinery/pkg/runtime/serializer"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/pkg/api"
-	"k8s.io/client-go/pkg/api/unversioned"
 	"k8s.io/client-go/pkg/api/v1"
-	"k8s.io/client-go/pkg/runtime"
-	"k8s.io/client-go/pkg/runtime/serializer"
 	"k8s.io/client-go/rest"
 )
 
@@ -14,7 +15,7 @@ import (
 type Client struct {
 	Interface kubernetes.Interface
 	Namespace string
-	TPRClient rest.Interface
+	CRDClient rest.Interface
 }
 
 // ClientForNamespace configures REST client to operate in a given namespace
@@ -28,21 +29,21 @@ func ClientForNamespace(ns string) (*Client, error) {
 		return nil, err
 	}
 
-	restcli, err := TPRClient()
+	restcli, err := CRDClient()
 	if err != nil {
 		return nil, err
 	}
 
-	return &Client{Interface: clientset, Namespace: ns, TPRClient: restcli}, nil
+	return &Client{Interface: clientset, Namespace: ns, CRDClient: restcli}, nil
 }
 
-// TPRClient returns rest.RESTClient for ThirdPartyResources
-func TPRClient() (*rest.RESTClient, error) {
+// CRDClient returns rest.RESTClient for CustomResourceDefinitions
+func CRDClient() (*rest.RESTClient, error) {
 	config, err := rest.InClusterConfig()
 	if err != nil {
 		return nil, err
 	}
-	config.GroupVersion = &unversioned.GroupVersion{
+	config.GroupVersion = &schema.GroupVersion{
 		Group:   "prsn.io",
 		Version: "v1",
 	}
@@ -119,20 +120,25 @@ func (c *Client) Ns() *Namespace {
 	return &Namespace{Interface: c.Interface, Namespace: c.Namespace}
 }
 
-// ThirdPartyResource builds TPR client
-func (c *Client) ThirdPartyResource(kind string) *ThirdPartyResource {
-	return &ThirdPartyResource{
-		Interface: c.TPRClient,
+// CustomResourceDefinition builds CRD client
+func (c *Client) CustomResourceDefinition(kind string) *CustomResourceDefinition {
+	return &CustomResourceDefinition{
+		Interface: c.CRDClient,
 		Namespace: c.Namespace,
 		Type:      kind,
 	}
 }
 
-func listOptions() v1.ListOptions {
-	return v1.ListOptions{
+func listOptions() metav1.ListOptions {
+	return metav1.ListOptions{
 		LabelSelector: "creator=pipeline",
 	}
 }
+
+func getOptions() metav1.GetOptions {
+	return metav1.GetOptions{}
+}
+
 func logOptions() *v1.PodLogOptions {
 	return &v1.PodLogOptions{
 		//SinceSeconds: &[]int64{300}[0], //Gets last 5 minutes of logs

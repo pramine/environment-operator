@@ -14,7 +14,7 @@ import (
 	"k8s.io/client-go/rest"
 )
 
-// NewClusterClient returns default in-cluster kubernetes client
+// Client returns default in-cluster kubernetes client
 func Client() (*Cluster, error) {
 	restConfig, err := rest.InClusterConfig()
 	if err != nil {
@@ -25,12 +25,12 @@ func Client() (*Cluster, error) {
 		return nil, err
 	}
 
-	tprclient, err := k8s.TPRClient()
+	crdcli, err := k8s.CRDClient()
 	if err != nil {
 		return nil, err
 	}
 
-	return &Cluster{Interface: clientset, TPRClient: tprclient}, nil
+	return &Cluster{Interface: clientset, CRDClient: crdcli}, nil
 }
 
 // ApplyIfChanged compares bitesize Environment passed as an argument to
@@ -67,7 +67,7 @@ func (cluster *Cluster) ApplyEnvironment(currentEnvironment, newEnvironment *bit
 		client := &k8s.Client{
 			Interface: cluster.Interface,
 			Namespace: newEnvironment.Namespace,
-			TPRClient: cluster.TPRClient,
+			CRDClient: cluster.CRDClient,
 		}
 
 		if service.Type == "" {
@@ -137,8 +137,8 @@ func (cluster *Cluster) ApplyEnvironment(currentEnvironment, newEnvironment *bit
 			}
 
 		} else {
-			tpr, _ := mapper.ThirdPartyResource()
-			if err = client.ThirdPartyResource(tpr.Kind).Apply(tpr); err != nil {
+			crd, _ := mapper.CustomResourceDefinition()
+			if err = client.CustomResourceDefinition(crd.Kind).Apply(crd); err != nil {
 				log.Error(err)
 			}
 		}
@@ -151,7 +151,7 @@ func (cluster *Cluster) LoadPods(namespace string) ([]bitesize.Pod, error) {
 	client := &k8s.Client{
 		Namespace: namespace,
 		Interface: cluster.Interface,
-		TPRClient: cluster.TPRClient,
+		CRDClient: cluster.CRDClient,
 	}
 
 	var deployedPods []bitesize.Pod
@@ -186,7 +186,7 @@ func (cluster *Cluster) LoadEnvironment(namespace string) (*bitesize.Environment
 	client := &k8s.Client{
 		Namespace: namespace,
 		Interface: cluster.Interface,
-		TPRClient: cluster.TPRClient,
+		CRDClient: cluster.CRDClient,
 	}
 
 	ns, err := client.Ns().Get()
@@ -244,9 +244,9 @@ func (cluster *Cluster) LoadEnvironment(namespace string) (*bitesize.Environment
 	}
 
 	for _, supported := range k8_extensions.SupportedThirdPartyResources {
-		tprs, _ := client.ThirdPartyResource(supported).List()
+		tprs, _ := client.CustomResourceDefinition(supported).List()
 		for _, tpr := range tprs {
-			serviceMap.AddThirdPartyResource(tpr)
+			serviceMap.AddCustomResourceDefinition(tpr)
 		}
 	}
 

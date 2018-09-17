@@ -12,19 +12,20 @@ import (
 	"github.com/pearsontechnology/environment-operator/pkg/config"
 	ext "github.com/pearsontechnology/environment-operator/pkg/k8_extensions"
 	"github.com/pearsontechnology/environment-operator/pkg/util"
+
 	// metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"encoding/base64"
 	"math/rand"
 	"time"
 
 	"github.com/pearsontechnology/environment-operator/pkg/util/k8s"
-	"k8s.io/client-go/pkg/api/resource"
-	"k8s.io/client-go/pkg/api/unversioned"
+	"k8s.io/apimachinery/pkg/api/resource"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/client-go/pkg/api/v1"
 	v1beta1_apps "k8s.io/client-go/pkg/apis/apps/v1beta1"
 	autoscale_v1 "k8s.io/client-go/pkg/apis/autoscaling/v1"
 	v1beta1_ext "k8s.io/client-go/pkg/apis/extensions/v1beta1"
-	"k8s.io/client-go/pkg/util/intstr"
 )
 
 // KubeMapper maps BitesizeService object to Kubernetes objects
@@ -49,7 +50,7 @@ func (w *KubeMapper) Service() (*v1.Service, error) {
 		ports = append(ports, servicePort)
 	}
 	retval := &v1.Service{
-		ObjectMeta: v1.ObjectMeta{
+		ObjectMeta: metav1.ObjectMeta{
 			Name:      w.BiteService.Name,
 			Namespace: w.Namespace,
 			Labels: map[string]string{
@@ -69,7 +70,7 @@ func (w *KubeMapper) Service() (*v1.Service, error) {
 	return retval, nil
 }
 
-// Service extracts Kubernetes Headless Service object (No ClusterIP) from Bitesize definition
+// HeadlessService extracts Kubernetes Headless Service object (No ClusterIP) from Bitesize definition
 func (w *KubeMapper) HeadlessService() (*v1.Service, error) {
 	var ports []v1.ServicePort
 	//Need to update this to have an option to create the headless service (no loadbalancing with Cluster IP not getting set)
@@ -82,7 +83,7 @@ func (w *KubeMapper) HeadlessService() (*v1.Service, error) {
 		ports = append(ports, servicePort)
 	}
 	retval := &v1.Service{
-		ObjectMeta: v1.ObjectMeta{
+		ObjectMeta: metav1.ObjectMeta{
 			Name:      w.BiteService.Name,
 			Namespace: w.Namespace,
 			Labels: map[string]string{
@@ -108,8 +109,13 @@ func (w *KubeMapper) PersistentVolumeClaims() ([]v1.PersistentVolumeClaim, error
 	var retval []v1.PersistentVolumeClaim
 
 	for _, vol := range w.BiteService.Volumes {
+		//Create a PVC only if the volume is not coming from a secret
+		if vol.IsSecretVolume() {
+			continue
+		}
+
 		ret := v1.PersistentVolumeClaim{
-			ObjectMeta: v1.ObjectMeta{
+			ObjectMeta: metav1.ObjectMeta{
 				Name:      vol.Name,
 				Namespace: w.Namespace,
 				Labels: map[string]string{
@@ -131,7 +137,7 @@ func (w *KubeMapper) PersistentVolumeClaims() ([]v1.PersistentVolumeClaim, error
 		}
 		if vol.HasManualProvisioning() {
 			ret.Spec.VolumeName = vol.Name
-			ret.Spec.Selector = &unversioned.LabelSelector{
+			ret.Spec.Selector = &metav1.LabelSelector{
 				MatchLabels: map[string]string{
 					"name": vol.Name,
 				},
@@ -166,7 +172,7 @@ func (w *KubeMapper) MongoInternalSecret() (*v1.Secret, error) {
 	}
 
 	ret := &v1.Secret{
-		ObjectMeta: v1.ObjectMeta{
+		ObjectMeta: metav1.ObjectMeta{
 			Name:      "mongo-bootstrap-data",
 			Namespace: w.Namespace,
 			Labels: map[string]string{
@@ -180,7 +186,7 @@ func (w *KubeMapper) MongoInternalSecret() (*v1.Secret, error) {
 	return ret, nil
 }
 
-// Stateful set extracts Kubernetes object from Bitesize definition
+// MongoStatefulSet extracts Mongo as Kubernetes object from Bitesize definition
 func (w *KubeMapper) MongoStatefulSet() (*v1beta1_apps.StatefulSet, error) {
 	replicas := int32(w.BiteService.Replicas)
 	imagePullSecrets, err := w.imagePullSecrets()
@@ -205,7 +211,7 @@ func (w *KubeMapper) MongoStatefulSet() (*v1beta1_apps.StatefulSet, error) {
 	}
 
 	retval := &v1beta1_apps.StatefulSet{
-		ObjectMeta: v1.ObjectMeta{
+		ObjectMeta: metav1.ObjectMeta{
 			Name:      w.BiteService.Name,
 			Namespace: w.Namespace,
 			Labels: map[string]string{
@@ -219,7 +225,7 @@ func (w *KubeMapper) MongoStatefulSet() (*v1beta1_apps.StatefulSet, error) {
 			ServiceName: w.BiteService.Name,
 			Replicas:    &replicas,
 			Template: v1.PodTemplateSpec{
-				ObjectMeta: v1.ObjectMeta{
+				ObjectMeta: metav1.ObjectMeta{
 					Name:      w.BiteService.Name,
 					Namespace: w.Namespace,
 					Labels: map[string]string{
@@ -278,7 +284,7 @@ func (w *KubeMapper) MongoStatefulSet() (*v1beta1_apps.StatefulSet, error) {
 			},
 			VolumeClaimTemplates: []v1.PersistentVolumeClaim{
 				{
-					ObjectMeta: v1.ObjectMeta{
+					ObjectMeta: metav1.ObjectMeta{
 						Name:      w.BiteService.Volumes[0].Name,
 						Namespace: w.Namespace,
 						Annotations: map[string]string{
@@ -325,7 +331,7 @@ func (w *KubeMapper) Deployment() (*v1beta1_ext.Deployment, error) {
 	}
 
 	retval := &v1beta1_ext.Deployment{
-		ObjectMeta: v1.ObjectMeta{
+		ObjectMeta: metav1.ObjectMeta{
 			Name:      w.BiteService.Name,
 			Namespace: w.Namespace,
 			Labels: map[string]string{
@@ -337,14 +343,14 @@ func (w *KubeMapper) Deployment() (*v1beta1_ext.Deployment, error) {
 		},
 		Spec: v1beta1_ext.DeploymentSpec{
 			Replicas: &replicas,
-			Selector: &unversioned.LabelSelector{
+			Selector: &metav1.LabelSelector{
 				MatchLabels: map[string]string{
 					"creator": "pipeline",
 					"name":    w.BiteService.Name,
 				},
 			},
 			Template: v1.PodTemplateSpec{
-				ObjectMeta: v1.ObjectMeta{
+				ObjectMeta: metav1.ObjectMeta{
 					Name:      w.BiteService.Name,
 					Namespace: w.Namespace,
 					Labels: map[string]string{
@@ -389,7 +395,7 @@ func (w *KubeMapper) imagePullSecrets() ([]v1.LocalObjectReference, error) {
 // HPA extracts Kubernetes object from Bitesize definition
 func (w *KubeMapper) HPA() (autoscale_v1.HorizontalPodAutoscaler, error) {
 	retval := autoscale_v1.HorizontalPodAutoscaler{
-		ObjectMeta: v1.ObjectMeta{
+		ObjectMeta: metav1.ObjectMeta{
 			Name:      w.BiteService.Name,
 			Namespace: w.Namespace,
 			Labels: map[string]string{
@@ -522,16 +528,25 @@ func (w *KubeMapper) volumes() ([]v1.Volume, error) {
 	var retval []v1.Volume
 	for _, v := range w.BiteService.Volumes {
 		vol := v1.Volume{
-			Name: v.Name,
-			VolumeSource: v1.VolumeSource{
-				PersistentVolumeClaim: &v1.PersistentVolumeClaimVolumeSource{
-					ClaimName: v.Name,
-				},
-			},
+			Name:         v.Name,
+			VolumeSource: w.volumeSource(v),
 		}
 		retval = append(retval, vol)
 	}
 	return retval, nil
+}
+
+func (w *KubeMapper) volumeSource(vol bitesize.Volume) v1.VolumeSource {
+	if vol.IsSecretVolume() {
+		return v1.VolumeSource{
+			Secret: &v1.SecretVolumeSource{SecretName: vol.Name},
+		}
+	}
+
+	return v1.VolumeSource{
+		PersistentVolumeClaim: &v1.PersistentVolumeClaimVolumeSource{ClaimName: vol.Name},
+	}
+
 }
 
 // Ingress extracts Kubernetes object from Bitesize definition
@@ -560,7 +575,7 @@ func (w *KubeMapper) Ingress() (*v1beta1_ext.Ingress, error) {
 
 	port := intstr.FromInt(w.BiteService.Ports[0])
 	retval := &v1beta1_ext.Ingress{
-		ObjectMeta: v1.ObjectMeta{
+		ObjectMeta: metav1.ObjectMeta{
 			Name:      w.BiteService.Name,
 			Namespace: w.Namespace,
 			Labels:    labels,
@@ -602,14 +617,14 @@ func (w *KubeMapper) Ingress() (*v1beta1_ext.Ingress, error) {
 	return retval, nil
 }
 
-// ThirdPartyResource extracts Kubernetes object from Bitesize definition
-func (w *KubeMapper) ThirdPartyResource() (*ext.PrsnExternalResource, error) {
+// CustomResourceDefinition extracts Kubernetes object from Bitesize definition
+func (w *KubeMapper) CustomResourceDefinition() (*ext.PrsnExternalResource, error) {
 	retval := &ext.PrsnExternalResource{
-		TypeMeta: unversioned.TypeMeta{
+		TypeMeta: metav1.TypeMeta{
 			Kind:       strings.Title(w.BiteService.Type),
 			APIVersion: "prsn.io/v1",
 		},
-		ObjectMeta: v1.ObjectMeta{
+		ObjectMeta: metav1.ObjectMeta{
 			Labels: map[string]string{
 				"creator": "pipeline",
 				"name":    w.BiteService.Name,
@@ -679,17 +694,15 @@ func (w *KubeMapper) resources() (v1.ResourceRequirements, error) {
 				"memory": memoryLimit,
 			},
 		}, nil
-	} else {
-		return v1.ResourceRequirements{
-			Requests: v1.ResourceList{
-				"cpu":    cpuRequest,
-				"memory": memoryRequest,
-			},
-			Limits: v1.ResourceList{
-				"cpu":    cpuLimit,
-				"memory": memoryLimit,
-			},
-		}, nil
-
 	}
+	return v1.ResourceRequirements{
+		Requests: v1.ResourceList{
+			"cpu":    cpuRequest,
+			"memory": memoryRequest,
+		},
+		Limits: v1.ResourceList{
+			"cpu":    cpuLimit,
+			"memory": memoryLimit,
+		},
+	}, nil
 }

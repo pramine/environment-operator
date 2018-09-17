@@ -6,23 +6,24 @@ import (
 	"testing"
 
 	"github.com/pearsontechnology/environment-operator/pkg/bitesize"
-	"k8s.io/client-go/pkg/api/resource"
+	"k8s.io/apimachinery/pkg/api/resource"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/pkg/api/v1"
 )
 
-func TestThirdPartyResource(t *testing.T) {
+func TestCRD(t *testing.T) {
 	w := BuildKubeMapper()
 	w.BiteService.Type = "mysql"
 	w.BiteService.Version = "5.6"
 
-	tpr, _ := w.ThirdPartyResource()
+	tpr, _ := w.CustomResourceDefinition()
 
 	if tpr.Kind != "Mysql" {
-		t.Errorf("tpr kind error. Expected: Mysql, got: %s", tpr.Kind)
+		t.Errorf("CRD kind error. Expected: Mysql, got: %s", tpr.Kind)
 	}
 
 	if tpr.Spec.Version != w.BiteService.Version {
-		t.Errorf("tpr version error: Expected: %s, got: %s", w.BiteService.Version, tpr.Spec.Version)
+		t.Errorf("CRD version error: Expected: %s, got: %s", w.BiteService.Version, tpr.Spec.Version)
 	}
 }
 
@@ -70,6 +71,33 @@ func TestDockerPullSecrets(t *testing.T) {
 		if testValue[i] != deployImagePullSecret[i] {
 			t.Errorf("Unexpected Value for ImagePullSecret. Expected= %+v Actual= %+v", testValue[i], deployImagePullSecret[i])
 		}
+	}
+}
+
+func TestVolumeFromSecret(t *testing.T) {
+	w := BuildKubeMapper()
+	w.BiteService.Name = "test"
+	w.Namespace = "test"
+	w.BiteService.Volumes = []bitesize.Volume{
+		{Name: "internal-ca", Path: "/tmp/vol1", Type: "secret"},
+	}
+	generatedVolumes, _ := w.volumes()
+
+	v := w.BiteService.Volumes
+
+	expectedVolumes := []v1.Volume{
+		{
+			Name: v[0].Name,
+			VolumeSource: v1.VolumeSource{
+				Secret: &v1.SecretVolumeSource{
+					SecretName: v[0].Name,
+				},
+			},
+		},
+	}
+
+	if !reflect.DeepEqual(generatedVolumes, expectedVolumes) {
+		t.Errorf("incorrect volumes: %v generated; expecting: %v ", generatedVolumes, expectedVolumes)
 	}
 }
 
@@ -197,7 +225,7 @@ func TestTranslatorPVCs(t *testing.T) {
 	generatedPVCs, _ := w.PersistentVolumeClaims()
 	expectedPVCs := []v1.PersistentVolumeClaim{
 		{
-			ObjectMeta: v1.ObjectMeta{
+			ObjectMeta: metav1.ObjectMeta{
 				Name:      "vol1",
 				Namespace: "test",
 				Labels: map[string]string{
@@ -221,7 +249,7 @@ func TestTranslatorPVCs(t *testing.T) {
 			},
 		},
 		{
-			ObjectMeta: v1.ObjectMeta{
+			ObjectMeta: metav1.ObjectMeta{
 				Name:      "vol2",
 				Namespace: "test",
 				Labels: map[string]string{

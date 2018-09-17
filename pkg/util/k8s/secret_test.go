@@ -3,6 +3,7 @@ package k8s
 import (
 	"testing"
 
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes/fake"
 	"k8s.io/client-go/pkg/api/v1"
 )
@@ -49,7 +50,7 @@ func createSecret() Secret {
 func createSimpleSecretClient() *fake.Clientset {
 	return fake.NewSimpleClientset(
 		&v1.Secret{
-			ObjectMeta: v1.ObjectMeta{
+			ObjectMeta: metav1.ObjectMeta{
 				Name:      "test-secret",
 				Namespace: "sample",
 			},

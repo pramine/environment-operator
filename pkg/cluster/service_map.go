@@ -6,7 +6,7 @@ import (
 
 	"github.com/pearsontechnology/environment-operator/pkg/bitesize"
 	"github.com/pearsontechnology/environment-operator/pkg/k8_extensions"
-	"k8s.io/client-go/pkg/api/resource"
+	"k8s.io/apimachinery/pkg/api/resource"
 	"k8s.io/client-go/pkg/api/v1"
 	v1beta1_apps "k8s.io/client-go/pkg/apis/apps/v1beta1"
 	autoscale_v1 "k8s.io/client-go/pkg/apis/autoscaling/v1"
@@ -18,6 +18,7 @@ import (
 // information, from kubernetes objects to bitesize objects
 type ServiceMap map[string]*bitesize.Service
 
+// CreateOrGet initializes new biteservice or returns an existing one (by name)
 func (s ServiceMap) CreateOrGet(name string) *bitesize.Service {
 	// Create with some defaults -- defaults should probably live in bitesize.Service
 	if s[name] == nil {
@@ -43,6 +44,7 @@ func (s ServiceMap) Services() bitesize.Services {
 	return serviceList
 }
 
+// AddService adds Kubernetes service object to biteservice
 func (s ServiceMap) AddService(svc v1.Service) {
 	name := svc.Name
 	biteservice := s.CreateOrGet(name)
@@ -53,6 +55,7 @@ func (s ServiceMap) AddService(svc v1.Service) {
 	}
 }
 
+// AddDeployment adds kubernetes deployment object to biteservice
 func (s ServiceMap) AddDeployment(deployment v1beta1_ext.Deployment) {
 	name := deployment.Name
 
@@ -107,6 +110,7 @@ func (s ServiceMap) AddDeployment(deployment v1beta1_ext.Deployment) {
 	}
 }
 
+// AddHPA adds Kubernetes HPA to biteservice
 func (s ServiceMap) AddHPA(hpa autoscale_v1.HorizontalPodAutoscaler) {
 	name := hpa.Name
 
@@ -117,34 +121,39 @@ func (s ServiceMap) AddHPA(hpa autoscale_v1.HorizontalPodAutoscaler) {
 	biteservice.HPA.TargetCPUUtilizationPercentage = *hpa.Spec.TargetCPUUtilizationPercentage
 }
 
+// AddVolumeClaim adds Kubernetes PVC to biteservice
 func (s ServiceMap) AddVolumeClaim(claim v1.PersistentVolumeClaim) {
 	name := claim.ObjectMeta.Labels["deployment"]
 
-	if name != "" {
-		biteservice := s.CreateOrGet(name)
-
-		vol := bitesize.Volume{
-			Path:  strings.Replace(claim.ObjectMeta.Labels["mount_path"], "2F", "/", -1),
-			Modes: getAccessModesAsString(claim.Spec.AccessModes),
-			Size:  claim.ObjectMeta.Labels["size"],
-			Name:  claim.ObjectMeta.Name,
-			Type:  claim.ObjectMeta.Labels["type"],
-		}
-		biteservice.Volumes = append(biteservice.Volumes, vol)
+	if name == "" {
+		return
 	}
-}
 
-func (s ServiceMap) AddThirdPartyResource(tpr k8_extensions.PrsnExternalResource) {
-	name := tpr.ObjectMeta.Name
 	biteservice := s.CreateOrGet(name)
-	biteservice.Type = strings.ToLower(tpr.Kind)
-	biteservice.Options = tpr.Spec.Options
-	biteservice.Version = tpr.Spec.Version
-	if tpr.Spec.Replicas != 0 {
-		biteservice.Replicas = tpr.Spec.Replicas
+
+	vol := bitesize.Volume{
+		Path:  strings.Replace(claim.ObjectMeta.Labels["mount_path"], "2F", "/", -1),
+		Modes: getAccessModesAsString(claim.Spec.AccessModes),
+		Size:  claim.ObjectMeta.Labels["size"],
+		Name:  claim.ObjectMeta.Name,
+		Type:  claim.ObjectMeta.Labels["type"],
+	}
+	biteservice.Volumes = append(biteservice.Volumes, vol)
+}
+
+// AddCustomResourceDefinition adds Kubernetes CRD to biteservice
+func (s ServiceMap) AddCustomResourceDefinition(crd k8_extensions.PrsnExternalResource) {
+	name := crd.ObjectMeta.Name
+	biteservice := s.CreateOrGet(name)
+	biteservice.Type = strings.ToLower(crd.Kind)
+	biteservice.Options = crd.Spec.Options
+	biteservice.Version = crd.Spec.Version
+	if crd.Spec.Replicas != 0 {
+		biteservice.Replicas = crd.Spec.Replicas
 	}
 }
 
+// AddIngress adds Kubernetes ingress fields to biteservice
 func (s ServiceMap) AddIngress(ingress v1beta1_ext.Ingress) {
 	name := ingress.Name
 	biteservice := s.CreateOrGet(name)
@@ -175,6 +184,7 @@ func (s ServiceMap) AddIngress(ingress v1beta1_ext.Ingress) {
 	}
 }
 
+// AddMongoStatefulSet adds Kubernetes stateful set (what???) to biteservice
 func (s ServiceMap) AddMongoStatefulSet(statefulset v1beta1_apps.StatefulSet) {
 	name := statefulset.Name
 

@@ -3,6 +3,7 @@ package k8s
 import (
 	"testing"
 
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes/fake"
 	"k8s.io/client-go/pkg/api/v1"
 	"k8s.io/client-go/pkg/apis/extensions/v1beta1"
@@ -40,7 +41,7 @@ func TestDeploymentExist(t *testing.T) {
 func TestDeploymentApplyNew(t *testing.T) {
 	d := createDeployment()
 	newDeployment := &v1beta1.Deployment{
-		ObjectMeta: v1.ObjectMeta{
+		ObjectMeta: metav1.ObjectMeta{
 			Name:      "new",
 			Namespace: "sample",
 			Labels: map[string]string{
@@ -75,7 +76,7 @@ func TestDeploymentApplyNew(t *testing.T) {
 func TestDeploymentApplyExisting(t *testing.T) {
 	d := createDeployment()
 	existingDeployment := &v1beta1.Deployment{
-		ObjectMeta: v1.ObjectMeta{
+		ObjectMeta: metav1.ObjectMeta{
 			Name:      "test",
 			Namespace: "sample",
 			Labels: map[string]string{
@@ -119,7 +120,7 @@ func createSimpleDeploymentClient() *fake.Clientset {
 	replicaCount := int32(1)
 	return fake.NewSimpleClientset(
 		&v1beta1.Deployment{
-			ObjectMeta: v1.ObjectMeta{
+			ObjectMeta: metav1.ObjectMeta{
 				Name:      "test",
 				Namespace: "sample",
 				Labels: map[string]string{
@@ -129,7 +130,7 @@ func createSimpleDeploymentClient() *fake.Clientset {
 			Spec: v1beta1.DeploymentSpec{
 				Replicas: &replicaCount,
 				Template: v1.PodTemplateSpec{
-					ObjectMeta: v1.ObjectMeta{
+					ObjectMeta: metav1.ObjectMeta{
 						Name:      "test",
 						Namespace: "test",
 						Labels: map[string]string{

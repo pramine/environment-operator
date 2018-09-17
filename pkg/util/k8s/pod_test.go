@@ -3,6 +3,7 @@ package k8s
 import (
 	"testing"
 
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes/fake"
 	"k8s.io/client-go/pkg/api/v1"
 )
@@ -35,7 +36,7 @@ func TestPodList(t *testing.T) {
 func createPod() Pod {
 	f := fake.NewSimpleClientset(
 		&v1.Pod{
-			ObjectMeta: v1.ObjectMeta{
+			ObjectMeta: metav1.ObjectMeta{
 				Name:      "test",
 				Namespace: "sample",
 				Labels: map[string]string{

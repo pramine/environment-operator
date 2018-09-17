@@ -8,42 +8,40 @@ import (
 	"github.com/pearsontechnology/environment-operator/pkg/diff"
 	ext "github.com/pearsontechnology/environment-operator/pkg/k8_extensions"
 	"github.com/pearsontechnology/environment-operator/pkg/util"
+	"k8s.io/apimachinery/pkg/api/resource"
 	"k8s.io/client-go/kubernetes/fake"
-	"k8s.io/client-go/pkg/api/resource"
-	"k8s.io/client-go/pkg/api/unversioned"
-	"k8s.io/client-go/pkg/api/v1"
-	"k8s.io/client-go/pkg/apimachinery"
-	autoscale_v1 "k8s.io/client-go/pkg/apis/autoscaling/v1"
-	// "k8s.io/client-go/pkg/api/meta"
 
-	"k8s.io/client-go/pkg/apimachinery/registered"
+	fakecrd "github.com/pearsontechnology/environment-operator/pkg/util/k8s/fake"
+	"k8s.io/client-go/pkg/api/v1"
 	v1beta1_apps "k8s.io/client-go/pkg/apis/apps/v1beta1"
+	autoscale_v1 "k8s.io/client-go/pkg/apis/autoscaling/v1"
 	v1beta1_ext "k8s.io/client-go/pkg/apis/extensions/v1beta1"
 	fakerest "k8s.io/client-go/rest/fake"
 
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
 	"github.com/pearsontechnology/environment-operator/pkg/config"
-	faketpr "github.com/pearsontechnology/environment-operator/pkg/util/k8s/fake"
 )
 
-func init() {
-	// Let our fake server handle our tprs
-	// by registering prsn.io/v1 resources
-	// it's easier in client-go v1.6
-	m := registered.DefaultAPIRegistrationManager
+// func init() {
+// 	// Let our fake server handle our tprs
+// 	// by registering prsn.io/v1 resources
+// 	// it's easier in client-go v1.6
+// 	m := registered.DefaultAPIRegistrationManager
 
-	groupversion := unversioned.GroupVersion{
-		Group:   "prsn.io",
-		Version: "v1",
-	}
-	groupversions := []unversioned.GroupVersion{groupversion}
-	groupmeta := apimachinery.GroupMeta{
-		GroupVersion: groupversion,
-	}
+// 	groupversion := runtime.GroupVersion{
+// 		Group:   "prsn.io",
+// 		Version: "v1",
+// 	}
+// 	groupversions := []runtime.GroupVersion{groupversion}
+// 	groupmeta := apimachinery.GroupMeta{
+// 		GroupVersion: groupversion,
+// 	}
 
-	m.RegisterVersions(groupversions)
-	m.AddThirdPartyAPIGroupVersions(groupversion)
-	m.RegisterGroup(groupmeta)
-}
+// 	m.RegisterVersions(groupversions)
+// 	m.AddThirdPartyAPIGroupVersions(groupversion)
+// 	m.RegisterGroup(groupmeta)
+// }
 
 func TestKubernetesClusterClient(t *testing.T) {
 	// t.Run("service count", testServiceCount)
@@ -58,7 +56,7 @@ func TestApplyEnvironment(t *testing.T) {
 	log.SetLevel(log.FatalLevel)
 	client := fake.NewSimpleClientset(
 		&v1.Namespace{
-			ObjectMeta: v1.ObjectMeta{
+			ObjectMeta: metav1.ObjectMeta{
 				Name: "environment-dev",
 				Labels: map[string]string{
 					"environment": "environment2",
@@ -66,10 +64,10 @@ func TestApplyEnvironment(t *testing.T) {
 			},
 		},
 	)
-	tprclient := loadTestTPRS()
+	crdcli := loadTestCRDs()
 	cluster := Cluster{
 		Interface: client,
-		TPRClient: tprclient,
+		CRDClient: crdcli,
 	}
 
 	e1, err := bitesize.LoadEnvironment("../../test/assets/environments.bitesize", "environment2")
@@ -113,7 +111,7 @@ func TestShouldDeploy(t *testing.T) {
 	}
 
 	//Mark all services in the initial environment as deployed
-	for i, _ := range e1.Services {
+	for i := range e1.Services {
 		e1.Services[i].Status.DeployedAt = "Current Time"
 	}
 
@@ -149,7 +147,7 @@ func TestGetPods(t *testing.T) {
 	labels := map[string]string{"creator": "pipeline"}
 	client := fake.NewSimpleClientset(
 		&v1.Pod{
-			TypeMeta: unversioned.TypeMeta{
+			TypeMeta: runtime.TypeMeta{
 				Kind:       "pod",
 				APIVersion: "v1",
 			},
@@ -160,10 +158,10 @@ func TestGetPods(t *testing.T) {
 			},
 		},
 	)
-	tprclient := loadTestTPRS()
+	crdclient := loadTestCRDs()
 	cluster := Cluster{
 		Interface: client,
-		TPRClient: tprclient,
+		CRDClient: crdcli,
 	}
 	pods, err := cluster.LoadPods("dev")
 
@@ -180,7 +178,7 @@ func TestGetPods(t *testing.T) {
 
 func newDeployment(namespace, name string) *v1beta1_ext.Deployment {
 	d := v1beta1_ext.Deployment{
-		ObjectMeta: v1.ObjectMeta{
+		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
 			Namespace: namespace,
 			Annotations: map[string]string{
@@ -198,7 +196,7 @@ func newService(namespace, serviceName, portName string, portNumber int32) *v1.S
 	labels := map[string]string{"creator": "pipeline"}
 
 	service := v1.Service{
-		ObjectMeta: v1.ObjectMeta{
+		ObjectMeta: metav1.ObjectMeta{
 			Name:      serviceName,
 			Namespace: namespace,
 			Labels:    labels,
@@ -213,30 +211,30 @@ func newService(namespace, serviceName, portName string, portNumber int32) *v1.S
 	return &service
 }
 
-func validMeta(namespace, name string) v1.ObjectMeta {
+func validMeta(namespace, name string) metav1.ObjectMeta {
 	validLabels := map[string]string{"creator": "pipeline"}
 
 	if namespace != "" {
-		return v1.ObjectMeta{
+		return metav1.ObjectMeta{
 			Name:      name,
 			Namespace: namespace,
 			Labels:    validLabels,
 		}
 	}
-	return v1.ObjectMeta{
+	return metav1.ObjectMeta{
 		Name:   name,
 		Labels: validLabels,
 	}
 }
 
-func loadTestTPRS() *fakerest.RESTClient {
-	return faketpr.TPRClient(
+func loadTestCRDs() *fakerest.RESTClient {
+	return fakecrd.CRDClient(
 		&ext.PrsnExternalResource{
-			TypeMeta: unversioned.TypeMeta{
+			TypeMeta: metav1.TypeMeta{
 				Kind:       "Mysql",
 				APIVersion: "prsn.io/v1",
 			},
-			ObjectMeta: v1.ObjectMeta{
+			ObjectMeta: metav1.ObjectMeta{
 				Name: "testdb",
 				Labels: map[string]string{
 					"creator": "pipeline",
@@ -261,13 +259,13 @@ func loadTestEnvironment() *fake.Clientset {
 
 	return fake.NewSimpleClientset(
 		&v1.Namespace{
-			ObjectMeta: v1.ObjectMeta{
+			ObjectMeta: metav1.ObjectMeta{
 				Name:   "test",
 				Labels: nsLabels,
 			},
 		},
 		&v1.PersistentVolumeClaim{
-			ObjectMeta: v1.ObjectMeta{
+			ObjectMeta: metav1.ObjectMeta{
 				Name:      "ts",
 				Namespace: "test",
 			},
@@ -286,13 +284,13 @@ func loadTestEnvironment() *fake.Clientset {
 			},
 		},
 		&v1.PersistentVolume{
-			ObjectMeta: v1.ObjectMeta{
+			ObjectMeta: metav1.ObjectMeta{
 				Name:   "test",
 				Labels: validLabels,
 			},
 		},
 		&v1beta1_ext.Deployment{
-			ObjectMeta: v1.ObjectMeta{
+			ObjectMeta: metav1.ObjectMeta{
 				Name:      "test",
 				Namespace: "test",
 				Labels: map[string]string{
@@ -313,7 +311,7 @@ func loadTestEnvironment() *fake.Clientset {
 			Spec: v1beta1_ext.DeploymentSpec{
 				Replicas: &replicaCount,
 				Template: v1.PodTemplateSpec{
-					ObjectMeta: v1.ObjectMeta{
+					ObjectMeta: metav1.ObjectMeta{
 						Name:      "test",
 						Namespace: "test",
 						Labels:    validLabels,
@@ -385,7 +383,7 @@ func loadTestEnvironment() *fake.Clientset {
 		},
 
 		&v1.Service{
-			ObjectMeta: v1.ObjectMeta{
+			ObjectMeta: metav1.ObjectMeta{
 				Name:      "ts",
 				Namespace: "test",
 			},
@@ -411,13 +409,13 @@ func loadTestEnvironment() *fake.Clientset {
 			ObjectMeta: validMeta("test", "test2"),
 		},
 		&v1beta1_ext.Ingress{
-			ObjectMeta: v1.ObjectMeta{
+			ObjectMeta: metav1.ObjectMeta{
 				Name:      "ts",
 				Namespace: "test",
 			},
 		},
 		&v1beta1_ext.Ingress{
-			ObjectMeta: v1.ObjectMeta{
+			ObjectMeta: metav1.ObjectMeta{
 				Name:      "test",
 				Namespace: "test",
 				Labels: map[string]string{
@@ -449,10 +447,10 @@ func loadTestEnvironment() *fake.Clientset {
 
 func testServicePorts(t *testing.T) {
 	client := loadTestEnvironment()
-	tprclient := loadTestTPRS()
+	crdcli := loadTestCRDs()
 	cluster := Cluster{
 		Interface: client,
-		TPRClient: tprclient,
+		CRDClient: crdcli,
 	}
 	environment, err := cluster.LoadEnvironment("test")
 	if err != nil {
@@ -468,10 +466,10 @@ func testServicePorts(t *testing.T) {
 func testFullBitesizeEnvironment(t *testing.T) {
 
 	client := loadTestEnvironment()
-	tprclient := loadTestTPRS()
+	crdcli := loadTestCRDs()
 	cluster := Cluster{
 		Interface: client,
-		TPRClient: tprclient,
+		CRDClient: crdcli,
 	}
 	environment, err := cluster.LoadEnvironment("test")
 	if err != nil {
@@ -518,10 +516,10 @@ func testFullBitesizeEnvironment(t *testing.T) {
 
 func TestEnvironmentAnnotations(t *testing.T) {
 	client := loadTestEnvironment()
-	tprclient := loadTestTPRS()
+	crdcli := loadTestCRDs()
 	cluster := Cluster{
 		Interface: client,
-		TPRClient: tprclient,
+		CRDClient: crdcli,
 	}
 	environment, _ := cluster.LoadEnvironment("test")
 	testService := environment.Services.FindByName("test")
@@ -544,10 +542,10 @@ func TestEnvironmentAnnotations(t *testing.T) {
 
 func TestApplyNewHPA(t *testing.T) {
 
-	tprclient := loadEmptyTPRS()
+	crdcli := loadEmptyCRDs()
 	client := fake.NewSimpleClientset(
 		&v1.Namespace{
-			ObjectMeta: v1.ObjectMeta{
+			ObjectMeta: metav1.ObjectMeta{
 				Name: "environment-dev",
 				Labels: map[string]string{
 					"environment": "environment-dev",
@@ -558,7 +556,7 @@ func TestApplyNewHPA(t *testing.T) {
 
 	cluster := Cluster{
 		Interface: client,
-		TPRClient: tprclient,
+		CRDClient: crdcli,
 	}
 
 	e1, err := bitesize.LoadEnvironment("../../test/assets/environments.bitesize", "environment3")
@@ -581,10 +579,10 @@ func TestApplyNewHPA(t *testing.T) {
 
 func TestApplyExistingHPA(t *testing.T) {
 	var min, target int32 = 2, 75
-	tprclient := loadEmptyTPRS()
+	crdcli := loadEmptyCRDs()
 	client := fake.NewSimpleClientset(
 		&v1.Namespace{
-			ObjectMeta: v1.ObjectMeta{
+			ObjectMeta: metav1.ObjectMeta{
 				Name: "environment-dev",
 				Labels: map[string]string{
 					"environment": "environment-dev",
@@ -592,7 +590,7 @@ func TestApplyExistingHPA(t *testing.T) {
 			},
 		},
 		&autoscale_v1.HorizontalPodAutoscaler{
-			ObjectMeta: v1.ObjectMeta{
+			ObjectMeta: metav1.ObjectMeta{
 				Name:      "hpa-service",
 				Namespace: "environment-dev",
 				Labels: map[string]string{
@@ -629,7 +627,7 @@ func TestApplyExistingHPA(t *testing.T) {
 
 	cluster := Cluster{
 		Interface: client,
-		TPRClient: tprclient,
+		CRDClient: crdcli,
 	}
 
 	e1, err := bitesize.LoadEnvironment("../../test/assets/environments.bitesize", "environment3")
@@ -649,17 +647,17 @@ func TestApplyExistingHPA(t *testing.T) {
 		t.Errorf("Expected loaded environments to be equal, yet diff is: %s", diff.Changes())
 	}
 }
-func loadEmptyTPRS() *fakerest.RESTClient {
-	return faketpr.TPRClient()
+func loadEmptyCRDs() *fakerest.RESTClient {
+	return fakecrd.CRDClient()
 }
 
 func TestApplyMongoStatefulSet(t *testing.T) {
-	tprclient := loadEmptyTPRS()
+	crdcli := loadEmptyCRDs()
 	cpulimit, _ := resource.ParseQuantity(config.Env.LimitDefaultCPU)
 	memlimit, _ := resource.ParseQuantity(config.Env.LimitDefaultMemory)
 	client := fake.NewSimpleClientset(
 		&v1.Namespace{
-			ObjectMeta: v1.ObjectMeta{
+			ObjectMeta: metav1.ObjectMeta{
 				Name: "environment-mongo",
 				Labels: map[string]string{
 					"environment": "environment-mongo",
@@ -667,7 +665,7 @@ func TestApplyMongoStatefulSet(t *testing.T) {
 			},
 		},
 		&v1beta1_apps.StatefulSet{
-			ObjectMeta: v1.ObjectMeta{
+			ObjectMeta: metav1.ObjectMeta{
 				Name:      "mongo",
 				Namespace: "environment-mongo",
 				Labels: map[string]string{
@@ -687,7 +685,7 @@ func TestApplyMongoStatefulSet(t *testing.T) {
 				ServiceName: "mongo",
 				Replicas:    &[]int32{3}[0],
 				Template: v1.PodTemplateSpec{
-					ObjectMeta: v1.ObjectMeta{
+					ObjectMeta: metav1.ObjectMeta{
 						Name:      "mongo",
 						Namespace: "test",
 						Labels: map[string]string{
@@ -748,7 +746,7 @@ func TestApplyMongoStatefulSet(t *testing.T) {
 				},
 				VolumeClaimTemplates: []v1.PersistentVolumeClaim{
 					{
-						ObjectMeta: v1.ObjectMeta{
+						ObjectMeta: metav1.ObjectMeta{
 							Name:      "mongo-persistent-storage",
 							Namespace: "environment-mongo",
 							Annotations: map[string]string{
@@ -790,7 +788,7 @@ func TestApplyMongoStatefulSet(t *testing.T) {
 
 	cluster := Cluster{
 		Interface: client,
-		TPRClient: tprclient,
+		CRDClient: crdcli,
 	}
 
 	e1, err := bitesize.LoadEnvironment("../../test/assets/environments.bitesize", "environment4")

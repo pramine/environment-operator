@@ -12,6 +12,7 @@ type Pod struct {
 	Namespace string
 }
 
+// GetLogs returns pod's logs as a string
 func (client *Pod) GetLogs(name string) (string, error) {
 
 	reader, err := client.Core().Pods(client.Namespace).GetLogs(name, logOptions()).Stream()
