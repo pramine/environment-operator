@@ -9,10 +9,11 @@ This project adheres to [Semantic Versioning](http://semver.org/). Additionally,
 - **Fixed** for any bug fixes.
 - **Security** for any security changes or fixes for vulnerabilities.
 
-### **[0.0.15]**
+### **[0.0.15] 2018-09-17 [RELEASED]**
 
 #### Added
 
+** Support for Kubernetes CRDs with backwards compatibilty to k8s 1.7 APIs. [[BITE-3572](https://agile-jira.pearson.com/browse/BITE-3572)]
 ** Support for mounting secrets as a volume within the container. [[BITE-3581](https://agile-jira.pearson.com/browse/BITE-3581)]
 
 ### **[0.0.14] 2018-05-03 [RELEASED]**
@@ -22,17 +23,12 @@ This project adheres to [Semantic Versioning](http://semver.org/). Additionally,
  * Support different types of dynamic volumes (EBS/EFS) [[BITE-2640](https://agile-jira.pearson.com/browse/BITE-2640)]
  * Added Prometheus metrics endpoint [[BITE-1491](https://agile-jira.pearson.com/browse/BITE-1491)]
 
-#### Changed 
-#### Fixed 
-
 ### **[0.0.13] 2018-04-26 [RELEASED]**
 
 #### Added
 
  * Support setting http2 label for ingress objects.  [[BITE-2633](https://agile-jira.pearson.com/browse/BITE-2633)]
 
-#### Changed 
-#### Fixed 
 
  * EO crashes with index out of range when an ingress exists which has no corresponding service defined.
 
