@@ -90,3 +90,23 @@ environments:
         path: /data/db
         modes: ReadWriteOnce
         size: 10G
+- name: environment5
+  namespace: environment-kafka
+  services:
+  - name: zookeeper
+    type: zookeeper
+    options:
+      replicas: 3
+      resources_limits_cpu: 500m
+      resources_limits_memory: 512Mi
+      resources_requests_cpu: 500m
+      resources_requests_memory: 512Mi
+  - type: kafka
+    name: kafka
+    options:
+      replicas: 3
+      zookeeperConnect: "zookeeper"
+      resources_limits_cpu: 500m
+      resources_limits_memory: 512Mi
+      resources_requests_cpu: 500m
+      resources_requests_memory: 512Mi
