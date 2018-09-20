@@ -9,7 +9,7 @@ This project adheres to [Semantic Versioning](http://semver.org/). Additionally,
 - **Fixed** for any bug fixes.
 - **Security** for any security changes or fixes for vulnerabilities.
 
-### **[0.0.16]**
+### **[0.0.16] 2018-09-20 [RELEASED]**
  #### Added
   * Added Zookeeper and Kafka TPRs [BITE-3429](https://agile-jira.pearson.com/browse/BITE-3429)
 
