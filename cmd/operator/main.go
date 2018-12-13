@@ -6,6 +6,7 @@ import (
 	"time"
 
 	log "github.com/Sirupsen/logrus"
+	"github.com/gorilla/handlers"
 	"github.com/pearsontechnology/environment-operator/pkg/bitesize"
 	"github.com/pearsontechnology/environment-operator/pkg/cluster"
 	"github.com/pearsontechnology/environment-operator/pkg/config"
@@ -13,8 +14,6 @@ import (
 	"github.com/pearsontechnology/environment-operator/pkg/reaper"
 	"github.com/pearsontechnology/environment-operator/pkg/web"
 	"github.com/pearsontechnology/environment-operator/version"
-
-	"github.com/gorilla/handlers"
 )
 
 var gitClient *git.Git
@@ -67,10 +66,15 @@ func main() {
 
 	for {
 		gitClient.Refresh()
-		gitConfiguration, _ := bitesize.LoadEnvironmentFromConfig(config.Env)
-		client.ApplyIfChanged(gitConfiguration)
+		gitConfiguration, err := bitesize.LoadEnvironmentFromConfig(config.Env)
 
-		go reap.Cleanup(gitConfiguration)
+		if err != nil {
+			log.Errorf("Error while loading environment config: %s", err.Error())
+		} else {
+			client.ApplyIfChanged(gitConfiguration)
+			go reap.Cleanup(gitConfiguration)
+		}
+
 		time.Sleep(30000 * time.Millisecond)
 	}
 
