@@ -25,6 +25,10 @@ func Compare(config1, config2 bitesize.Environment) bool {
 	c1.Name = ""
 	c2.Name = ""
 
+	logrus.Debugf("Testing dump")
+	litter.Dump(c2)
+	litter.Dump(c1)
+
 	compareConfig := &pretty.Config{
 		Diffable:          true,
 		SkipZeroFields:    true,
@@ -45,6 +49,7 @@ func Compare(config1, config2 bitesize.Environment) bool {
 
 			serviceDiff := compareConfig.Compare(d, s)
 			if serviceDiff != "" {
+				logrus.Debug("Found changes")
 				litter.Dump(serviceDiff)
 				addServiceChange(s.Name, serviceDiff)
 				changeDetected = true

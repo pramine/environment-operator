@@ -51,7 +51,6 @@ func (cluster *Cluster) ApplyIfChanged(newConfig *bitesize.Environment) error {
 	}
 
 	if diff.Compare(*newConfig, *currentConfig) {
-		log.Infof("Changes:\n %s", diff.Changes())
 		err = cluster.ApplyEnvironment(currentConfig, newConfig)
 	}
 
