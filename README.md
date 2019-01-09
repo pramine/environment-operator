@@ -26,6 +26,7 @@ For those that would rather get an example running and then go back to read the 
 
 * [Using Docker Registries (Dockerhub, Google Container Registry)](https://github.com/pearsontechnology/environment-operator/blob/dev/docs/Private_Registry.md)
 * [Deploying a Mongo Statefulset](https://github.com/pearsontechnology/environment-operator/blob/dev/docs/Mongo.md)
+* [Using Horizontal Pod AutoScaling](https://github.com/pearsontechnology/environment-operator/blob/dev/docs/HPA.md)
 
 
 

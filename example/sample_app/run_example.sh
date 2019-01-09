@@ -1,4 +1,4 @@
-#!/bin/bash -x
+#!/bin/bash
 
 ###################################
 ##Deploy Environment Operator
@@ -7,6 +7,7 @@
 kubectl create ns sample-app
 kubectl create secret generic git-private-key --from-file=key=./ro-priv --namespace=sample-app
 kubectl create secret generic auth-token-file --from-file=token=./token --namespace=sample-app
+kubectl create -f operator-rbac.yaml
 kubectl create -f operator-deployment.yaml
 kubectl create -f operator-ingress.yaml
 kubectl create -f operator-svc.yaml
