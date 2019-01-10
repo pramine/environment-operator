@@ -1,7 +1,7 @@
 package diff
 
 import (
-	//	log "github.com/Sirupsen/logrus"
+	"github.com/Sirupsen/logrus"
 	"github.com/kylelemons/godebug/pretty"
 	"github.com/pearsontechnology/environment-operator/pkg/bitesize"
 	"k8s.io/apimachinery/pkg/api/resource"
@@ -24,6 +24,8 @@ func Compare(config1, config2 bitesize.Environment) bool {
 	c1.Name = ""
 	c2.Name = ""
 
+	logrus.Debugf("Testing dump")
+
 	compareConfig := &pretty.Config{
 		Diffable:          true,
 		SkipZeroFields:    true,
@@ -32,7 +34,7 @@ func Compare(config1, config2 bitesize.Environment) bool {
 
 	for _, s := range c1.Services {
 		d := c2.Services.FindByName(s.Name)
-
+		logrus.Debugf("Service Name: %s", s.Name)
 		// compare configs only if deployment is found in cluster
 		// and git service has no version set
 		if (s.Version != "") || (d != nil && d.Version != "") {
@@ -40,8 +42,11 @@ func Compare(config1, config2 bitesize.Environment) bool {
 				alignServices(&s, d)
 			}
 
+			logrus.Debugf("Comparing service (new): %s", s.Name)
+
 			serviceDiff := compareConfig.Compare(d, s)
 			if serviceDiff != "" {
+				logrus.Debug("Found changes")
 				addServiceChange(s.Name, serviceDiff)
 				changeDetected = true
 			}
