@@ -4,7 +4,6 @@ import (
 	"github.com/Sirupsen/logrus"
 	"github.com/kylelemons/godebug/pretty"
 	"github.com/pearsontechnology/environment-operator/pkg/bitesize"
-	"github.com/sanity-io/litter"
 	"k8s.io/apimachinery/pkg/api/resource"
 )
 
@@ -26,8 +25,6 @@ func Compare(config1, config2 bitesize.Environment) bool {
 	c2.Name = ""
 
 	logrus.Debugf("Testing dump")
-	litter.Dump(c2)
-	litter.Dump(c1)
 
 	compareConfig := &pretty.Config{
 		Diffable:          true,
@@ -50,7 +47,6 @@ func Compare(config1, config2 bitesize.Environment) bool {
 			serviceDiff := compareConfig.Compare(d, s)
 			if serviceDiff != "" {
 				logrus.Debug("Found changes")
-				litter.Dump(serviceDiff)
 				addServiceChange(s.Name, serviceDiff)
 				changeDetected = true
 			}

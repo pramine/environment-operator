@@ -147,6 +147,8 @@ func kindFromElem(e string) string {
 		return "Zookeeper"
 	case "kafkas":
 		return "Kafka"
+	case "postgreses":
+		return "Postgres"
 	default:
 		return "None"
 	}
