@@ -34,21 +34,23 @@ func (client *CustomResourceDefinition) Get(name string) (*extensions.PrsnExtern
 // Exist checks if named resource exist in k8s cluster
 func (client *CustomResourceDefinition) Exist(name string) bool {
 	rsc, _ := client.Get(name)
-	log.Debugf("Got existing crd: %+v", rsc)
+	log.Debugf("Got existing CRD: %s", rsc.Name)
 	return rsc != nil
 }
 
 // Apply creates or updates PrsnExternalResource in k8s
 func (client *CustomResourceDefinition) Apply(resource *extensions.PrsnExternalResource) error {
 	if client.Exist(resource.ObjectMeta.Name) {
-		log.Debugf("Updating tpr resource: %s", resource.ObjectMeta.Name)
+		rsc, _ := client.Get(resource.ObjectMeta.Name)
+		resource.ResourceVersion = rsc.GetResourceVersion()
+		log.Debugf("Updating CRD resource: %s", resource.ObjectMeta.Name)
 		ret := client.Update(resource)
 		if ret != nil {
 			log.Debugf("CRD: Got error on update: %s", ret.Error())
 		}
 		return ret
 	}
-	log.Debugf("Creating tpr resource: %s", resource.ObjectMeta.Name)
+	log.Debugf("Creating CRD resource: %s", resource.ObjectMeta.Name)
 	ret := client.Create(resource)
 	if ret != nil {
 		log.Debugf("TPR: Got error on create: %s", ret.Error())
@@ -69,7 +71,7 @@ func (client *CustomResourceDefinition) Create(resource *extensions.PrsnExternal
 // Update updates existing resource in k8s
 func (client *CustomResourceDefinition) Update(resource *extensions.PrsnExternalResource) error {
 	var result extensions.PrsnExternalResource
-	return client.Put().
+	return client.Interface.Put().
 		Resource(plural(client.Type)).
 		Name(resource.ObjectMeta.Name).
 		Namespace(client.Namespace).

@@ -113,10 +113,12 @@ environments:
 - name: environment6
   namespace: environment-postgres
   services:
-  - name: postgres
-    type: postgres
+  - type: postgres
+    name: postgres
+    version : 1.0
     options:
-      replicas: 3
+      version: 9.6.6
+      replicas: 2
       multiaz: false
       dbinstanceclass: db.m4.large
       allocatedstorage: 200

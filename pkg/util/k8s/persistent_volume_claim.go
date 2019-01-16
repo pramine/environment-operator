@@ -2,9 +2,9 @@ package k8s
 
 import (
 	log "github.com/Sirupsen/logrus"
+	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/pkg/api/v1"
 )
 
 // PersistentVolumeClaim type actions on pvcs in k8s cluster

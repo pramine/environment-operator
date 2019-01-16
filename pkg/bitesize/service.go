@@ -13,32 +13,33 @@ import (
 // Service represents a single service and it's configuration,
 // running in environment
 type Service struct {
-	Name         string                  `yaml:"name" validate:"nonzero"`
-	ExternalURL  []string                `yaml:"-"`
-	Backend      string                  `yaml:"backend"`
-	BackendPort  int                     `yaml:"backend_port"`
-	Ports        []int                   `yaml:"-"` // Ports have custom unmarshaler
-	Ssl          string                  `yaml:"ssl,omitempty" validate:"regexp=^(true|false)*$"`
-	Version      string                  `yaml:"version,omitempty"`
-	Application  string                  `yaml:"application,omitempty"`
-	Replicas     int                     `yaml:"replicas,omitempty"`
-	Deployment   *DeploymentSettings     `yaml:"deployment,omitempty"`
-	HPA          HorizontalPodAutoscaler `yaml:"hpa" validate:"hpa"`
-	Requests     ContainerRequests       `yaml:"requests" validate:"requests"`
-	Limits       ContainerLimits         `yaml:"limits" validate:"limits"`
-	HealthCheck  *HealthCheck            `yaml:"health_check,omitempty"`
-	EnvVars      []EnvVar                `yaml:"env,omitempty"`
-	Commands     []string                `yaml:"command,omitempty"`
-	Annotations  map[string]string       `yaml:"-"` // Annotations have custom unmarshaler
-	Volumes      []Volume                `yaml:"volumes,omitempty"`
-	Options      map[string]string       `yaml:"options,omitempty"`
-	HTTP2        string                  `yaml:"http2,omitempty" validate:"regexp=^(true|false)*$"`
-	HTTPSOnly    string                  `yaml:"httpsOnly,omitempty" validate:"regexp=^(true|false)*$"`
-	HTTPSBackend string                  `yaml:"httpsBackend,omitempty" validate:"regexp=^(true|false)*$"`
-	Type         string                  `yaml:"type,omitempty"`
-	Status       ServiceStatus           `yaml:"status,omitempty"`
-	DatabaseType string                  `yaml:"database_type,omitempty" validate:"regexp=^(mongo)*$"`
-	GracePeriod  *int64                  `yaml:"graceperiod,omitempty"`
+	Name            string                  `yaml:"name" validate:"nonzero"`
+	ExternalURL     []string                `yaml:"-"`
+	Backend         string                  `yaml:"backend"`
+	BackendPort     int                     `yaml:"backend_port"`
+	Ports           []int                   `yaml:"-"` // Ports have custom unmarshaler
+	Ssl             string                  `yaml:"ssl,omitempty" validate:"regexp=^(true|false)*$"`
+	Version         string                  `yaml:"version,omitempty"`
+	Application     string                  `yaml:"application,omitempty"`
+	Replicas        int                     `yaml:"replicas,omitempty"`
+	Deployment      *DeploymentSettings     `yaml:"deployment,omitempty"`
+	HPA             HorizontalPodAutoscaler `yaml:"hpa" validate:"hpa"`
+	Requests        ContainerRequests       `yaml:"requests" validate:"requests"`
+	Limits          ContainerLimits         `yaml:"limits" validate:"limits"`
+	HealthCheck     *HealthCheck            `yaml:"health_check,omitempty"`
+	EnvVars         []EnvVar                `yaml:"env,omitempty"`
+	Commands        []string                `yaml:"command,omitempty"`
+	Annotations     map[string]string       `yaml:"-"` // Annotations have custom unmarshaler
+	Volumes         []Volume                `yaml:"volumes,omitempty"`
+	Options         map[string]string       `yaml:"options,omitempty"`
+	HTTP2           string                  `yaml:"http2,omitempty" validate:"regexp=^(true|false)*$"`
+	HTTPSOnly       string                  `yaml:"httpsOnly,omitempty" validate:"regexp=^(true|false)*$"`
+	HTTPSBackend    string                  `yaml:"httpsBackend,omitempty" validate:"regexp=^(true|false)*$"`
+	Type            string                  `yaml:"type,omitempty"`
+	Status          ServiceStatus           `yaml:"status,omitempty"`
+	DatabaseType    string                  `yaml:"database_type,omitempty" validate:"regexp=^(mongo)*$"`
+	GracePeriod     *int64                  `yaml:"graceperiod,omitempty"`
+	ResourceVersion string                  `yaml:"resourceVersion,omitempty"`
 	// XXX          map[string]interface{} `yaml:",inline"`
 }
 

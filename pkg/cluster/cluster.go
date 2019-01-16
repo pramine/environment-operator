@@ -75,11 +75,11 @@ func (cluster *Cluster) ApplyEnvironment(currentEnvironment, newEnvironment *bit
 			CRDClient: cluster.CRDClient,
 		}
 
-		if service.Type == "" {
+		if !shouldDeploy(currentEnvironment, newEnvironment, service.Name) {
+			continue
+		}
 
-			if !shouldDeploy(currentEnvironment, newEnvironment, service.Name) {
-				continue
-			}
+		if service.Type == "" {
 
 			if service.DatabaseType == "mongo" {
 				log.Debugf("Applying Stateful set for Mongo DB Service: %s ", service.Name)
@@ -145,7 +145,9 @@ func (cluster *Cluster) ApplyEnvironment(currentEnvironment, newEnvironment *bit
 			crd, _ := mapper.CustomResourceDefinition()
 			if err = client.CustomResourceDefinition(crd.Kind).Apply(crd); err != nil {
 				log.Error(err)
+				return err
 			}
+			log.Infof("Successfully updated CRD resource: %s", crd.Name)
 		}
 	}
 	return err
@@ -196,7 +198,7 @@ func (cluster *Cluster) LoadEnvironment(namespace string) (*bitesize.Environment
 
 	ns, err := client.Ns().Get()
 	if err != nil {
-		return nil, fmt.Errorf("Namespace %s not found", namespace)
+		return nil, fmt.Errorf("Error while retrieving namespace: %s", err.Error())
 	}
 	environmentName := ns.ObjectMeta.Labels["environment"]
 
@@ -249,9 +251,9 @@ func (cluster *Cluster) LoadEnvironment(namespace string) (*bitesize.Environment
 	}
 
 	for _, supported := range k8_extensions.SupportedThirdPartyResources {
-		tprs, _ := client.CustomResourceDefinition(supported).List()
-		for _, tpr := range tprs {
-			serviceMap.AddCustomResourceDefinition(tpr)
+		crds, _ := client.CustomResourceDefinition(supported).List()
+		for _, crd := range crds {
+			serviceMap.AddCustomResourceDefinition(crd)
 		}
 	}
 
