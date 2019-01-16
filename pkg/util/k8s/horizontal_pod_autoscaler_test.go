@@ -3,9 +3,9 @@ package k8s
 import (
 	"testing"
 
+	autoscale_v1 "k8s.io/api/autoscaling/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes/fake"
-	autoscale_v1 "k8s.io/client-go/pkg/apis/autoscaling/v1"
 )
 
 func TestHPACreate(t *testing.T) {

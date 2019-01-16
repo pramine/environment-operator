@@ -6,11 +6,11 @@ import (
 
 	"github.com/pearsontechnology/environment-operator/pkg/bitesize"
 	"github.com/pearsontechnology/environment-operator/pkg/k8_extensions"
+	v1beta2_apps "k8s.io/api/apps/v1beta2"
+	autoscale_v1 "k8s.io/api/autoscaling/v1"
+	"k8s.io/api/core/v1"
+	v1beta1_ext "k8s.io/api/extensions/v1beta1"
 	"k8s.io/apimachinery/pkg/api/resource"
-	"k8s.io/client-go/pkg/api/v1"
-	v1beta1_apps "k8s.io/client-go/pkg/apis/apps/v1beta1"
-	autoscale_v1 "k8s.io/client-go/pkg/apis/autoscaling/v1"
-	v1beta1_ext "k8s.io/client-go/pkg/apis/extensions/v1beta1"
 )
 
 // ServiceMap holds a list of bitesize.Service objects, representing the
@@ -185,7 +185,7 @@ func (s ServiceMap) AddIngress(ingress v1beta1_ext.Ingress) {
 }
 
 // AddMongoStatefulSet adds Kubernetes stateful set (what???) to biteservice
-func (s ServiceMap) AddMongoStatefulSet(statefulset v1beta1_apps.StatefulSet) {
+func (s ServiceMap) AddMongoStatefulSet(statefulset v1beta2_apps.StatefulSet) {
 	name := statefulset.Name
 
 	biteservice := s.CreateOrGet(name)

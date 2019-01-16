@@ -4,11 +4,10 @@ import (
 	"strings"
 
 	"github.com/pearsontechnology/environment-operator/pkg/bitesize"
-
+	v1beta2_apps "k8s.io/api/apps/v1beta2"
+	"k8s.io/api/core/v1"
+	v1beta1_ext "k8s.io/api/extensions/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/pkg/api/v1"
-	v1beta1_apps "k8s.io/client-go/pkg/apis/apps/v1beta1"
-	v1beta1_ext "k8s.io/client-go/pkg/apis/extensions/v1beta1"
 )
 
 func envVars(deployment v1beta1_ext.Deployment) []bitesize.EnvVar {
@@ -31,7 +30,7 @@ func envVars(deployment v1beta1_ext.Deployment) []bitesize.EnvVar {
 	}
 	return retval
 }
-func envVarsStatefulset(statefulset v1beta1_apps.StatefulSet) []bitesize.EnvVar {
+func envVarsStatefulset(statefulset v1beta2_apps.StatefulSet) []bitesize.EnvVar {
 	var retval []bitesize.EnvVar
 	for _, e := range statefulset.Spec.Template.Spec.Containers[0].Env {
 		var v bitesize.EnvVar
@@ -65,7 +64,7 @@ func healthCheck(deployment v1beta1_ext.Deployment) *bitesize.HealthCheck {
 	}
 	return retval
 }
-func healthCheckStatefulset(statefulset v1beta1_apps.StatefulSet) *bitesize.HealthCheck {
+func healthCheckStatefulset(statefulset v1beta2_apps.StatefulSet) *bitesize.HealthCheck {
 	var retval *bitesize.HealthCheck
 
 	probe := statefulset.Spec.Template.Spec.Containers[0].LivenessProbe

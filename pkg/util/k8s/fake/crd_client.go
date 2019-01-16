@@ -15,7 +15,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/runtime/serializer"
-	"k8s.io/client-go/pkg/api"
+	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/rest/fake"
 	"k8s.io/client-go/tools/cache"
 )
@@ -104,7 +104,6 @@ func CRDClient(objects ...runtime.Object) *fake.RESTClient {
 
 	m, _ := registered.NewAPIRegistrationManager("")
 
-	m.AddThirdPartyAPIGroupVersions(schemeGroupVersion)
 	m.RegisterGroup(groupmeta)
 
 	// very ugly but works
@@ -117,7 +116,7 @@ func CRDClient(objects ...runtime.Object) *fake.RESTClient {
 
 	return &fake.RESTClient{
 		GroupName:            "prsn.io",
-		NegotiatedSerializer: serializer.DirectCodecFactory{CodecFactory: api.Codecs},
+		NegotiatedSerializer: serializer.DirectCodecFactory{CodecFactory: scheme.Codecs},
 		Client:               fake.CreateHTTPClient(f.HandleRequest),
 		APIRegistry:          m,
 	}
