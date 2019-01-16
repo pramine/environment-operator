@@ -3,9 +3,9 @@ package k8s
 import (
 	"testing"
 
+	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes/fake"
-	"k8s.io/client-go/pkg/api/v1"
 )
 
 func TestServiceGet(t *testing.T) {
@@ -121,7 +121,7 @@ func TestServiceListWrongNs(t *testing.T) {
 	client.Namespace = "other"
 	c, _ := client.List()
 	if len(c) != 0 {
-		t.Errorf("Unexpected list %q", c)
+		t.Error(c)
 	}
 }
 

@@ -3,29 +3,25 @@ package translator
 // translator package converts objects between Kubernetes and Bitesize
 
 import (
+	"encoding/base64"
 	"fmt"
+	"math/rand"
 	"strings"
+	"time"
 
 	log "github.com/Sirupsen/logrus"
-	// metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"github.com/pearsontechnology/environment-operator/pkg/bitesize"
 	"github.com/pearsontechnology/environment-operator/pkg/config"
 	ext "github.com/pearsontechnology/environment-operator/pkg/k8_extensions"
 	"github.com/pearsontechnology/environment-operator/pkg/util"
-
-	// metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"encoding/base64"
-	"math/rand"
-	"time"
-
 	"github.com/pearsontechnology/environment-operator/pkg/util/k8s"
+	v1beta2_apps "k8s.io/api/apps/v1beta2"
+	autoscale_v1 "k8s.io/api/autoscaling/v1"
+	"k8s.io/api/core/v1"
+	v1beta1_ext "k8s.io/api/extensions/v1beta1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
-	"k8s.io/client-go/pkg/api/v1"
-	v1beta1_apps "k8s.io/client-go/pkg/apis/apps/v1beta1"
-	autoscale_v1 "k8s.io/client-go/pkg/apis/autoscaling/v1"
-	v1beta1_ext "k8s.io/client-go/pkg/apis/extensions/v1beta1"
 )
 
 // KubeMapper maps BitesizeService object to Kubernetes objects
@@ -187,7 +183,7 @@ func (w *KubeMapper) MongoInternalSecret() (*v1.Secret, error) {
 }
 
 // MongoStatefulSet extracts Mongo as Kubernetes object from Bitesize definition
-func (w *KubeMapper) MongoStatefulSet() (*v1beta1_apps.StatefulSet, error) {
+func (w *KubeMapper) MongoStatefulSet() (*v1beta2_apps.StatefulSet, error) {
 	replicas := int32(w.BiteService.Replicas)
 	imagePullSecrets, err := w.imagePullSecrets()
 	if err != nil {
@@ -210,7 +206,7 @@ func (w *KubeMapper) MongoStatefulSet() (*v1beta1_apps.StatefulSet, error) {
 		return nil, err
 	}
 
-	retval := &v1beta1_apps.StatefulSet{
+	retval := &v1beta2_apps.StatefulSet{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      w.BiteService.Name,
 			Namespace: w.Namespace,
@@ -221,7 +217,7 @@ func (w *KubeMapper) MongoStatefulSet() (*v1beta1_apps.StatefulSet, error) {
 				"version":     w.BiteService.Version,
 			},
 		},
-		Spec: v1beta1_apps.StatefulSetSpec{
+		Spec: v1beta2_apps.StatefulSetSpec{
 			ServiceName: w.BiteService.Name,
 			Replicas:    &replicas,
 			Template: v1.PodTemplateSpec{
@@ -473,7 +469,7 @@ func (w *KubeMapper) envVars() ([]v1.EnvVar, error) {
 			}
 
 			if !client.Secret().Exists(secretName) {
-				log.Debugf("Unable to Find Secret %s", secretName)
+				log.Debugf("Unable to find Secret %s", secretName)
 				err = fmt.Errorf("Unable to find secret [%s] in namespace [%s] when processing envvars for deployment [%s]", secretName, config.Env.Namespace, w.BiteService.Name)
 			}
 
@@ -629,16 +625,15 @@ func (w *KubeMapper) CustomResourceDefinition() (*ext.PrsnExternalResource, erro
 				"creator": "pipeline",
 				"name":    w.BiteService.Name,
 			},
-			Namespace: w.Namespace,
-			Name:      w.BiteService.Name,
+			Namespace:       w.Namespace,
+			Name:            w.BiteService.Name,
+			ResourceVersion: w.BiteService.ResourceVersion,
 		},
 		Spec: ext.PrsnExternalResourceSpec{
 			Version: w.BiteService.Version,
 			Options: w.BiteService.Options,
 		},
 	}
-
-	log.Debugf("PrsnExternalResource: %+v", *retval)
 
 	return retval, nil
 }

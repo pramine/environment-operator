@@ -1,9 +1,9 @@
 package k8s
 
 import (
+	"k8s.io/api/apps/v1beta2"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/pkg/apis/apps/v1beta1"
 )
 
 // StatefulSet type actions on statefulset in k8s cluster
@@ -13,7 +13,7 @@ type StatefulSet struct {
 }
 
 // Get returns statefulset object from the k8s by name
-func (client *StatefulSet) Get(name string) (*v1beta1.StatefulSet, error) {
+func (client *StatefulSet) Get(name string) (*v1beta2.StatefulSet, error) {
 	return client.Apps().
 		StatefulSets(client.Namespace).
 		Get(name, getOptions())
@@ -26,7 +26,7 @@ func (client *StatefulSet) Exist(name string) bool {
 }
 
 // Apply updates or creates statefulset in k8s
-func (client *StatefulSet) Apply(resource *v1beta1.StatefulSet) error {
+func (client *StatefulSet) Apply(resource *v1beta2.StatefulSet) error {
 	if client.Exist(resource.Name) {
 		return client.Update(resource)
 	}
@@ -35,7 +35,7 @@ func (client *StatefulSet) Apply(resource *v1beta1.StatefulSet) error {
 }
 
 // Update stateful set
-func (client *StatefulSet) Update(resource *v1beta1.StatefulSet) error {
+func (client *StatefulSet) Update(resource *v1beta2.StatefulSet) error {
 	current, err := client.Get(resource.Name)
 	if err != nil {
 		return err
@@ -59,7 +59,7 @@ func (client *StatefulSet) Update(resource *v1beta1.StatefulSet) error {
 }
 
 // Create creates new statefulset in k8s
-func (client *StatefulSet) Create(resource *v1beta1.StatefulSet) error {
+func (client *StatefulSet) Create(resource *v1beta2.StatefulSet) error {
 	_, err := client.
 		Apps().
 		StatefulSets(client.Namespace).
@@ -73,7 +73,7 @@ func (client *StatefulSet) Destroy(name string) error {
 }
 
 // List returns the list of k8s services maintained by pipeline
-func (client *StatefulSet) List() ([]v1beta1.StatefulSet, error) {
+func (client *StatefulSet) List() ([]v1beta2.StatefulSet, error) {
 	list, err := client.Apps().StatefulSets(client.Namespace).List(listOptions())
 	if err != nil {
 		return nil, err
