@@ -110,7 +110,8 @@ func (cluster *Cluster) ApplyEnvironment(currentEnvironment, newEnvironment *bit
 				log.Debugf("Applying Deployment for Service %s ", service.Name)
 				deployment, err := mapper.Deployment()
 				if err != nil {
-					return err
+					log.Error(err)
+					continue
 				}
 				if err = client.Deployment().Apply(deployment); err != nil {
 					log.Error(err)
@@ -145,9 +146,9 @@ func (cluster *Cluster) ApplyEnvironment(currentEnvironment, newEnvironment *bit
 			crd, _ := mapper.CustomResourceDefinition()
 			if err = client.CustomResourceDefinition(crd.Kind).Apply(crd); err != nil {
 				log.Error(err)
-				return err
+			} else {
+				log.Infof("Successfully updated CRD resource: %s", crd.Name)
 			}
-			log.Infof("Successfully updated CRD resource: %s", crd.Name)
 		}
 	}
 	return err
