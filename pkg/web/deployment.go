@@ -2,19 +2,19 @@ package web
 
 import (
 	"fmt"
-	log "github.com/Sirupsen/logrus"
 
+	log "github.com/Sirupsen/logrus"
 	"github.com/pearsontechnology/environment-operator/pkg/bitesize"
 	"github.com/pearsontechnology/environment-operator/pkg/config"
 	"github.com/pearsontechnology/environment-operator/pkg/git"
 	"github.com/pearsontechnology/environment-operator/pkg/translator"
-	v1beta1_apps "k8s.io/client-go/pkg/apis/apps/v1beta1"
-	v1beta1_ext "k8s.io/client-go/pkg/apis/extensions/v1beta1"
+	v1beta2_apps "k8s.io/api/apps/v1beta2"
+	v1beta1_ext "k8s.io/api/extensions/v1beta1"
 )
 
 // GetCurrentDeploymentByName retrieves kubernetes deployment object for
 // currently active environment from bitesize file in git.
-func GetCurrentDeploymentByName(name string) (*v1beta1_ext.Deployment, *v1beta1_apps.StatefulSet, error) {
+func GetCurrentDeploymentByName(name string) (*v1beta1_ext.Deployment, *v1beta2_apps.StatefulSet, error) {
 	gitClient := git.Client()
 	gitClient.Refresh()
 

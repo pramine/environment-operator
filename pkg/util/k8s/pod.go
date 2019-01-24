@@ -1,7 +1,7 @@
 package k8s
 
 import "k8s.io/client-go/kubernetes"
-import "k8s.io/client-go/pkg/api/v1"
+import "k8s.io/api/core/v1"
 import (
 	"bytes"
 )

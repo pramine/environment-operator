@@ -110,3 +110,15 @@ environments:
       resources_limits_memory: 512Mi
       resources_requests_cpu: 500m
       resources_requests_memory: 512Mi
+- name: environment6
+  namespace: environment-postgres
+  services:
+  - type: postgres
+    name: postgres
+    version : 1.0
+    options:
+      version: 9.6.6
+      replicas: 2
+      multiaz: false
+      dbinstanceclass: db.m4.large
+      allocatedstorage: 200

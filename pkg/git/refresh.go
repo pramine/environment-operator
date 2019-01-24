@@ -6,13 +6,20 @@ import log "github.com/Sirupsen/logrus"
 // changes are pulled in.
 func (g *Git) Refresh() error {
 	ok, err := g.UpdatesExist()
+
+	//TODO update to return the repo status and stop from comparing if there are no new changes.
 	if err != nil {
-		log.Error(err.Error())
+		log.Errorf("Error while checking for updates: %s", err.Error())
 		return err
 	}
+
 	if ok {
 		log.Infof("Updates in repository: %s", g.RemotePath)
-		g.Pull()
+		if err := g.Pull(); err != nil {
+			log.Errorf("Error while pulling the changes from repository: %s", err)
+			return err
+		}
 	}
+
 	return nil
 }

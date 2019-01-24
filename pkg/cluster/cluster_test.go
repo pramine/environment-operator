@@ -5,22 +5,19 @@ import (
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/pearsontechnology/environment-operator/pkg/bitesize"
+	"github.com/pearsontechnology/environment-operator/pkg/config"
 	"github.com/pearsontechnology/environment-operator/pkg/diff"
 	ext "github.com/pearsontechnology/environment-operator/pkg/k8_extensions"
 	"github.com/pearsontechnology/environment-operator/pkg/util"
-	"k8s.io/apimachinery/pkg/api/resource"
-	"k8s.io/client-go/kubernetes/fake"
-
 	fakecrd "github.com/pearsontechnology/environment-operator/pkg/util/k8s/fake"
-	"k8s.io/client-go/pkg/api/v1"
-	v1beta1_apps "k8s.io/client-go/pkg/apis/apps/v1beta1"
-	autoscale_v1 "k8s.io/client-go/pkg/apis/autoscaling/v1"
-	v1beta1_ext "k8s.io/client-go/pkg/apis/extensions/v1beta1"
-	fakerest "k8s.io/client-go/rest/fake"
-
+	v1beta2_apps "k8s.io/api/apps/v1beta2"
+	autoscale_v1 "k8s.io/api/autoscaling/v1"
+	"k8s.io/api/core/v1"
+	v1beta1_ext "k8s.io/api/extensions/v1beta1"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-
-	"github.com/pearsontechnology/environment-operator/pkg/config"
+	"k8s.io/client-go/kubernetes/fake"
+	fakerest "k8s.io/client-go/rest/fake"
 )
 
 // func init() {
@@ -664,7 +661,7 @@ func TestApplyMongoStatefulSet(t *testing.T) {
 				},
 			},
 		},
-		&v1beta1_apps.StatefulSet{
+		&v1beta2_apps.StatefulSet{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "mongo",
 				Namespace: "environment-mongo",
@@ -678,10 +675,10 @@ func TestApplyMongoStatefulSet(t *testing.T) {
 					"deployment.kubernetes.io/revision": "1",
 				},
 			},
-			Status: v1beta1_apps.StatefulSetStatus{
+			Status: v1beta2_apps.StatefulSetStatus{
 				Replicas: 1,
 			},
-			Spec: v1beta1_apps.StatefulSetSpec{
+			Spec: v1beta2_apps.StatefulSetSpec{
 				ServiceName: "mongo",
 				Replicas:    &[]int32{3}[0],
 				Template: v1.PodTemplateSpec{

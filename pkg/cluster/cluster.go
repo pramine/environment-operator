@@ -41,14 +41,19 @@ func (cluster *Cluster) ApplyIfChanged(newConfig *bitesize.Environment) error {
 	if newConfig == nil {
 		return errors.New("Could not compare against config (nil)")
 	}
-	log.Debugf("Loading namespace: %s", newConfig.Namespace)
-	currentConfig, _ := cluster.LoadEnvironment(newConfig.Namespace)
+
+	log.Debugf("Loading namespaces: %s", newConfig.Namespace)
+	currentConfig, err := cluster.LoadEnvironment(newConfig.Namespace)
+
+	if err != nil {
+		log.Errorf("Error while loading environment: %s", err.Error())
+		return err
+	}
 
 	if diff.Compare(*newConfig, *currentConfig) {
-
-		log.Infof("Changes:\n %s", diff.Changes())
 		err = cluster.ApplyEnvironment(currentConfig, newConfig)
 	}
+
 	return err
 }
 
@@ -70,11 +75,11 @@ func (cluster *Cluster) ApplyEnvironment(currentEnvironment, newEnvironment *bit
 			CRDClient: cluster.CRDClient,
 		}
 
-		if service.Type == "" {
+		if !shouldDeploy(currentEnvironment, newEnvironment, service.Name) {
+			continue
+		}
 
-			if !shouldDeploy(currentEnvironment, newEnvironment, service.Name) {
-				continue
-			}
+		if service.Type == "" {
 
 			if service.DatabaseType == "mongo" {
 				log.Debugf("Applying Stateful set for Mongo DB Service: %s ", service.Name)
@@ -105,7 +110,8 @@ func (cluster *Cluster) ApplyEnvironment(currentEnvironment, newEnvironment *bit
 				log.Debugf("Applying Deployment for Service %s ", service.Name)
 				deployment, err := mapper.Deployment()
 				if err != nil {
-					return err
+					log.Error(err)
+					continue
 				}
 				if err = client.Deployment().Apply(deployment); err != nil {
 					log.Error(err)
@@ -140,6 +146,8 @@ func (cluster *Cluster) ApplyEnvironment(currentEnvironment, newEnvironment *bit
 			crd, _ := mapper.CustomResourceDefinition()
 			if err = client.CustomResourceDefinition(crd.Kind).Apply(crd); err != nil {
 				log.Error(err)
+			} else {
+				log.Infof("Successfully updated CRD resource: %s", crd.Name)
 			}
 		}
 	}
@@ -191,7 +199,7 @@ func (cluster *Cluster) LoadEnvironment(namespace string) (*bitesize.Environment
 
 	ns, err := client.Ns().Get()
 	if err != nil {
-		return nil, fmt.Errorf("Namespace %s not found", namespace)
+		return nil, fmt.Errorf("Error while retrieving namespace: %s", err.Error())
 	}
 	environmentName := ns.ObjectMeta.Labels["environment"]
 
@@ -244,9 +252,9 @@ func (cluster *Cluster) LoadEnvironment(namespace string) (*bitesize.Environment
 	}
 
 	for _, supported := range k8_extensions.SupportedThirdPartyResources {
-		tprs, _ := client.CustomResourceDefinition(supported).List()
-		for _, tpr := range tprs {
-			serviceMap.AddCustomResourceDefinition(tpr)
+		crds, _ := client.CustomResourceDefinition(supported).List()
+		for _, crd := range crds {
+			serviceMap.AddCustomResourceDefinition(crd)
 		}
 	}
 

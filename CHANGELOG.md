@@ -9,6 +9,21 @@ This project adheres to [Semantic Versioning](http://semver.org/). Additionally,
 - **Fixed** for any bug fixes.
 - **Security** for any security changes or fixes for vulnerabilities.
 
+### **[0.0.19] 2019-01-17 [RELEASED]**
+ #### Fixed
+  * Enable continuation of deployments when some deployments are failing due to configs issues [BITE-4428](https://agile-jira.pearson.com/browse/BITE-4428)
+
+### **[0.0.18] 2019-01-16 [RELEASED]**
+ #### Changed
+  * Upgraded client-go version to v5.0.0 [BITE-4386](https://agile-jira.pearson.com/browse/BITE-4386)
+
+ #### Fixed
+  * CRD PUT request failures [BITE-4386](https://agile-jira.pearson.com/browse/BITE-4386)
+
+### **[0.0.17] 2019-01-09 [RELEASED]**
+ #### Added
+  * Added Postgres Support [BITE-4084](https://agile-jira.pearson.com/browse/BITE-4084)
+
 ### **[0.0.16] 2018-09-20 [RELEASED]**
  #### Added
   * Added Zookeeper and Kafka TPRs [BITE-3429](https://agile-jira.pearson.com/browse/BITE-3429)
@@ -17,8 +32,8 @@ This project adheres to [Semantic Versioning](http://semver.org/). Additionally,
 
 #### Added
 
-** Support for Kubernetes CRDs with backwards compatibilty to k8s 1.7 APIs. [[BITE-3572](https://agile-jira.pearson.com/browse/BITE-3572)]
-** Support for mounting secrets as a volume within the container. [[BITE-3581](https://agile-jira.pearson.com/browse/BITE-3581)]
+* Support for Kubernetes CRDs with backwards compatibilty to k8s 1.7 APIs. [[BITE-3572](https://agile-jira.pearson.com/browse/BITE-3572)]
+* Support for mounting secrets as a volume within the container. [[BITE-3581](https://agile-jira.pearson.com/browse/BITE-3581)]
 
 ### **[0.0.14] 2018-05-03 [RELEASED]**
 
