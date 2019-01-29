@@ -42,7 +42,7 @@ echo "**************************************************************"
  docker run --rm -v "$(pwd)":/go/src/github.com/pearsontechnology/environment-operator \
   	-w /go/src/github.com/pearsontechnology/environment-operator \
   	-e CGO_ENABLED=1 \
-  	${BUILD_IMAGE} \
+ 	${BUILD_IMAGE} \
     go build -v -o ${bin_dir}/environment-operator ./cmd/operator/main.go
 #    /bin/sh -c  "apk update && apk add build-base && go build -v -o ${bin_dir}/environment-operator ./cmd/operator/main.go"
 
