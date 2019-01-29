@@ -9,6 +9,10 @@ This project adheres to [Semantic Versioning](http://semver.org/). Additionally,
 - **Fixed** for any bug fixes.
 - **Security** for any security changes or fixes for vulnerabilities.
 
+### **[0.0.20] 2019-01-29 [RELEASED]**
+ #### Fixed
+  * Fix EO failing when provisioning CRDs [BITE-4545](https://agile-jira.pearson.com/browse/BITE-4545)
+
 ### **[0.0.19] 2019-01-17 [RELEASED]**
  #### Fixed
   * Enable continuation of deployments when some deployments are failing due to configs issues [BITE-4428](https://agile-jira.pearson.com/browse/BITE-4428)

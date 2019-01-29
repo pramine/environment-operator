@@ -34,7 +34,6 @@ func (client *CustomResourceDefinition) Get(name string) (*extensions.PrsnExtern
 // Exist checks if named resource exist in k8s cluster
 func (client *CustomResourceDefinition) Exist(name string) bool {
 	rsc, _ := client.Get(name)
-	log.Debugf("Got existing CRD: %s", rsc.Name)
 	return rsc != nil
 }
 
