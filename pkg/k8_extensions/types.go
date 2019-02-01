@@ -8,7 +8,7 @@ import (
 // SupportedThirdPartyResources contains all supported TPRs on bitesize
 // cluster.
 var SupportedThirdPartyResources = []string{
-	"mongo", "mysql", "cassandra", "redis", "zookeeper", "kafka", "postgres",
+	"mongo", "mysql", "cassandra", "redis", "zookeeper", "kafka", "postgres", "sns"
 }
 
 // PrsnExternalResource represents ThirdpartyResources mapped from
