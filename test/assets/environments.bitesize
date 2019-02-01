@@ -122,3 +122,11 @@ environments:
       multiaz: false
       dbinstanceclass: db.m4.large
       allocatedstorage: 200
+- name: environment7
+  namespace: environment-sns
+  services:
+  - type: sns
+    name: sns
+    options:
+      protocol: email
+      endpoint: hasindu.malalaachichige@pearson.com   
