@@ -9,6 +9,11 @@ This project adheres to [Semantic Versioning](http://semver.org/). Additionally,
 - **Fixed** for any bug fixes.
 - **Security** for any security changes or fixes for vulnerabilities.
 
+### **[0.0.21] 2019-02-06 [RELEASED]**
+ #### Added
+  * Added support for complex data structures in options [BITE-4641](https://agile-jira.pearson.com/browse/BITE-4641)
+  * Added Neptune, Mks, Docdb, Cb support
+
 ### **[0.0.20] 2019-01-29 [RELEASED]**
  #### Fixed
   * Fix EO failing when provisioning CRDs [BITE-4545](https://agile-jira.pearson.com/browse/BITE-4545)

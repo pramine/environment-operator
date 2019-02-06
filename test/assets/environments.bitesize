@@ -122,3 +122,50 @@ environments:
       multiaz: false
       dbinstanceclass: db.m4.large
       allocatedstorage: 200
+- name: environment7
+  namespace: environment-neptune
+  services:
+  - type: neptune
+    name: neptune
+    version : 1.0
+    options:
+      ApplyImmediately: True
+      db_instances:
+        - db_name: "db01"
+          db_instance_class: "db.r4.2xlarge"
+        - db_name: "db02"
+          db_instance_class: "db.r4.xlarge"
+        - db_name: "db03"
+          db_instance_class: "db.r4.large"
+        - db_name: "db04"
+          db_instance_class: "db.r4.large"
+- name: environment8
+  namespace: environment-mks
+  services:
+  - type: mks
+    name: mks
+    version : 1.0
+- name: environment9
+  namespace: environment-docdb
+  services:
+  - type: docdb
+    name: docdb
+    version : 1.0
+- name: environment10
+  namespace: environment-cb
+  services:
+  - type: cb
+    name: cb
+    version : 1.0
+    options:
+      use_mds: 1
+      high_perf: 1
+      instance_type: "r4.2xlarge"
+      node_count: "2"
+      data_size: 512
+      query_instance_type: "c4.large"
+      query_node_count: "1"
+      query_data_size: 200
+      index_instance_type: "r4.xlarge"
+      index_node_count: "1"
+      index_data_size: 512

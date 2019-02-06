@@ -12,7 +12,7 @@ import (
 	fakecrd "github.com/pearsontechnology/environment-operator/pkg/util/k8s/fake"
 	v1beta2_apps "k8s.io/api/apps/v1beta2"
 	autoscale_v1 "k8s.io/api/autoscaling/v1"
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	v1beta1_ext "k8s.io/api/extensions/v1beta1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"

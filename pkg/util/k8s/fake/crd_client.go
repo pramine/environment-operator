@@ -148,6 +148,14 @@ func kindFromElem(e string) string {
 		return "Kafka"
 	case "postgreses":
 		return "Postgres"
+	case "neptune":
+		return "Neptune"
+	case "mks":
+		return "Mks"
+	case "docdb":
+		return "Docdb"
+	case "cb":
+		return "Cb"
 	default:
 		return "None"
 	}
