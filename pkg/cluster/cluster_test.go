@@ -239,6 +239,19 @@ func loadTestCRDs() *fakerest.RESTClient {
 			},
 			Spec: ext.PrsnExternalResourceSpec{
 				Version: "5.6",
+				Options: map[string]interface{}{
+					"ApplyImmediately": "true",
+					"db_instances": []map[string]string{
+						map[string]string{
+							"db_name":           "db01",
+							"db_instance_class": "db.r4.2xlarge",
+						},
+						map[string]string{
+							"db_name":           "db02",
+							"db_instance_class": "db.r4.xlarge",
+						},
+					},
+				},
 			},
 		},
 	)
