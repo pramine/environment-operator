@@ -28,8 +28,9 @@ environments:
           - name: APP_PORT
             value: 80
         requests:
-           cpu: 100m
+           cpu: 10m
+           memory: 5000Mi
         limits:
-           cpu: 500m
-           memory: 100Mi
+           cpu: 50m
+           memory: 5000Mi
 
