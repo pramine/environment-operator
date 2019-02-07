@@ -39,7 +39,7 @@ environments:
   - name: service2_environment2
   - name: testdb
     type: "neptune"
-    version: "5.6"
+    version: "1.0.1.0.200264.0"
     options:
       ApplyImmediately: True
       db_instances:
