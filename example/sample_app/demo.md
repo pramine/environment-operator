@@ -7,18 +7,19 @@ I will use environment-operator to deploy an application to the cluster
 environment-operator is running in the sample-app namespace:
 
 ```
-root@master-i-01d298add324432ca:~/environment-operator/example [0]# kubectl get pod -n sample-app
-NAME                                   READY     STATUS    RESTARTS   AGE
-environment-operator-69564d97f-t6ndw   1/1       Running   0          10h
-```
+root@master-i-01d298add324432ca:~/environment-operator [1]# kubectl get all   -n sample-app
+NAME                                       READY     STATUS    RESTARTS   AGE
+pod/environment-operator-69564d97f-8f2qx   1/1       Running   0          2m
 
-Deploy an app using curl to the environment-operator:
+NAME                           TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)   AGE
+service/environment-operator   ClusterIP   172.31.81.177   <none>        80/TCP    12h
 
-```
-root@master-i-01d298add324432ca:~/environment-operator/example/sample_app [0]# curl -k  -XPOST -H 'Content-Type: application/json' -d '{"application":"sample-app-back", "name":"back", "version":"latest"}'  environment-operator.sample-app.svc.cluster.local/deploy
-{"status":"deploying"}
-```
+NAME                                   DESIRED   CURRENT   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/environment-operator   1         1         1            1           12h
 
+NAME                                             DESIRED   CURRENT   READY     AGE
+replicaset.apps/environment-operator-69564d97f   1         1         1         12h
+```
 
 Bitesize file used in this demo:
 
@@ -66,6 +67,14 @@ environments:
 *NOTE*
 It is important to specify the `requests` field above as HPA requires this configuration. Without it, HPA will not work correctly and the pods will not scale dynamically.
 
+Deploy an app using curl to the environment-operator:
+
+```
+root@master-i-01d298add324432ca:~/environment-operator/example/sample_app [0]# curl -k  -XPOST -H 'Content-Type: application/json' -d '{"application":"sample-app-back", "name":"back", "version":"latest"}'  environment-operator.sample-app.svc.cluster.local/deploy
+{"status":"deploying"}
+
+kubectl get pod -n sample-app
+```
 
 Add load to the deployed app:
 ```
