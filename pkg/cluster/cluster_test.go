@@ -228,7 +228,7 @@ func loadTestCRDs() *fakerest.RESTClient {
 	return fakecrd.CRDClient(
 		&ext.PrsnExternalResource{
 			TypeMeta: metav1.TypeMeta{
-				Kind:       "Mysql",
+				Kind:       "Neptune",
 				APIVersion: "prsn.io/v1",
 			},
 			ObjectMeta: metav1.ObjectMeta{
