@@ -12,7 +12,7 @@ import (
 	fakecrd "github.com/pearsontechnology/environment-operator/pkg/util/k8s/fake"
 	v1beta2_apps "k8s.io/api/apps/v1beta2"
 	autoscale_v1 "k8s.io/api/autoscaling/v1"
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	v1beta1_ext "k8s.io/api/extensions/v1beta1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -228,7 +228,7 @@ func loadTestCRDs() *fakerest.RESTClient {
 	return fakecrd.CRDClient(
 		&ext.PrsnExternalResource{
 			TypeMeta: metav1.TypeMeta{
-				Kind:       "Mysql",
+				Kind:       "Neptune",
 				APIVersion: "prsn.io/v1",
 			},
 			ObjectMeta: metav1.ObjectMeta{
@@ -238,7 +238,20 @@ func loadTestCRDs() *fakerest.RESTClient {
 				},
 			},
 			Spec: ext.PrsnExternalResourceSpec{
-				Version: "5.6",
+				Version: "1.0.1.0.200264.0",
+				Options: map[string]interface{}{
+					"ApplyImmediately": "true",
+					"db_instances": []map[string]string{
+						map[string]string{
+							"db_name":           "db01",
+							"db_instance_class": "db.r4.2xlarge",
+						},
+						map[string]string{
+							"db_name":           "db02",
+							"db_instance_class": "db.r4.xlarge",
+						},
+					},
+				},
 			},
 		},
 	)
