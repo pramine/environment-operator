@@ -79,9 +79,11 @@ Observe HPA scaling stats:
  kubectl top pod -n sample-app
 
  kubectl get pod -n sample-app -w
+
+ kubectl get nodes
 ```
 
-Add a large pod:
+Add a large pod (if needed to speed up demo):
 
 ```
 
@@ -105,7 +107,13 @@ spec:
 Observe cluster node scaling events:
 ```
  kubectl get events --all-namespaces  --field-selector reason=TriggeredScaleUp
+
+ kubectl get nodes
+
+ kubectl top nodes
 ```
+
+Take a look at #spam channel on slack
 
 More details on HPA is available [here](https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/)
 
