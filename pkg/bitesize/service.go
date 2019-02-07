@@ -31,7 +31,7 @@ type Service struct {
 	Commands        []string                `yaml:"command,omitempty"`
 	Annotations     map[string]string       `yaml:"-"` // Annotations have custom unmarshaler
 	Volumes         []Volume                `yaml:"volumes,omitempty"`
-	Options         map[string]string       `yaml:"options,omitempty"`
+	Options         map[string]interface{}  `yaml:"-"` // Options have custom unmarshaler
 	HTTP2           string                  `yaml:"http2,omitempty" validate:"regexp=^(true|false)*$"`
 	HTTPSOnly       string                  `yaml:"httpsOnly,omitempty" validate:"regexp=^(true|false)*$"`
 	HTTPSBackend    string                  `yaml:"httpsBackend,omitempty" validate:"regexp=^(true|false)*$"`
@@ -85,6 +85,11 @@ func (e *Service) UnmarshalYAML(unmarshal func(interface{}) error) error {
 		return fmt.Errorf("service.external_url.%s", err.Error())
 	}
 
+	unmarshalOptions, err := unmarshalOptions(unmarshal)
+	if err != nil {
+		return fmt.Errorf("service.options.%s", err.Error())
+	}
+
 	type plain Service
 	if err = unmarshal((*plain)(ee)); err != nil {
 		return fmt.Errorf("service.%s", err.Error())
@@ -94,6 +99,7 @@ func (e *Service) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	e.Ports = ports
 	e.Annotations = annotations
 	e.ExternalURL = externalURL
+	e.Options = unmarshalOptions
 
 	if e.Type != "" {
 		e.Ports = nil
@@ -158,6 +164,57 @@ func unmarshalAnnotations(unmarshal func(interface{}) error) (map[string]string,
 		annotations[ann.Name] = ann.Value
 	}
 	return annotations, nil
+}
+
+func cleanupInterfaceArray(in []interface{}) []interface{} {
+	res := make([]interface{}, len(in))
+	for i, v := range in {
+		res[i] = cleanupMapValue(v)
+	}
+	return res
+}
+
+func cleanupInterfaceMap(in map[interface{}]interface{}) map[string]interface{} {
+	res := make(map[string]interface{})
+	for k, v := range in {
+		res[fmt.Sprintf("%v", k)] = cleanupMapValue(v)
+	}
+	return res
+}
+
+func cleanupMapValue(v interface{}) interface{} {
+	switch v := v.(type) {
+	case []interface{}:
+		return cleanupInterfaceArray(v)
+	case map[interface{}]interface{}:
+		return cleanupInterfaceMap(v)
+	case string:
+		return v
+	default:
+		return fmt.Sprintf("%v", v)
+	}
+}
+
+func unmarshalOptions(unmarshal func(interface{}) error) (map[string]interface{}, error) {
+	var bz struct {
+		Options map[string]interface{} `yaml:"options,omitempty"`
+	}
+
+	options := map[string]interface{}{}
+
+	if err := unmarshal(&bz); err != nil {
+		return options, err
+	}
+
+	for k, v := range bz.Options {
+		options[k] = cleanupMapValue(v)
+	}
+
+	if len(options) == 0 {
+		return nil, nil
+	}
+
+	return options, nil
 }
 
 func unmarshalPorts(unmarshal func(interface{}) error) ([]int, error) {

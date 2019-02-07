@@ -8,7 +8,7 @@ import (
 // SupportedThirdPartyResources contains all supported TPRs on bitesize
 // cluster.
 var SupportedThirdPartyResources = []string{
-	"mongo", "mysql", "cassandra", "redis", "zookeeper", "kafka", "postgres",
+	"mongo", "mysql", "cassandra", "redis", "zookeeper", "kafka", "postgres", "neptune", "mks", "docdb", "cb",
 }
 
 // PrsnExternalResource represents ThirdpartyResources mapped from
@@ -23,9 +23,9 @@ type PrsnExternalResource struct {
 // PrsnExternalResourceSpec represents format for these mappings - which is
 // basically it's version and  options
 type PrsnExternalResourceSpec struct {
-	Version  string            `json:"version"`
-	Options  map[string]string `json:"options"`
-	Replicas int               `json:"replicas"`
+	Version  string                 `json:"version"`
+	Options  map[string]interface{} `json:"options"`
+	Replicas int                    `json:"replicas"`
 }
 
 // PrsnExternalResourceList is a list of PrsnExternalResource
