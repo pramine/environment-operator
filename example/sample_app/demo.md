@@ -63,6 +63,10 @@ environments:
            memory: 5000Mi
 ```
 
+*NOTE*
+It is important to specify the `requests` field above as HPA requires this configuration. Without it, HPA will not work correctly and the pods will not scale dynamically.
+
+
 Add load to the deployed app:
 ```
  ab -k -c 1000 -n 2000000 http://back.sample-app.svc.cluster.local/
@@ -102,11 +106,6 @@ Observe cluster node scaling events:
 ```
  kubectl get events --all-namespaces  --field-selector reason=TriggeredScaleUp
 ```
-
-
-*NOTE*
-It is important to specify the `requests` field above as HPA requires this configuration. Without it, HPA will not work correctly and the pods will not scale dynamically.
-
 
 More details on HPA is available [here](https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/)
 
