@@ -21,7 +21,7 @@ git clone https://github.com/pearsontechnology/environment-operator.git
 
 ```
 cd environment-operator/example/sample_app
-./run-example.sh
+./run_example.sh
 ```
 
 Now that you have a running example of environment operator with an app deployed, your next step should be to explore the  [Operational Guide](https://github.com/pearsontechnology/environment-operator/blob/dev/docs/Operatonal_Guide.md) and [User Guide](https://github.com/pearsontechnology/environment-operator/blob/dev/docs/User_Guide.md) so you may customize the provided example to fit your needs.
