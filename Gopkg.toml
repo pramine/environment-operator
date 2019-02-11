@@ -70,7 +70,7 @@
   version = "2.2.1"
 
 [[constraint]]
-  branch = "release-1.8"
+  branch = "release-1.10"
   name = "k8s.io/apimachinery"
 
 [[constraint]]
